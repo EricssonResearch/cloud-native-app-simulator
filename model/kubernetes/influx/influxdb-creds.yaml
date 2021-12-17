@@ -1,0 +1,9 @@
+apiVersion: v1
+data:
+  INFLUXDB_DATABASE: bGF0ZW5jeQ==
+  INFLUXDB_HOST: aW5mbHV4ZGI=
+  INFLUXDB_PASSWORD: cm9vdA==
+  INFLUXDB_USERNAME: cm9vdA==
+kind: Secret
+metadata:
+  name: influxdb-creds

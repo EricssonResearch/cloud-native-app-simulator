@@ -1,0 +1,21 @@
+# Please make sure this resource is created in all respective clusters
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: frontend-destination
+  namespace: edge-namespace
+spec:
+  host: frontend
+  subsets:
+  - name: c1
+    labels:
+      version: cluster1
+  - name: c2
+    labels:
+      version: cluster2
+  - name: c3
+    labels:
+      version: cluster3
+  - name: c4
+    labels:
+      version: cluster4

@@ -1,0 +1,68 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+spec:
+  addonComponents:
+    grafana:
+      enabled: true
+    kiali:
+      enabled: true
+  values:
+    # selfSigned is required if Citadel is enabled, that is when values.global.istiod.enabled is false.
+    security:
+      selfSigned: false
+
+    global:
+      multiCluster:
+        clusterName: cluster1
+      network: network1
+
+      # Mesh network configuration. This is optional and may be omitted if
+      # all clusters are on the same network.
+      #      meshNetworks:
+      #  network1:
+      #   endpoints:
+      #     # Always use Kubernetes as the registry name for the main cluster in the mesh network configuration
+      #     - fromRegistry: Kubernetes
+      #   gateways:
+      #     - registry_service_name: istio-ingressgateway.istio-system.svc.cluster.local
+      #       port: 443
+      # network2:
+      #   endpoints:
+      #     - fromRegistry: cluster2
+      #   gateways:
+      #     - registry_service_name: istio-ingressgateway.istio-system.svc.cluster.local
+      #       port: 443
+      #  network3:
+      #   endpoints:
+      #     - fromRegistry: cluster3
+      #   gateways:
+      #     - registry_service_name: istio-ingressgateway.istio-system.svc.cluster.local
+      #       port: 443
+      # network4:
+      #   endpoints:
+      #     - fromRegistry: cluster4
+      #   gateways:
+      #     - registry_service_name: istio-ingressgateway.istio-system.svc.cluster.local
+      #       port: 443
+      # network5:
+      #    endpoints:
+      #     - fromRegistry: cluster5
+      #   gateways:
+      #     - registry_service_name: istio-ingressgateway.istio-system.svc.cluster.local
+      #       port: 443
+      # network6:
+      #   endpoints:
+      #     - fromRegistry: cluster6
+      #   gateways:
+      #     - registry_service_name: istio-ingressgateway.istio-system.svc.cluster.local
+      #       port: 443
+      # network7:
+      #   endpoints:
+      #     - fromRegistry: cluster7
+      #   gateways:
+      #     - registry_service_name: istio-ingressgateway.istio-system.svc.cluster.local
+      #       port: 443
+   
+      # Use the existing istio-ingressgateway.
+      meshExpansion:
+              enabled: true

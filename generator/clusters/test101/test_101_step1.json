@@ -1,0 +1,27 @@
+{
+  "service_id": "test_101",
+  "final_placement": [
+    {
+      "cluster_id": "cluster1",
+      "service_list": [
+        "details",
+	"reviews"
+      ]
+    },
+    {
+      "cluster_id": "cluster2",
+      "service_list": [
+	"productpage",
+        "ratings",
+	"reviews"
+      ]
+    },
+    {
+      "cluster_id": "cluster3",
+      "service_list": [
+        "ratings",
+        "productpage"
+      ]
+    }
+  ]
+}

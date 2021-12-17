@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: grafana
+  name: grafana
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: grafana
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - envFrom:
+            - secretRef:
+                name: grafana-creds
+          image: docker.io/grafana/grafana:latest
+          imagePullPolicy: IfNotPresent
+          name: grafana
+          volumeMounts:
+            - mountPath: /etc/grafana/provisioning/datasources/influxdb-datasource.yaml
+              name: grafana-config
+              readOnly: true
+              subPath: influxdb-datasource.yaml
+            - mountPath: /etc/grafana/provisioning/dashboards/grafana-dashboard-provider.yaml
+              name: grafana-config
+              readOnly: true
+              subPath: grafana-dashboard-provider.yaml
+            - mountPath: /var/lib/grafana/dashboards/latency-dashboard.json
+              name: grafana-config
+              readOnly: true
+              subPath: latency-dashboard.json
+      restartPolicy: Always
+      volumes:
+        - configMap:
+            name: grafana-config
+          name: grafana-config

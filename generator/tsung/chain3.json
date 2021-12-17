@@ -1,0 +1,9 @@
+{
+  "initial": "reviews",
+  "chain_no": "2",
+  "request_task_type": {
+	"1": "cpu",
+	"2": "sleep"
+ },
+ "request_type": "1"
+}

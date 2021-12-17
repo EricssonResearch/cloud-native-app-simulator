@@ -1,0 +1,12 @@
+{
+  "initial": "productpage",
+  "chain_no": "1",
+  "request_task_type": {
+ 	"1": "memory",
+ 	"2": {"communication": {"client_params": "-qps 1000 -c 8 -t 3s -r 0.0001",
+ 				"server_params": "delay=0.5s:50,1s:40&size=512:10,1024:90"}},
+ 	"3": "sleep",
+	"4": "memory"
+ },
+ "request_type": "1"
+}

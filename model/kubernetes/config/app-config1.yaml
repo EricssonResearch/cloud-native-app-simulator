@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config1
+  labels:
+    name: config1
+  namespace: default
+data:
+  conf.json: '{"Hop":{"1" : ["redis-service3"], "2" : null}, "Hostname":"redis-service1", "Type":"memory"}'

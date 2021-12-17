@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-demo3
+spec:
+  selector:
+    matchLabels:
+      app: redis-demo3
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redis-demo3
+    spec:
+      # serviceAccountName: example-demo3
+      containers:
+        - name: redis-demo
+          image: redis-demo:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5000
+          volumeMounts:
+            - mountPath: /usr/src/app/config
+              name: config-data-volume
+        - name: master
+          image: k8s.gcr.io/redis:e2e
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          ports:
+            - containerPort: 6379
+      volumes:
+        - name: config-data-volume
+          configMap:
+            name: config3

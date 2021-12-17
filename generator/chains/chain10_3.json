@@ -1,0 +1,44 @@
+{
+    "serviceID": 1,
+    "chains": [
+        {
+            "latency": 0.045,
+            "chainID": "1",
+            "microServices": [
+                "5",
+                "3",
+                "4",
+                "2",
+                "10",
+                "7",
+                "1",
+                "6",
+                "9"
+            ]
+        },
+        {
+            "latency": 0.090,
+            "chainID": "2",
+            "microServices": [
+                "8",
+                "7",
+                "5",
+                "9",
+                "3",
+                "1",
+                "6"
+            ]
+        },
+        {
+            "latency": 0.080,
+            "chainID": "3",
+            "microServices": [
+                "7",
+                "5",
+                "2",
+                "1",
+                "8"
+            ]
+        }
+    ]
+}

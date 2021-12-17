@@ -1,0 +1,37 @@
+{
+  "service_id": "cloudgaming",
+  "final_placement": [
+    {
+      "cluster_id": "cluster1",
+      "service_list": [
+      	"database",
+      	"frontend",
+      	"analytics",
+      	"presence"
+      ]
+    },
+    {
+      "cluster_id": "cluster2",
+      "service_list": [
+        "frontend"
+      ]
+    },
+    {
+      "cluster_id": "cluster3",
+      "service_list": [
+        "frontend"
+      ]
+    },
+    {
+      "cluster_id": "cluster4",
+      "service_list": [
+        "gpurendering",
+        "streaming",
+        "encoder",
+        "gamelogic",
+        "database",
+        "frontend"
+      ]
+    }
+  ]
+}

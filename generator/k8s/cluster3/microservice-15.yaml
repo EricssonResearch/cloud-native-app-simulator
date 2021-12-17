@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: config-microservice-15
+    labels:
+        name: config-microservice-15
+        version: cluster3
+    namespace: edge-namespace
+data:
+    conf.json: '{"Hop":{"1":null,"2":null,"3":null,"4":null,"5":null,"6":null,"7":null,"8":null},"Hostname":"localhost"}'
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: microservice-15
+    namespace: edge-namespace
+    labels:
+        version: cluster3
+spec:
+    selector:
+        matchLabels:
+            app: microservice-15
+            version: cluster3
+    replicas: 1
+    template:
+        metadata:
+            labels:
+                app: microservice-15
+                version: cluster3
+        spec:
+            containers:
+                - name: app
+                  image: redis-demo:latest
+                  imagePullPolicy: Never
+                  ports:
+                    - containerPort: 5000
+                  volumeMounts:
+                    - mountPath: /usr/src/app/config
+                      name: config-data-volume
+                  readinessProbe:
+                    httpGet:
+                        path: /
+                        port: 5000
+                    initialDelaySeconds: 5
+                    periodSeconds: 1
+                - name: db
+                  image: k8s.gcr.io/redis:e2e
+                  imagePullPolicy: IfNotPresent
+                  ports:
+                    - containerPort: 6379
+                  volumeMounts: []
+                - name: worker
+                  image: redis-demo-worker
+                  imagePullPolicy: Never
+                  ports: []
+                  volumeMounts:
+                    - mountPath: /usr/src/app/config
+                      name: config-data-volume
+                - name: fortio
+                  image: fortio/fortio
+                  imagePullPolicy: IfNotPresent
+                  ports:
+                    - containerPort: 8080
+                  volumeMounts: []
+            volumes:
+                - name: config-data-volume
+                  configMap:
+                    name: config-microservice-15
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: microservice-15
+    namespace: edge-namespace
+    labels:
+        version: cluster3
+    annotations:
+        http: /
+        http-fortio-ui: /ui
+        tcp-fortio: /echo?
+spec:
+    selector:
+        app: microservice-15
+    ports:
+        - name: http
+          port: 80
+          targetPort: 5000
+        - name: tcp-fortio
+          port: 8080
+          targetPort: 8080
+        - name: http-fortio-ui
+          port: 8089
+          targetPort: 8089

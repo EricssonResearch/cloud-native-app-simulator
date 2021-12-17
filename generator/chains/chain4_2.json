@@ -1,0 +1,23 @@
+{
+  "serviceID": "sample",
+  "chains": [
+    {
+      "latency": 0.045,
+      "chainID": "1",
+      "microServices": [
+        "productpage",
+        "details",
+        "reviews",
+        "ratings"
+      ]
+    },
+    {
+      "latency": 0.090,
+      "chainID": "2",
+      "microServices": [
+        "reviews",
+        "ratings"
+      ]
+    }
+  ]
+}

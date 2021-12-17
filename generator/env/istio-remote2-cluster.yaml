@@ -1,0 +1,23 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+spec:
+  addonComponents:
+    grafana:
+      enabled: true
+  values:
+    global:
+      # The remote cluster's name and network name must match the values specified in the
+      # mesh network configuration of the main cluster.
+      multiCluster:
+        clusterName: cluster3
+      network: network1
+
+      # Replace ISTIOD_REMOTE_EP with the the value of ISTIOD_REMOTE_EP set earlier.
+      remotePilotAddress: 172.17.255.1
+  ## The istio-ingressgateway is not required in the remote cluster if both clusters are on
+  ## the same network. To disable the istio-ingressgateway component, uncomment the lines below.
+  #
+  components:
+   ingressGateways:
+   - name: istio-ingressgateway
+     enabled: false
