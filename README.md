@@ -69,4 +69,4 @@ To stop traffic generation use´
 tsung stop
 ```
 
-For more information see doc folder.
+For more information see generator/doc folder and [masther thesis report] (http://www.diva-portal.org/smash/record.jsf?pid=diva2%3A1506576&dswid=8090).
