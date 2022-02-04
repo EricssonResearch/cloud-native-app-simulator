@@ -31,7 +31,7 @@ fi
 mkdir k8s
 #generate kubernetes kubernetes manifest files
 echo "generating kubernetes manifest files"
-go run main.go generate $1 $2 $3
+go run main.go generate $1 $2
 
 #applying manifest files to respective clusters
 for i in $(seq ${NUM}); do

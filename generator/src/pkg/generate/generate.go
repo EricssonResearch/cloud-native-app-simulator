@@ -20,11 +20,10 @@ import (
 	s "application-generator/src/pkg/service"
 	"encoding/json"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
 	"strings"
-
-	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -38,35 +37,38 @@ const (
 	redisImageURL  = "k8s.gcr.io/redis:e2e"
 
 	fortioImageName = "fortio"
-	fortioImageUrl = "fortio/fortio"
+	fortioImageUrl  = "fortio/fortio"
 
 	workerImageName = "worker"
 	workerImageURL  = "redis-demo-worker"
 
-	protocol      = "http"
-	redisProtocol = "tcp"
-	fortioProtocol = "tcp-fortio"
+	protocol         = "http"
+	redisProtocol    = "tcp"
+	fortioProtocol   = "tcp-fortio"
 	fortioUiProtocol = "http-fortio-ui"
 
-	namespace = "edge-namespace"
-
-	defaultExtPort = 80
-	defaultPort = 5000
-	redisDefaultPort = 6379
-	redisTargetPort  = 6379
-	fortioDefaultPort = 8080
+	defaultExtPort      = 80
+	defaultPort         = 5000
+	redisDefaultPort    = 6379
+	redisTargetPort     = 6379
+	fortioDefaultPort   = 8080
 	fortioUiDefaultPort = 8089
 
-	uri = "/"
-	fortioUri = "/echo?"
+	uri         = "/"
+	fortioUri   = "/echo?"
 	fortioUiUri = "/ui"
 
 	replicaNumber   = 1
 	numberOfWorkers = 1
+
+	requestsCPUDefault    = "500m"
+	requestsMemoryDefault = "256M"
+	limitsCPUDefault      = "1000m"
+	limitsMemoryDefault   = "1024M"
 )
 
 var (
-	config           model.ConfigMapInstance
+	configmap        model.ConfigMapInstance
 	deployment       model.DeploymentInstance
 	service          model.ServiceInstance
 	serviceAccount   model.ServiceAccountInstance
@@ -74,44 +76,62 @@ var (
 	workerDeployment model.DeploymentInstance
 )
 
-type ConfigData struct {
-	Hop      ChainTypes `json:"Hop"`
-	Hostname string     `json:"Hostname"`
+type CalledServices struct {
+	Cluster      string  `json:"cluster"`
+	Service      string  `json:"service"`
+	Endpoint     string  `json:"endpoint"`
+	Protocol     string  `json:"protocol"`
+	TrafficRatio float32 `json:"traffic_ratio"`
+	Requests     string  `json:"requests"`
+}
+type Endpoints struct {
+	Name               string           `json:"name"`
+	Protocol           string           `json:"protocol"`
+	CpuConsumption     float64          `json:"cpuConsumption"`
+	NetworkConsumption float64          `json:"networkConsumption"`
+	MemoryConsumption  float64          `json:"memoryConsumption"`
+	CalledServices     []CalledServices `json:"calledServices"`
+	Requests           string           `json:"requests"`
+}
+type ResourceLimits struct {
+	Cpu    string `json:"cpu"`
+	Memory string `json:"memory"`
+}
+type ResourceRequests struct {
+	Cpu    string `json:"cpu"`
+	Memory string `json:"memory"`
+}
+type Resources struct {
+	Limits   ResourceLimits   `json:"limits"`
+	Requests ResourceRequests `json:"requests"`
+}
+type Services struct {
+	Name      string      `json:"name"`
+	Node      string      `json:"node"`
+	Resources Resources   `json:"resources"`
+	Endpoints []Endpoints `json:"endpoints"`
 }
 
-type ChainTypes struct {
-	Chain1 []string `json:"1"`
-	Chain2 []string `json:"2"`
-	Chain3 []string `json:"3"`
-	Chain4 []string `json:"4"`
-	Chain5 []string `json:"5"`
-	Chain6 []string `json:"6"`
-	Chain7 []string `json:"7"`
-	Chain8 []string `json:"8"`
+type Clusters struct {
+	Name      string     `json:"name"`
+	Namespace string     `json:"namespace"`
+	Services  []Services `json:"services"`
 }
 
-type ServiceChains struct {
-	ServiceID string   `json:"serviceId"`
-	Chains    []Chains `json:"chains"`
-	Number    int      `json:"number"`
+type Latencies struct {
+	Src     string  `json:"src"`
+	Dest    string  `json:"dest"`
+	Latancy float64 `json:"latancy"`
 }
 
-type Chains struct {
-	ChainID  string   `json:"chainid"`
-	Latency  float64  `json:"latency"`
-	Services []string `json:"microservices"`
-}
-type Placement struct {
-    ServiceID   string  `json:"service_id"`
-    FinalPlacement []struct {
-        ClusterID string `json:"cluster_id"`
-        Service   []string `json:"service_list"`
-	} `json:"final_placement"`
+type Config struct {
+	Latencies []Latencies `json:"latencies"`
+	Clusters  []Clusters  `json:"clusters"`
 }
 
 // NumMS the total number of the microservices in the service description file
-var NumMS int
-var mlist []string
+var NumCluster, NumEP int
+var services, clusters, endpoints []string
 
 // Unique return the number of unique elements in the slice of strings
 func Unique(strSlice []string) int {
@@ -126,64 +146,70 @@ func Unique(strSlice []string) int {
 	return len(list)
 }
 
-// Parse microservice chain and cluster file, and return a mapped placement struct
-func Parse(chainFilename, clusterFilename string) (m map[string]map[string][]string, p Placement) {
-
-	// filePath := fmt.Sprintf("chains/%s", chainFilename)
-
-	chainFile, err := os.Open(chainFilename)
+// Parse microservice config file, and return a config struct
+func Parse(configFilename string) Config {
+	configFile, err := os.Open(configFilename)
+	configFileByteValue, _ := ioutil.ReadAll(configFile)
 
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	chainFileByteValue, _ := ioutil.ReadAll(chainFile)
-
-	// clusterFilePath := fmt.Sprintf("clusters/%s", clusterFilename)
-
-	clusterFile, e := os.Open(clusterFilename)
-
-	if e != nil {
-		fmt.Println(e)
-	}
-
-	clusterFileByteValue, _ := ioutil.ReadAll(clusterFile)
-
-	var serviceChains ServiceChains
-	var placement Placement
-
-	json.Unmarshal(chainFileByteValue, &serviceChains)
-	json.Unmarshal(clusterFileByteValue, &placement)
-
-	m = map[string]map[string][]string{}
-
-	for i := 0; i < len(serviceChains.Chains); i++ {
-		w := map[string][]string{}
-		for k := 1; k < len(serviceChains.Chains[i].Services); k++ {
-			data := serviceChains.Chains[i].Services[k]
-			w[serviceChains.Chains[i].Services[k-1]] = append(w[serviceChains.Chains[i].Services[k-1]], data)
+	var loaded_config Config
+	json.Unmarshal(configFileByteValue, &loaded_config)
+	for i := 0; i < len(loaded_config.Clusters); i++ {
+		clusters = append(clusters, loaded_config.Clusters[i].Name)
+		NumCluster = NumCluster + 1
+		for k := 0; k < len(loaded_config.Clusters[i].Services); k++ {
+			services = append(services, loaded_config.Clusters[i].Services[k].Name)
+			for l := 0; l < len(loaded_config.Clusters[i].Services[k].Endpoints); l++ {
+				endpoints = append(endpoints, loaded_config.Clusters[i].Services[k].Endpoints[l].Name)
+				NumEP = NumEP + 1
+			}
 		}
-		m[serviceChains.Chains[i].ChainID] = w
-		mlist = append(mlist, serviceChains.Chains[i].Services[:]...)
 	}
-	fmt.Println("all ms: ", mlist)
-	NumMS = Unique(mlist)
-	fmt.Println("the unique number of ms is: ", NumMS)
 
-	return m, placement
+	fmt.Println("All clusters: ", clusters)
+	fmt.Println("Number of clusters: ", NumCluster)
+	fmt.Println("---------------")
+	fmt.Println("All Services: ", services)
+	fmt.Println("Number of services (unique): ", Unique(services))
+	fmt.Println("---------------")
+	fmt.Println("All endpoints: ", endpoints)
+	fmt.Println("Number of endpoints: ", NumEP)
 
+	return loaded_config
 }
-func Create(m map[string]map[string][]string, placement Placement, readinessProbe int) {
 
+func Create(config Config, readinessProbe int) {
 	path, _ := os.Getwd()
 	path = path + "/k8s"
-	for i := 0; i < len(placement.FinalPlacement); i++ {
-		directory := fmt.Sprintf(path+"/%s", placement.FinalPlacement[i].ClusterID)
-		c_id := fmt.Sprintf("%s", placement.FinalPlacement[i].ClusterID)
+	for i := 0; i < len(config.Clusters); i++ {
+		directory := fmt.Sprintf(path+"/%s", config.Clusters[i].Name)
+		c_id := fmt.Sprintf("%s", config.Clusters[i].Name)
 		os.Mkdir(directory, 0777)
-		for j := 0; j < len(placement.FinalPlacement[i].Service); j++ {
-			configData := ConfigData{}
-			serv := placement.FinalPlacement[i].Service[j]
+		for k := 0; k < len(config.Clusters[i].Services); k++ {
+			serv := config.Clusters[i].Services[k].Name
+			resources := Resources(config.Clusters[i].Services[k].Resources)
+			nodeAffinity := config.Clusters[i].Services[k].Node
+
+			if resources.Limits.Cpu == "" {
+				resources.Limits.Cpu = limitsCPUDefault
+			}
+			if resources.Limits.Memory == "" {
+				resources.Limits.Memory = limitsMemoryDefault
+			}
+			if resources.Requests.Cpu == "" {
+				resources.Requests.Cpu = requestsCPUDefault
+			}
+			if resources.Requests.Memory == "" {
+				resources.Requests.Memory = requestsMemoryDefault
+			}
+			serv_endpoints := []Endpoints(config.Clusters[i].Services[k].Endpoints)
+			serv_ep_json, err := json.Marshal(serv_endpoints)
+			if err != nil {
+				panic(err)
+			}
 			manifestFilePath := fmt.Sprintf(directory+"/%s.yaml", serv)
 			manifests := make([]string, 0, 1)
 			appendManifest := func(manifest interface{}) error {
@@ -194,23 +220,28 @@ func Create(m map[string]map[string][]string, placement Placement, readinessProb
 				manifests = append(manifests, string(yamlDoc))
 				return nil
 			}
-			configData = ConfigData{Hop: ChainTypes{Chain1: m["1"][serv], Chain2: m["2"][serv], Chain3: m["3"][serv], Chain4: m["4"][serv], Chain5: m["5"][serv],
-				Chain6: m["6"][serv], Chain7: m["7"][serv], Chain8: m["8"][serv]}, Hostname: serv}
-			d, _ := json.Marshal(configData)
-			data := fmt.Sprintf("%s", string(d))
+			configmap = s.CreateConfig("config-"+serv, "config-"+serv, c_id, config.Clusters[i].Namespace, string(serv_ep_json))
+			appendManifest(configmap)
+			if nodeAffinity == "" {
+				deployment := s.CreateDeployment(serv, serv, c_id, replicaNumber, config.Clusters[i].Name, c_id, config.Clusters[i].Namespace,
+					defaultPort, redisDefaultPort, fortioDefaultPort, imageName, imageURL, redisImageName,
+					redisImageURL, workerImageName, workerImageURL, fortioImageName, fortioImageUrl, volumePath, volumeName, "config-"+serv, readinessProbe,
+					resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory)
+				appendManifest(deployment)
+			} else {
+				deployment := s.CreateDeploymentWithAffinity(serv, serv, c_id, replicaNumber, config.Clusters[i].Name, c_id, config.Clusters[i].Namespace,
+					defaultPort, redisDefaultPort, fortioDefaultPort, imageName, imageURL, redisImageName,
+					redisImageURL, workerImageName, workerImageURL, fortioImageName, fortioImageUrl, volumePath, volumeName, "config-"+serv, readinessProbe,
+					resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory, nodeAffinity)
+				appendManifest(deployment)
+			}
 
-			config = s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, data)
-			appendManifest(config)
-			deployment = s.CreateDeployment(serv, serv, c_id, replicaNumber, serv, c_id, namespace,
-			    defaultPort, redisDefaultPort, fortioDefaultPort, imageName, imageURL, redisImageName,
-				redisImageURL, workerImageName, workerImageURL, fortioImageName, fortioImageUrl, volumePath, volumeName, "config-"+serv, readinessProbe)
-			appendManifest(deployment)
-			service = s.CreateService(serv, serv, protocol, fortioProtocol, fortioUiProtocol, uri, fortioUri, fortioUiUri, c_id, namespace, defaultExtPort, defaultPort, fortioDefaultPort, fortioUiDefaultPort)
+			service = s.CreateService(serv, serv, protocol, fortioProtocol, fortioUiProtocol, uri, fortioUri, fortioUiUri, c_id, config.Clusters[i].Namespace, defaultExtPort, defaultPort, fortioDefaultPort, fortioUiDefaultPort)
 			appendManifest(service)
 
 			yamlDocString := strings.Join(manifests, "---\n")
 			ioutil.WriteFile(manifestFilePath, []byte(yamlDocString), 0644)
-			}
-	}
 
+		}
+	}
 }
