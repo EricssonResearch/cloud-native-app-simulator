@@ -6,41 +6,40 @@
       "latency": 0.002
     }
   ],
-  "clusters": [
+  "services": [
     {
-      "name": "cluster_1",
-      "namespace": "ns_1",
-      "services": [
+      "name": "service_1",
+      "clusters": [
         {
-          "name": "service_1",
-          "node": "node-1",
-          "resources": {
-            "limits": {
-              "memory": "1024",
-              "cpu": "1000"
-            },
-            "requests": {
-              "memory": "512",
-              "cpu": "500"
-            }
-          },
-          "endpoints": [
+          "cluster": "cluster_1",
+          "namespace": "ns_1",
+          "node": "node_1"
+        }
+      ],
+      "resources": {
+        "limits": {
+          "memory": "1024",
+          "cpu": "1000"
+        },
+        "requests": {
+          "memory": "512",
+          "cpu": "500"
+        }
+      },
+      "endpoints": [
+        {
+          "name": "/end_1",
+          "protocol": "http",
+          "cpu_consumption": 0.003,
+          "network_consumption": 0.002,
+          "memory_consumption": 0.003,
+          "calledservices": [
             {
-              "name": "/end_1",
-              "protocol": "http",
-              "cpu_consumption": 0.003,
-              "network_consumption": 0.002,
-              "memory_consumption": 0.003,
-              "calledservices": [
-                {
-                  "cluster": "cluster_1",
-                  "service": "service_2",
-                  "endpoint": "/end_2",
-                  "protocol": "grpc",
-                  "traffic_ratio": 1,
-                  "requests": "asynchronous"
-                }
-              ]
+              "cluster": "cluster_1",
+              "service": "service_2",
+              "endpoint": "/end_2",
+              "traffic_forward_ratio": 1,
+              "requests": "asynchronous"
             }
           ]
         }
