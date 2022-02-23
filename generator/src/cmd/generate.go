@@ -30,8 +30,8 @@ var generateCmd = &cobra.Command{
 		readinessProbe, err := strconv.Atoi(args[1])
 		exitIfError(err)
 
-		config := generate.Parse(chain)
-		generate.Create(config, readinessProbe)
+		config, clusters := generate.Parse(chain)
+		generate.Create(config, readinessProbe, clusters)
 	},
 }
 
