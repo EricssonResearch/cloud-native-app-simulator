@@ -21,7 +21,6 @@ import time
 import uuid
 import random
 import requests
-from rq import Queue
 from src.service.util import gen_dict_extract
 from src.service import path
 
