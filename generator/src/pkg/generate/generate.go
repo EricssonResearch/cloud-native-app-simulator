@@ -33,33 +33,14 @@ const (
 	imageName = "app"
 	imageURL  = "redis-demo:latest"
 
-	redisImageName = "db"
-	redisImageURL  = "k8s.gcr.io/redis:e2e"
+	protocol = "http"
 
-	fortioImageName = "fortio"
-	fortioImageUrl  = "fortio/fortio"
+	defaultExtPort = 80
+	defaultPort    = 5000
 
-	workerImageName = "worker"
-	workerImageURL  = "redis-demo-worker"
+	uri = "/"
 
-	protocol         = "http"
-	redisProtocol    = "tcp"
-	fortioProtocol   = "tcp-fortio"
-	fortioUiProtocol = "http-fortio-ui"
-
-	defaultExtPort      = 80
-	defaultPort         = 5000
-	redisDefaultPort    = 6379
-	redisTargetPort     = 6379
-	fortioDefaultPort   = 8080
-	fortioUiDefaultPort = 8089
-
-	uri         = "/"
-	fortioUri   = "/echo?"
-	fortioUiUri = "/ui"
-
-	replicaNumber   = 1
-	numberOfWorkers = 1
+	replicaNumber = 1
 
 	requestsCPUDefault    = "500m"
 	requestsMemoryDefault = "256M"
@@ -229,20 +210,18 @@ func Create(config Config, readinessProbe int, clusters []string) {
 			appendManifest(configmap)
 			if nodeAffinity == "" {
 				deployment := s.CreateDeployment(serv, serv, c_id, replicaNumber, directory, c_id, namespace,
-					defaultPort, redisDefaultPort, fortioDefaultPort, imageName, imageURL, redisImageName,
-					redisImageURL, workerImageName, workerImageURL, fortioImageName, fortioImageUrl, volumePath, volumeName, "config-"+serv, readinessProbe,
+					defaultPort, imageName, imageURL, volumePath, volumeName, "config-"+serv, readinessProbe,
 					resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory)
 
 				appendManifest(deployment)
 			} else {
 				deployment := s.CreateDeploymentWithAffinity(serv, serv, c_id, replicaNumber, directory, c_id, namespace,
-					defaultPort, redisDefaultPort, fortioDefaultPort, imageName, imageURL, redisImageName,
-					redisImageURL, workerImageName, workerImageURL, fortioImageName, fortioImageUrl, volumePath, volumeName, "config-"+serv, readinessProbe,
+					defaultPort, imageName, imageURL, volumePath, volumeName, "config-"+serv, readinessProbe,
 					resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory, nodeAffinity)
 				appendManifest(deployment)
 			}
 
-			service = s.CreateService(serv, serv, protocol, fortioProtocol, fortioUiProtocol, uri, fortioUri, fortioUiUri, c_id, namespace, defaultExtPort, defaultPort, fortioDefaultPort, fortioUiDefaultPort)
+			service = s.CreateService(serv, serv, protocol, uri, c_id, namespace, defaultExtPort, defaultPort)
 			appendManifest(service)
 
 			yamlDocString := strings.Join(manifests, "---\n")

@@ -21,25 +21,18 @@ import (
 )
 
 func CreateDeployment(metadataName, selectorAppName, selectorClusterName string, numberOfReplicas int,
-	templateAppLabel, templateClusterLabel, namespace string, containerPort int, redisContainerPort int,
-	fortioContainerPort int, containerName, containerImage, redisContainerName, redisContainerImage,
-	workerContainerName, workerContainerImage, fortioContainerName, fortioContainerImage, mountPath string,
-	volumeName, configMapName string, readinessProbe int, requestCPU, requestMemory, limitCPU, limitMemory string) (deploymentInstance model.DeploymentInstance) {
+	templateAppLabel, templateClusterLabel, namespace string, containerPort int, containerName, containerImage,
+	mountPath string, volumeName, configMapName string, readinessProbe int, requestCPU, requestMemory, limitCPU,
+	limitMemory string) (deploymentInstance model.DeploymentInstance) {
 
 	var deployment model.DeploymentInstance
 	var containerInstance model.ContainerInstance
-	var redisContainerInstance model.ContainerInstance
-	var workerContainerInstance model.ContainerInstance
-	var fortioContainerInstance model.ContainerInstance
+
 	var containerPortInstance model.ContainerPortInstance
-	var redisContainerPortInstance model.ContainerPortInstance
-	var fortioContainerPortInstance model.ContainerPortInstance
 	var containerVolume model.ContainerVolumeInstance
 	var volumeInstance model.VolumeInstance
 
-	redisContainerPortInstance.ContainerPort = redisContainerPort
 	containerPortInstance.ContainerPort = containerPort
-	fortioContainerPortInstance.ContainerPort = fortioContainerPort
 	volumeInstance.Name = volumeName
 	volumeInstance.ConfigMap.Name = configMapName
 
@@ -60,33 +53,6 @@ func CreateDeployment(metadataName, selectorAppName, selectorClusterName string,
 	containerInstance.Resources.ResourceLimits.Cpu = limitCPU
 	containerInstance.Resources.ResourceLimits.Memory = limitMemory
 
-	redisContainerInstance.Ports = append(redisContainerInstance.Ports, redisContainerPortInstance)
-	redisContainerInstance.Image = redisContainerImage
-	redisContainerInstance.ImagePullPolicy = "IfNotPresent"
-	redisContainerInstance.Name = redisContainerName
-	redisContainerInstance.Resources.ResourceRequests.Cpu = requestCPU
-	redisContainerInstance.Resources.ResourceRequests.Memory = requestMemory
-	redisContainerInstance.Resources.ResourceLimits.Cpu = limitCPU
-	redisContainerInstance.Resources.ResourceLimits.Memory = limitMemory
-
-	workerContainerInstance.Volumes = append(workerContainerInstance.Volumes, containerVolume)
-	workerContainerInstance.Name = workerContainerName
-	workerContainerInstance.Image = workerContainerImage
-	workerContainerInstance.ImagePullPolicy = "Never"
-	workerContainerInstance.Resources.ResourceRequests.Cpu = requestCPU
-	workerContainerInstance.Resources.ResourceRequests.Memory = requestMemory
-	workerContainerInstance.Resources.ResourceLimits.Cpu = limitCPU
-	workerContainerInstance.Resources.ResourceLimits.Memory = limitMemory
-
-	fortioContainerInstance.Ports = append(fortioContainerInstance.Ports, fortioContainerPortInstance)
-	fortioContainerInstance.Image = fortioContainerImage
-	fortioContainerInstance.ImagePullPolicy = "IfNotPresent"
-	fortioContainerInstance.Name = fortioContainerName
-	fortioContainerInstance.Resources.ResourceRequests.Cpu = requestCPU
-	fortioContainerInstance.Resources.ResourceRequests.Memory = requestMemory
-	fortioContainerInstance.Resources.ResourceLimits.Cpu = limitCPU
-	fortioContainerInstance.Resources.ResourceLimits.Memory = limitMemory
-
 	deployment.APIVersion = "apps/v1"
 	deployment.Kind = "Deployment"
 	deployment.Metadata.Name = metadataName
@@ -98,9 +64,6 @@ func CreateDeployment(metadataName, selectorAppName, selectorClusterName string,
 	deployment.Spec.Template.Metadata.Labels.App = templateAppLabel
 	deployment.Spec.Template.Metadata.Labels.Cluster = templateClusterLabel
 	deployment.Spec.Template.Spec.Containers = append(deployment.Spec.Template.Spec.Containers, containerInstance)
-	deployment.Spec.Template.Spec.Containers = append(deployment.Spec.Template.Spec.Containers, redisContainerInstance)
-	deployment.Spec.Template.Spec.Containers = append(deployment.Spec.Template.Spec.Containers, workerContainerInstance)
-	deployment.Spec.Template.Spec.Containers = append(deployment.Spec.Template.Spec.Containers, fortioContainerInstance)
 	deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, volumeInstance)
 
 	return deployment
@@ -108,25 +71,17 @@ func CreateDeployment(metadataName, selectorAppName, selectorClusterName string,
 }
 
 func CreateDeploymentWithAffinity(metadataName, selectorAppName, selectorClusterName string, numberOfReplicas int,
-	templateAppLabel, templateClusterLabel, namespace string, containerPort int, redisContainerPort int,
-	fortioContainerPort int, containerName, containerImage, redisContainerName, redisContainerImage,
-	workerContainerName, workerContainerImage, fortioContainerName, fortioContainerImage, mountPath string,
-	volumeName, configMapName string, readinessProbe int, requestCPU, requestMemory, limitCPU, limitMemory, nodeAffinity string) (deploymentInstance model.DeploymentInstanceWithAffinity) {
+	templateAppLabel, templateClusterLabel, namespace string, containerPort int, containerName, containerImage,
+	mountPath string, volumeName, configMapName string, readinessProbe int, requestCPU, requestMemory, limitCPU,
+	limitMemory, nodeAffinity string) (deploymentInstance model.DeploymentInstanceWithAffinity) {
 
 	var deployment model.DeploymentInstanceWithAffinity
 	var containerInstance model.ContainerInstance
-	var redisContainerInstance model.ContainerInstance
-	var workerContainerInstance model.ContainerInstance
-	var fortioContainerInstance model.ContainerInstance
 	var containerPortInstance model.ContainerPortInstance
-	var redisContainerPortInstance model.ContainerPortInstance
-	var fortioContainerPortInstance model.ContainerPortInstance
 	var containerVolume model.ContainerVolumeInstance
 	var volumeInstance model.VolumeInstance
 
-	redisContainerPortInstance.ContainerPort = redisContainerPort
 	containerPortInstance.ContainerPort = containerPort
-	fortioContainerPortInstance.ContainerPort = fortioContainerPort
 	volumeInstance.Name = volumeName
 	volumeInstance.ConfigMap.Name = configMapName
 
@@ -147,33 +102,6 @@ func CreateDeploymentWithAffinity(metadataName, selectorAppName, selectorCluster
 	containerInstance.Resources.ResourceLimits.Cpu = limitCPU
 	containerInstance.Resources.ResourceLimits.Memory = limitMemory
 
-	redisContainerInstance.Ports = append(redisContainerInstance.Ports, redisContainerPortInstance)
-	redisContainerInstance.Image = redisContainerImage
-	redisContainerInstance.ImagePullPolicy = "IfNotPresent"
-	redisContainerInstance.Name = redisContainerName
-	redisContainerInstance.Resources.ResourceRequests.Cpu = requestCPU
-	redisContainerInstance.Resources.ResourceRequests.Memory = requestMemory
-	redisContainerInstance.Resources.ResourceLimits.Cpu = limitCPU
-	redisContainerInstance.Resources.ResourceLimits.Memory = limitMemory
-
-	workerContainerInstance.Volumes = append(workerContainerInstance.Volumes, containerVolume)
-	workerContainerInstance.Name = workerContainerName
-	workerContainerInstance.Image = workerContainerImage
-	workerContainerInstance.ImagePullPolicy = "Never"
-	workerContainerInstance.Resources.ResourceRequests.Cpu = requestCPU
-	workerContainerInstance.Resources.ResourceRequests.Memory = requestMemory
-	workerContainerInstance.Resources.ResourceLimits.Cpu = limitCPU
-	workerContainerInstance.Resources.ResourceLimits.Memory = limitMemory
-
-	fortioContainerInstance.Ports = append(fortioContainerInstance.Ports, fortioContainerPortInstance)
-	fortioContainerInstance.Image = fortioContainerImage
-	fortioContainerInstance.ImagePullPolicy = "IfNotPresent"
-	fortioContainerInstance.Name = fortioContainerName
-	fortioContainerInstance.Resources.ResourceRequests.Cpu = requestCPU
-	fortioContainerInstance.Resources.ResourceRequests.Memory = requestMemory
-	fortioContainerInstance.Resources.ResourceLimits.Cpu = limitCPU
-	fortioContainerInstance.Resources.ResourceLimits.Memory = limitMemory
-
 	deployment.APIVersion = "apps/v1"
 	deployment.Kind = "Deployment"
 	deployment.Metadata.Name = metadataName
@@ -185,9 +113,6 @@ func CreateDeploymentWithAffinity(metadataName, selectorAppName, selectorCluster
 	deployment.Spec.Template.Metadata.Labels.App = templateAppLabel
 	deployment.Spec.Template.Metadata.Labels.Cluster = templateClusterLabel
 	deployment.Spec.Template.Spec.Containers = append(deployment.Spec.Template.Spec.Containers, containerInstance)
-	deployment.Spec.Template.Spec.Containers = append(deployment.Spec.Template.Spec.Containers, redisContainerInstance)
-	deployment.Spec.Template.Spec.Containers = append(deployment.Spec.Template.Spec.Containers, workerContainerInstance)
-	deployment.Spec.Template.Spec.Containers = append(deployment.Spec.Template.Spec.Containers, fortioContainerInstance)
 	deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, volumeInstance)
 	deployment.Spec.Template.Spec.NodeName = nodeAffinity
 
@@ -226,36 +151,22 @@ func CreateWorkerDeployment(metadataName, selectorName string, numberOfReplicas 
 	return deployment
 }
 
-func CreateService(metadataName, selectorAppName, protocol, fortioProtocol, fortioUiProtocol, uri, fortioUri, fortioUiUri, metadataLabelCluster, namespace string, defaultExtPort, defaultPort, fortioDefaultPort, fortioUiDefaultPort int) (serviceInstance model.ServiceInstance) {
+func CreateService(metadataName, selectorAppName, protocol, uri, metadataLabelCluster, namespace string, defaultExtPort, defaultPort int) (serviceInstance model.ServiceInstance) {
 	const apiVersion = "v1"
 
 	const apiKind = "Service"
 
 	var port model.ServicePortInstance
 
-	var fortioUiPort model.ServicePortInstance
-
-	var fortioPort model.ServicePortInstance
-
 	var service model.ServiceInstance
 
 	annotations := map[string]string{
-		protocol:         uri,
-		fortioProtocol:   fortioUri,
-		fortioUiProtocol: fortioUiUri,
+		protocol: uri,
 	}
 
 	port.Port = defaultExtPort
 	port.TargetPort = defaultPort
 	port.Name = protocol
-
-	fortioPort.Port = fortioDefaultPort
-	fortioPort.TargetPort = fortioDefaultPort
-	fortioPort.Name = fortioProtocol
-
-	fortioUiPort.Port = fortioUiDefaultPort
-	fortioUiPort.TargetPort = fortioUiDefaultPort
-	fortioUiPort.Name = fortioUiProtocol
 
 	service.APIVersion = apiVersion
 	service.Kind = apiKind
@@ -265,8 +176,6 @@ func CreateService(metadataName, selectorAppName, protocol, fortioProtocol, fort
 	service.Metadata.Annotations = annotations
 	service.Spec.Selector.App = selectorAppName
 	service.Spec.Ports = append(service.Spec.Ports, port)
-	service.Spec.Ports = append(service.Spec.Ports, fortioPort)
-	service.Spec.Ports = append(service.Spec.Ports, fortioUiPort)
 
 	return service
 }
