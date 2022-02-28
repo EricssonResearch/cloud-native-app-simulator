@@ -31,7 +31,7 @@ const (
 	volumePath = "/usr/src/app/config"
 
 	imageName = "app"
-	imageURL  = "redis-demo:latest"
+	imageURL  = "app-demo:latest"
 
 	protocol = "http"
 
