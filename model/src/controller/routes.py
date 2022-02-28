@@ -17,15 +17,10 @@ limitations under the License.
 import logging
 from flask import Blueprint, jsonify, request
 from src.service.util import create_and_save_network_data
-from src.service.backend import initialize_redis
-from src.service.tasks import save_task
-
+from src.service.tasks import execute_task
 
 simple_page = Blueprint("simple_page", __name__,)
-redis = initialize_redis()
 logger = logging.getLogger(__name__)
-
-
 
 def getForwardHeaders(request):
     '''
@@ -43,13 +38,12 @@ def getForwardHeaders(request):
             headers[ihdr] = val
     return headers
 
-
 @simple_page.route("/", methods=["POST", "GET"])
 def run_task():
     if request.method == "POST":
         address = request.remote_addr
         headers = getForwardHeaders(request)
-        response_object = save_task(request.json, address, headers)
+        response_object = execute_task(request.json, address, headers)
         return jsonify(response_object), 200
     else:
         return "request received"
@@ -57,7 +51,7 @@ def run_task():
 @simple_page.route("/status", methods=["POST"])
 def task_status():
     return "OK"
-#    create_and_save_network_data(request.json) 
+#    create_and_save_network_data(request.json)
 #    logging.info(request.json)
 #    return jsonify(request.json), 200
 
@@ -65,4 +59,3 @@ def task_status():
 def load_test():
     address = request.remote_addr
     return "request received"
-

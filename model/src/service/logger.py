@@ -15,8 +15,8 @@ limitations under the License.
 """
 
 import logging.config
-import sys
 import os
+
 def initialize_logging():
     config_file_path = os.path.join(os.getcwd(), 'src/config/logging.ini')
     logging.config.fileConfig(config_file_path, disable_existing_loggers=False)

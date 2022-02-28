@@ -14,18 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from redis import Redis, RedisError
-from influxdb import InfluxDBClient
 from src.service import path
 
-def initialize_redis():
-    redis = Redis(host="localhost", db=0, socket_connect_timeout=2)
-    return redis
-
 def init_influxdb(host=path.INFLUXDB_HOST, db=path.INFLUXDB_DATABASE, user=path.INFLUXDB_USERNAME, password=path.INFLUXDB_PASSWORD):
-
     client = InfluxDBClient(host, 8086, user, password, db)
-
     return (client)
 
 def create_influxdb(client, db_name=path.INFLUXDB_DATABASE):

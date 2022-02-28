@@ -16,7 +16,7 @@ limitations under the License.
 
 import json
 import logging
-import os
+#import os
 
 # script_dir = os.path.dirname(__file__)
 configFilePath = os.environ['CONF']
@@ -30,7 +30,6 @@ def process_configfile():
 
 config_data = process_configfile()
 
-REDIS_HOST = config_data["Hostname"]
 HOP = config_data["Hop"]
 # TYPE = config_data["Type"]
 INFLUXDB_DATABASE = "latency"
