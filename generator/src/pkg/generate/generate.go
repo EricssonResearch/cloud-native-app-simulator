@@ -101,7 +101,7 @@ type Clusters struct {
 type Latencies struct {
 	Src     string  `json:"src"`
 	Dest    string  `json:"dest"`
-	Latancy float64 `json:"latancy"`
+	Latancy float64 `json:"latency"`
 }
 
 type Config struct {
