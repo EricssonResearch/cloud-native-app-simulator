@@ -22,8 +22,7 @@ WORKDIR /usr/src/app
 
 ADD ./requirements.txt /usr/src/app/requirements.txt
 
-RUN pip install -r requirements.txt && \
-    rm -r /usr/src/app/usr
+RUN pip install -r requirements.txt
 
 ENV CONF="/usr/src/app/config/conf.json"
 COPY . /usr/src/app
