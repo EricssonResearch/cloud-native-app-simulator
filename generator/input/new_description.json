@@ -1,5 +1,5 @@
 {
-  "latencies": [
+  "cluster_latencies": [
     {
       "src" : "cluster_1",
       "dest": "cluster_2",

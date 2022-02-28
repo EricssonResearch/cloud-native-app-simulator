@@ -105,7 +105,7 @@ type Latencies struct {
 }
 
 type Config struct {
-	Latencies []Latencies `json:"latencies"`
+	Latencies []Latencies `json:"cluster_latencies"`
 	Services  []Services  `json:"services"`
 }
 
