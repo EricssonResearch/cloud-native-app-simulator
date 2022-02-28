@@ -109,10 +109,10 @@ type Config struct {
 	Services  []Services  `json:"services"`
 }
 
-// NumMS the total number of the microservices in the service description file
+// the slices to store services, cluster and endpoints for counting and printing
 var services, clusters, endpoints []string
 
-// Unique return the number of unique elements in the slice of strings
+// Unique return unique elements in the slice of strings
 func Unique(strSlice []string) []string {
 	keys := make(map[string]bool)
 	list := []string{}
