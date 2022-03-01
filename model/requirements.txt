@@ -6,4 +6,3 @@ itsdangerous==2.0.1
 requests==2.23
 flatten_json
 six
-influxdb

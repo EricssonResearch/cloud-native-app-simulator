@@ -60,7 +60,7 @@ def do_sleep():
     time.sleep(num)
     return True
 
-def make_request(task_id, chain_no, address, start_time, request_body, task, request_to_next_service, forward_headers={}):
+def make_request(task_id, chain_no, address, request_body, task, request_to_next_service, forward_headers={}):
     task_type = task
     if task_type == "cpu":
         eat_cpu()
@@ -68,7 +68,6 @@ def make_request(task_id, chain_no, address, start_time, request_body, task, req
         eat_memory()
     elif task_type == "sleep":
         do_sleep()
-    finish_time = datetime.datetime.utcnow()
     v = list(gen_dict_extract(chain_no, hop))[0]
     logger.info(v)
     if v:
@@ -80,9 +79,7 @@ def make_request(task_id, chain_no, address, start_time, request_body, task, req
                 "task_id" : task_id,
                 "task_type" : task_type,
                 "address" : address,
-                "initial_time" : start_time,
-                "final_time": finish_time,
-                "request_type": request_to_next_service
+                "request_type": request_to_next_service,
             }
             forward_headers.update({'Content-type' : 'application/json'})
             res = requests.post(dst, data=json.dumps(d, indent=4, default=str), headers=forward_headers)
@@ -95,8 +92,6 @@ def make_request(task_id, chain_no, address, start_time, request_body, task, req
             "task_id" : task_id,
             "task_type" : task_type,
             "address" : address,
-            "initial_time" : start_time,
-            "final_time": finish_time,
         }
        address = list(gen_dict_extract("initial", request_body))[0]
        dst = DEFAULT_STATUS_ADDRESS.format(address)
@@ -104,7 +99,6 @@ def make_request(task_id, chain_no, address, start_time, request_body, task, req
 #       res = requests.post(dst, data=json.dumps(d, indent=4, default=str), headers=forward_headers)
 
 def execute_task(json_data, address, headers):
-    start_time = datetime.datetime.utcnow()
     task_id = str(uuid.uuid4())
     chain_no = json_data["chain_no"]
     request_type = json_data["request_type"]
@@ -114,7 +108,7 @@ def execute_task(json_data, address, headers):
         task = random.choice(["cpu", "memory", "sleep"])
     else:
         task = list(gen_dict_extract(request_type, request_task_type))[0]
-    make_request(task_id, chain_no, address, start_time, json_data, task, request_to_next_service, headers)
+    make_request(task_id, chain_no, address, json_data, task, request_to_next_service, headers)
     response_object = {
         "status": "Task created",
         "data": {

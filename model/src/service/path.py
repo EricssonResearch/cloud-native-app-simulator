@@ -32,7 +32,3 @@ config_data = process_configfile()
 
 HOP = config_data["Hop"]
 # TYPE = config_data["Type"]
-INFLUXDB_DATABASE = "latency"
-INFLUXDB_HOST = "influxdb"
-INFLUXDB_PASSWORD = "root"
-INFLUXDB_USERNAME = "root"
