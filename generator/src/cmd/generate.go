@@ -17,23 +17,21 @@ package cmd
 
 import (
 	"application-generator/src/pkg/generate"
-	"strconv"
-
 	"github.com/spf13/cobra"
+	"strconv"
 )
 
 var generateCmd = &cobra.Command{
 	Use:   "generate [chain-file] [cluster-file] [k8s-readiness-probe]",
 	Short: "This commands generates Kubernetes manifest files by using example files in chains and clusters directory and also uses k8s readiness probe time",
-	Args:  cobra.ExactArgs(3),
+	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		chain := args[0]
-		cluster := args[1]
-		readinessProbe, err := strconv.Atoi(args[2])
+		readinessProbe, err := strconv.Atoi(args[1])
 		exitIfError(err)
 
-		m, placement := generate.Parse(chain, cluster)
-		generate.Create(m, placement, readinessProbe)
+		config, clusters := generate.Parse(chain)
+		generate.Create(config, readinessProbe, clusters)
 	},
 }
 
