@@ -21,7 +21,7 @@ kind load docker-image app-demo --name={cluster$i}
 1. Make sure the application-generator folder is located under path ~/go_projects/src/ and initialize module by executing go mod init
 2. If needed, install go module dependencies, e.g. cobra and yaml
 3. Modify any of the input files under the input directory according to the requirements.
-4. Generate and deploy kubernetes manifest files by running 'generator.sh' script. It accepts three arguments, path to chain file, path to cluster file and value for readiness probe in seconds.
+4. Generate and deploy kubernetes manifest files by running 'generator.sh' script. It accepts two arguments, path to input file and value for readiness probe in seconds.
   ```bash
   ./generator.sh {input file} {readiness probe}
   ```
