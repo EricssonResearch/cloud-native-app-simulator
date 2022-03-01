@@ -16,7 +16,7 @@ limitations under the License.
 
 import json
 import logging
-#import os
+import os
 
 # script_dir = os.path.dirname(__file__)
 configFilePath = os.environ['CONF']
