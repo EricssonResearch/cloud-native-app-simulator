@@ -1,6 +1,8 @@
 # Build and upload Docker images
+
 Build docker image for main application
 1. Under [model](/model) directory, run:
+
 ``` bash
 docker build -t app-demo .
 ```

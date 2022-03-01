@@ -14,17 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
-import socket
 import logging
-import sys
-import os
-import subprocess
 from src import create_app
-from flask import Flask, jsonify, current_app
 from flask.cli import FlaskGroup
-from rq import Queue, Connection, Worker
-from src.service import logger, path
+from src.service import logger
 
 app = create_app()
 cli = FlaskGroup(create_app=create_app)
