@@ -18,20 +18,20 @@ kind load docker-image app-demo --name={cluster$i}
 5. go (for installation, configuration and basic testing, follow instructions in e.g. [How to Install GoLang (Go Programming Language) in Linux](HTtps://www.tecmint.com/install-go-in-linux/); make sure go environment variables and path are configured accordingly)
 
 ## Environment Preparation
-2. Make sure the application-generator folder is located under path ~/go_projects/src/ and initialize module by executing go mod init
-3. If needed, install go module dependencies, e.g. cobra and yaml
-4. Modify any of the input files under the input directory according to the requirements.
-6. Generate and deploy kubernetes manifest files by running 'generator.sh' script. It accepts three arguments, path to chain file, path to cluster file and value for readiness probe in seconds.
+1. Make sure the application-generator folder is located under path ~/go_projects/src/ and initialize module by executing go mod init
+2. If needed, install go module dependencies, e.g. cobra and yaml
+3. Modify any of the input files under the input directory according to the requirements.
+4. Generate and deploy kubernetes manifest files by running 'generator.sh' script. It accepts three arguments, path to chain file, path to cluster file and value for readiness probe in seconds.
   ```bash
   ./generator.sh {input file} {readiness probe}
   ```
-8. Modify the necessary files for request generator
+5. Modify the necessary files for request generator
     - Change the initial field of json files under the **tsung** directory according the chain configuration.
     - Change the chain_no field of json files under the **tsung** directory according the chain configuration. For example, for first chain it should be **1**
     - Update the request_task_type of json files under the **tsung** directory for assigning user defined task to each microservice in the chain
     - Change server host ip address in conf.xml file with istio-ingress gateway for first microservice in chain.
     - Change the chain json file under the request section in conf.xml to send request to the desired chain. For example, if first chain is targeted it should be **chain1.json**
-9. Change Kubernetes context to the main cluster
+6. Change Kubernetes context to the main cluster
 ```bash
 kubectl config use-context cluster1
 ```
