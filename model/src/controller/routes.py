@@ -16,7 +16,6 @@ limitations under the License.
 
 import logging
 from flask import Blueprint, jsonify, request
-from src.service.util import create_and_save_network_data
 from src.service.tasks import execute_task
 
 simple_page = Blueprint("simple_page", __name__,)
@@ -51,7 +50,6 @@ def run_task():
 @simple_page.route("/status", methods=["POST"])
 def task_status():
     return "OK"
-#    create_and_save_network_data(request.json)
 #    logging.info(request.json)
 #    return jsonify(request.json), 200
 
