@@ -15,7 +15,6 @@ limitations under the License.
 """
 
 import datetime
-from datetime import timedelta
 #from src.service.backend import client
 import json
 
@@ -32,6 +31,7 @@ def gen_dict_extract(key, var):
                 for d in v:
                     for result in gen_dict_extract(key, d):
                         yield result
+
 def create_point(username, measurement, value, time):
     json_body = {
         "measurement": measurement,
@@ -45,6 +45,7 @@ def create_point(username, measurement, value, time):
     }
 
     return json_body
+
 def create_and_save_network_data(json_data):
     json_body = []
     time = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -54,7 +55,6 @@ def create_and_save_network_data(json_data):
     num_cpu = t.count("cpu")
     num_mem = t.count("memory")
     num_sleep = t.count("sleep")
-    num_communi = t.count("communication")
     latency = datetime.datetime.strptime(f[0], dtformat) - datetime.datetime.strptime(i[0], dtformat)
     delay = latency.seconds + (latency.microseconds / 1000000.0)
     mec_number = len(f)
@@ -66,7 +66,6 @@ def create_and_save_network_data(json_data):
         "cpu_tasks": num_cpu,
         "mem_tasks": num_mem,
         "sleep_tasks": num_sleep,
-        "communication_task": num_communi,
     }
     for key, value in data_points.items():
         json_body.append((create_point("network", key, value, time)))

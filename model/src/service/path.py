@@ -30,7 +30,6 @@ def process_configfile():
 
 config_data = process_configfile()
 
-REDIS_HOST = config_data["Hostname"]
 HOP = config_data["Hop"]
 # TYPE = config_data["Type"]
 INFLUXDB_DATABASE = "latency"

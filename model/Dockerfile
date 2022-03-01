@@ -22,13 +22,7 @@ WORKDIR /usr/src/app
 
 ADD ./requirements.txt /usr/src/app/requirements.txt
 
-RUN pip install -r requirements.txt && \
-    wget -O fortio.tgz https://github.com/fortio/fortio/releases/download/v1.6.8/fortio-linux_x64-1.6.8.tgz && \
-    tar -xvf fortio.tgz && \
-    mv /usr/src/app/usr/share/fortio /usr/share/ && \
-    mv /usr/src/app/usr/bin/fortio /usr/local/bin/ && \
-    mkdir /usr/src/app/fortio_result && \
-    rm -r /usr/src/app/usr
+RUN pip install -r requirements.txt
 
 ENV CONF="/usr/src/app/config/conf.json"
 COPY . /usr/src/app

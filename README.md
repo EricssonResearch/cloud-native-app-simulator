@@ -1,18 +1,13 @@
 # Build and upload Docker images
 Build docker images for main application and worker
-1. Under [model](/model) directory, run:
+Under [model](/model) directory, run:
 ``` bash
-docker build -t redis-demo .
-```
-2. Under [worker](/worker) directory, run:
-```bash
-docker build -t redis-demo-worker .
+docker build -t app-demo .
 ```
 
 After creating the docker images, upload them to each of the clusters 'i' by runnning:
 ``` bash
-kind load docker-image redis-demo --name={cluster$i}
-kind load docker-image redis-demo-worker --name={cluster$i}
+kind load docker-image app-demo --name={cluster$i}
 ```
 
 ## Dependecies

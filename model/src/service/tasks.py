@@ -21,22 +21,15 @@ import time
 import uuid
 import random
 import requests
-import subprocess
-from rq import Connection, Queue
 from src.service.util import gen_dict_extract
 from src.service import path
-from src.service.backend import initialize_redis
 
-
-DEFAULT_STATUS_ADDRESS = "http://{0}.edge-namespace:80/status" 
+DEFAULT_STATUS_ADDRESS = "http://{0}.edge-namespace:80/status"
 DEFAULT_ROOT_ADDRESS = "http://{0}.edge-namespace:80/"
 
 hop = path.HOP
-hostname = path.REDIS_HOST
 # task_type =  path.TYPE
-redis = initialize_redis()
 logger = logging.getLogger(__name__)
-
 
 def range_prod(lo,hi):
     if lo+1 < hi:
@@ -67,14 +60,6 @@ def do_sleep():
     time.sleep(num)
     return True
 
-def do_communicate(ip_of_next_service, client_params, server_params):
-
-   load_testing_command = "fortio load -a {0} -data-dir /usr/src/app/fortio_result " \
-                          "\"http://{1}.edge-namespace:80/echo?{2}\""
-   command_to_server = load_testing_command.format(client_params, ip_of_next_service, server_params)
-   subprocess.call(command_to_server, shell=True)
-   return True
-
 def make_request(task_id, chain_no, address, start_time, request_body, task, request_to_next_service, forward_headers={}):
     task_type = task
     if task_type == "cpu":
@@ -83,15 +68,6 @@ def make_request(task_id, chain_no, address, start_time, request_body, task, req
         eat_memory()
     elif task_type == "sleep":
         do_sleep()
-    else:
-        client_params = list(gen_dict_extract("client_params", task_type))[0]
-        server_params = list(gen_dict_extract("server_params", task_type))[0]
-        v = list(gen_dict_extract(chain_no, hop))[0]
-        task_type = "communication"
-        if v:
-            for index,item in enumerate(v):
-                ip_of_next_service = item
-                do_communicate(ip_of_next_service, client_params, server_params)
     finish_time = datetime.datetime.utcnow()
     v = list(gen_dict_extract(chain_no, hop))[0]
     logger.info(v)
@@ -116,7 +92,6 @@ def make_request(task_id, chain_no, address, start_time, request_body, task, req
             "previous":request_body,
             "req_id": req_id,
             "chain_no": chain_no,
-            "hostname" : hostname,
             "task_id" : task_id,
             "task_type" : task_type,
             "address" : address,
@@ -128,30 +103,22 @@ def make_request(task_id, chain_no, address, start_time, request_body, task, req
        forward_headers.update({'Content-type' : 'application/json'})
 #       res = requests.post(dst, data=json.dumps(d, indent=4, default=str), headers=forward_headers)
 
-
-
-def save_task(json_data, address, headers):
-    with Connection(redis):
-        start_time = datetime.datetime.utcnow()
-        task_id = str(uuid.uuid4())
-        chain_no = json_data["chain_no"]
-        request_type = json_data["request_type"]
-        request_to_next_service = str(int(request_type) + 1)
-        request_task_type = list(gen_dict_extract("request_task_type", json_data))[0]
-        if int(request_type) > len(request_task_type):
-            task = random.choice(["cpu", "memory", "sleep"])
-        else:
-            task = list(gen_dict_extract(request_type, request_task_type))[0]
-        if task in ["cpu", "memory", "sleep"]:
-            q = Queue()
-        else:
-            q = Queue('high')
-#        result = make_request(task_id, chain_no, address, start_time, json_data, task, request_to_next_service)
-        enqueue_task = q.enqueue_call(func=make_request, args=(task_id, chain_no, address, start_time, json_data, task, request_to_next_service, headers), job_id=task_id, result_ttl=5000)
-        response_object = {
-            "status": "Task created",
-            "data": {
-                "task_id": task_id
-            }
+def execute_task(json_data, address, headers):
+    start_time = datetime.datetime.utcnow()
+    task_id = str(uuid.uuid4())
+    chain_no = json_data["chain_no"]
+    request_type = json_data["request_type"]
+    request_to_next_service = str(int(request_type) + 1)
+    request_task_type = list(gen_dict_extract("request_task_type", json_data))[0]
+    if int(request_type) > len(request_task_type):
+        task = random.choice(["cpu", "memory", "sleep"])
+    else:
+        task = list(gen_dict_extract(request_type, request_task_type))[0]
+    make_request(task_id, chain_no, address, start_time, json_data, task, request_to_next_service, headers)
+    response_object = {
+        "status": "Task created",
+        "data": {
+            "task_id": task_id
         }
+    }
     return response_object
