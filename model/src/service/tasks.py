@@ -59,6 +59,6 @@ def make_request(remote_service, forward_headers={}):
     request_type = remote_service["requests"]
 
     # TODO: Asynchronous forwarding of traffic not supported yet
-    for(_ in range(traffic_forward_ratio)):
+    for(_ in range(traffic_forward_ratio):
         forward_headers.update({'Content-type' : 'application/json'})
         res = requests.post(dst, headers=forward_headers)
