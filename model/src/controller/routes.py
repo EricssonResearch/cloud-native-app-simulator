@@ -16,10 +16,12 @@ limitations under the License.
 
 import logging
 from flask import Blueprint, jsonify, request
-from src.service.tasks import execute_task
+from src.service.tasks import attend_request
+from src.service import path
 
 simple_page = Blueprint("simple_page", __name__,)
 logger = logging.getLogger(__name__)
+service_config = path.SERVICE_CONFIG
 
 def getForwardHeaders(request):
     '''
@@ -37,12 +39,11 @@ def getForwardHeaders(request):
             headers[ihdr] = val
     return headers
 
-@simple_page.route("/", methods=["POST", "GET"])
+@simple_page.route(service_config["name"], methods=["POST", "GET"])
 def run_task():
     if request.method == "POST":
-        address = request.remote_addr
         headers = getForwardHeaders(request)
-        response_object = execute_task(request.json, address, headers)
+        response_object = attend_request(service_config, headers)
         return jsonify(response_object), 200
     else:
         return "request received"
@@ -50,10 +51,7 @@ def run_task():
 @simple_page.route("/status", methods=["POST"])
 def task_status():
     return "OK"
-#    logging.info(request.json)
-#    return jsonify(request.json), 200
 
 @simple_page.route("/loadtest", methods=["GET"])
 def load_test():
-    address = request.remote_addr
     return "request received"
