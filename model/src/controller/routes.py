@@ -48,9 +48,9 @@ def run_task():
     else:
         return "request received"
 
-@simple_page.route("/status", methods=["POST"])
+@simple_page.route("/", methods=["POST", "GET"])
 def task_status():
-    return "OK"
+    return "OK", 200
 
 @simple_page.route("/loadtest", methods=["GET"])
 def load_test():
