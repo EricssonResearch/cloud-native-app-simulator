@@ -71,7 +71,6 @@ type Endpoints struct {
 	NetworkConsumption float64          `json:"networkConsumption"`
 	MemoryConsumption  float64          `json:"memoryConsumption"`
 	CalledServices     []CalledServices `json:"calledServices"`
-	Requests           string           `json:"requests"`
 }
 type ResourceLimits struct {
 	Cpu    string `json:"cpu"`
@@ -185,7 +184,7 @@ func Create(config Config, readinessProbe int, clusters []string) {
 		}
 
 		serv_endpoints := []Endpoints(config.Services[i].Endpoints)
-		serv_ep_json, err := json.Marshal(serv_endpoints)
+		serv_ep_json, err := json.Marshal(map[string][]Endpoints{"endpoints": serv_endpoints})
 		if err != nil {
 			panic(err)
 		}
