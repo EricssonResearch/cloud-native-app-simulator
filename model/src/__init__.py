@@ -24,5 +24,6 @@ def create_app(script_info=None):
 
     app.register_blueprint(routes.simple_page)
     app.shell_context_processor({"app" : app})
+    app.run(threaded=True, processes=4)
 
     return app
