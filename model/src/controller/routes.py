@@ -42,13 +42,14 @@ def getForwardHeaders(request):
     return headers
 
 @simple_page.route(service_config["name"], methods=["POST", "GET"])
-def run_task():
+async def run_task():
     if request.method == "POST":
+        response_object = "post request received"
         headers = getForwardHeaders(request)
         response_object = attend_request(service_config, headers)
         return jsonify(response_object), 200
     else:
-        return "request received"
+        return "get request received"
 
 @simple_page.route("/", methods=["POST", "GET"])
 def task_status():
