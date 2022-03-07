@@ -14,105 +14,53 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import datetime
 import json
 import logging
-import time
 import uuid
-import random
 import requests
-from src.service.util import gen_dict_extract
-from src.service import path
 
-DEFAULT_STATUS_ADDRESS = "http://{0}.edge-namespace:80/status"
-DEFAULT_ROOT_ADDRESS = "http://{0}.edge-namespace:80/"
+# TODO: So far, we only support a hard-coded namespace. For more flexible support of namespaces we will need to pass that info as part of the config map
+# TODO: Similarly for the port configuration, hard-coded to port 80
+FORMATTED_REMOTE_URL = "http://{0}.edge-namespace:80{1}"
 
-hop = path.HOP
-# task_type =  path.TYPE
 logger = logging.getLogger(__name__)
 
-def range_prod(lo,hi):
-    if lo+1 < hi:
-        mid = (hi+lo)//2
-        return range_prod(lo,mid) * range_prod(mid+1,hi)
-    if lo == hi:
-        return lo
-    return lo*hi
-
-def treefactorial(n):
-    if n < 2:
-        return 1
-    return range_prod(1, n)
-
-def eat_cpu():
-    num = random.randint(100, 500)
-    treefactorial(num)
-
-def eat_memory():
-    num = random.randint(1,6)
-    a = [1] * (10 ** num)
-    b = [2] * (2 * 10 ** num)
-    del b
-    return a
-
-def do_sleep():
-    num = random.uniform(0.01, 0.02)
-    time.sleep(num)
-    return True
-
-def make_request(task_id, chain_no, address, request_body, task, request_to_next_service, forward_headers={}):
-    task_type = task
-    if task_type == "cpu":
-        eat_cpu()
-    elif task_type == "memory":
-        eat_memory()
-    elif task_type == "sleep":
-        do_sleep()
-    v = list(gen_dict_extract(chain_no, hop))[0]
-    logger.info(v)
-    if v:
-        for index,item in enumerate(v):
-            dst = DEFAULT_ROOT_ADDRESS.format(item)
-            d = {
-                "previous"  : request_body,
-                "chain_no" : chain_no,
-                "task_id" : task_id,
-                "task_type" : task_type,
-                "address" : address,
-                "request_type": request_to_next_service,
-            }
-            forward_headers.update({'Content-type' : 'application/json'})
-            res = requests.post(dst, data=json.dumps(d, indent=4, default=str), headers=forward_headers)
-    if v is None:
-       req_id = str(uuid.uuid4())
-       d = {
-            "previous":request_body,
-            "req_id": req_id,
-            "chain_no": chain_no,
-            "task_id" : task_id,
-            "task_type" : task_type,
-            "address" : address,
-        }
-       address = list(gen_dict_extract("initial", request_body))[0]
-       dst = DEFAULT_STATUS_ADDRESS.format(address)
-       forward_headers.update({'Content-type' : 'application/json'})
-#       res = requests.post(dst, data=json.dumps(d, indent=4, default=str), headers=forward_headers)
-
-def execute_task(json_data, address, headers):
+def attend_request(service_config, headers):
+    # TODO: Asynchronous attendance of requests not supported yet
     task_id = str(uuid.uuid4())
-    chain_no = json_data["chain_no"]
-    request_type = json_data["request_type"]
-    request_to_next_service = str(int(request_type) + 1)
-    request_task_type = list(gen_dict_extract("request_task_type", json_data))[0]
-    if int(request_type) > len(request_task_type):
-        task = random.choice(["cpu", "memory", "sleep"])
-    else:
-        task = list(gen_dict_extract(request_type, request_task_type))[0]
-    make_request(task_id, chain_no, address, json_data, task, request_to_next_service, headers)
+    task_config = {}
+    task_config["task_id"] = task_id
+    task_config["cpu_consumption"] = service_config["cpuConsumption"]
+    task_config["network_consumption"] = service_config["networkConsumption"]
+    task_config["memory_consumption"] = service_config["memoryConsumption"]
+    response_object = execute_task(task_config)
+
+    called_services = service_config["calledServices"]
+    for remote_svc in called_services:
+        make_request(remote_svc, headers)
+
+    return response_object
+
+def execute_task(task_config):
+    # TODO: Implement resource stress emulation...
     response_object = {
-        "status": "Task created",
+        "status": "Task executed",
         "data": {
-            "task_id": task_id
+            "task_id": task_config["task_id"]
         }
     }
     return response_object
+
+def make_request(remote_service, forward_headers={}):
+    # TODO: Request forwarding to a service on a particular cluster is not supported yet
+    # TODO: Requests for other protocols than html are not supported yet
+    logger.info(remote_service)
+
+    dst = FORMATTED_REMOTE_URL.format(remote_service["service"], remote_service["endpoint"])
+    traffic_forward_ratio = remote_service["traffic_forward_ratio"]
+    request_type = remote_service["requests"]
+
+    # TODO: Asynchronous forwarding of traffic not supported yet
+    forward_headers.update({'Content-type' : 'application/json'})
+    for _ in range(traffic_forward_ratio):
+        res = requests.post(dst, headers=forward_headers)

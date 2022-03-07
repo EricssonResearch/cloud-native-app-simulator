@@ -18,9 +18,7 @@ import json
 import logging
 import os
 
-# script_dir = os.path.dirname(__file__)
 configFilePath = os.environ['CONF']
-# configFilePath = os.path.join(script_dir, 'conf.json')
 logger = logging.getLogger(__name__)
 
 def process_configfile():
@@ -30,5 +28,4 @@ def process_configfile():
 
 config_data = process_configfile()
 
-HOP = config_data["Hop"]
-# TYPE = config_data["Type"]
+SERVICE_CONFIG = config_data["endpoints"]
