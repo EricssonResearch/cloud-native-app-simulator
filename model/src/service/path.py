@@ -28,4 +28,4 @@ def process_configfile():
 
 config_data = process_configfile()
 
-SERVICE_CONFIG = config_data[0] #["endpoints"][0]
+SERVICE_CONFIG = config_data["endpoints"]
