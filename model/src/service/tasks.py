@@ -20,6 +20,7 @@ import uuid
 import requests
 
 # TODO: So far, we only support a hard-coded namespace. For more flexible support of namespaces we will need to pass that info as part of the config map
+# TODO: Similarly for the port configuration, hard-coded to port 80
 FORMATTED_REMOTE_URL = "http://{0}.edge-namespace:80{1}"
 
 logger = logging.getLogger(__name__)
