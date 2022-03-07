@@ -28,5 +28,4 @@ def process_configfile():
 
 config_data = process_configfile()
 
-# TODO: So far, we only support one endpoint per service...
-SERVICE_CONFIG = config_data["endpoints"][0]
+SERVICE_CONFIG = config_data["endpoints"]

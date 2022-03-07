@@ -22,7 +22,8 @@ from src.service import path
 simple_page = Blueprint("simple_page", __name__,)
 logger = logging.getLogger(__name__)
 
-service_config = path.SERVICE_CONFIG
+# TODO: So far, we only support one endpoint per service...
+service_config = path.SERVICE_CONFIG[0]
 
 def getForwardHeaders(request):
     '''
