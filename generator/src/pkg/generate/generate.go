@@ -64,7 +64,7 @@ type CalledServices struct {
 	Port           			string	`json:"port"`
 	Endpoint            string  `json:"endpoint"`
 	Protocol            string  `json:"protocol"`
-	TrafficForwardRatio float32 `json:"traffic_forward_ratio"`
+	TrafficForwardRatio float32 `json:"trafficForwardRatio"`
 }
 type Endpoints struct {
 	Name               string           `json:"name"`
@@ -90,7 +90,7 @@ type Services struct {
 	Name      string      `json:"name"`
 	Clusters  []Clusters  `json:"clusters"`
 	Resources Resources   `json:"resources"`
-	Processes	uint				`json:"processes"`
+	Processes	float64			`json:"processes"`
 	Endpoints []Endpoints `json:"endpoints"`
 }
 
@@ -188,7 +188,8 @@ func Create(config Config, readinessProbe int, clusters []string) {
 
 		// TODO: add processes param
 		serv_endpoints := []Endpoints(config.Services[i].Endpoints)
-		serv_ep_json, err := json.Marshal(map[string][]Endpoints{"endpoints": serv_endpoints})
+		serv_processes := []Processes(config.Services[i].Processes)
+		serv_json, err := json.Marshal(map[string][]Processes{"processes": serv_processes},Endpoints{"endpoints": serv_endpoints})
 		if err != nil {
 			panic(err)
 		}
@@ -209,7 +210,7 @@ func Create(config Config, readinessProbe int, clusters []string) {
 				manifests = append(manifests, string(yamlDoc))
 				return nil
 			}
-			configmap = s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_ep_json))
+			configmap = s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json))
 			appendManifest(configmap)
 			if nodeAffinity == "" {
 				deployment := s.CreateDeployment(serv, serv, c_id, replicaNumber, serv, c_id, namespace,
