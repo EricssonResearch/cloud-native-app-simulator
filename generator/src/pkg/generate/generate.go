@@ -90,7 +90,7 @@ type Services struct {
 	Name      string      `json:"name"`
 	Clusters  []Clusters  `json:"clusters"`
 	Resources Resources   `json:"resources"`
-	Processes	float64			`json:"processes"`
+	Processes	int			`json:"processes"`
 	Endpoints []Endpoints `json:"endpoints"`
 }
 
@@ -109,6 +109,11 @@ type Latencies struct {
 type Config struct {
 	Latencies []Latencies `json:"cluster_latencies"`
 	Services  []Services  `json:"services"`
+}
+
+type ConfigMap struct {
+	Processes	int					`json:"processes"`
+	Endpoints []Endpoints	`json:"endpoints"`
 }
 
 // the slices to store services, cluster and endpoints for counting and printing
@@ -187,9 +192,12 @@ func Create(config Config, readinessProbe int, clusters []string) {
 		}
 
 		// TODO: add processes param
-		serv_endpoints := []Endpoints(config.Services[i].Endpoints)
-		serv_processes := []Services.Processes(config.Services[i].Processes)
-		serv_json, err := json.Marshal(map[string][]{Services.Processes{"processes": serv_processes}, Endpoints{"endpoints": serv_endpoints}})
+		cm_data := &ConfigMap{
+			Processes: int(config.Services[i].Processes),
+			Endpoints: []Endpoints(config.Services[i].Endpoints)
+		}
+
+		serv_json, err := json.Marshal(cm_data)
 		if err != nil {
 			panic(err)
 		}
