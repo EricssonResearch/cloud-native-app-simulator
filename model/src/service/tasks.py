@@ -14,10 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import json
 import logging
 import uuid
-import requests
 
 # TODO: So far, we only support a hard-coded namespace. For more flexible support of namespaces we will need to pass that info as part of the config map
 # TODO: Similarly for the port configuration, hard-coded to port 80
@@ -25,42 +23,35 @@ FORMATTED_REMOTE_URL = "http://{0}.edge-namespace:80{1}"
 
 logger = logging.getLogger(__name__)
 
-def attend_request(service_config, headers):
-    # TODO: Asynchronous attendance of requests not supported yet
+def execute_cpu_bounded_task(origin_service_name, target_service, headers):
     task_id = str(uuid.uuid4())
     task_config = {}
     task_config["task_id"] = task_id
-    task_config["cpu_consumption"] = service_config["cpuConsumption"]
-    task_config["network_consumption"] = service_config["networkConsumption"]
-    task_config["memory_consumption"] = service_config["memoryConsumption"]
-    response_object = execute_task(task_config)
+    task_config["cpu_consumption"] = target_service["cpuConsumption"]
+    task_config["network_consumption"] = target_service["networkConsumption"]
+    task_config["memory_consumption"] = target_service["memoryConsumption"]
 
-    called_services = service_config["calledServices"]
-    for remote_svc in called_services:
-        make_request(remote_svc, headers)
-
-    return response_object
-
-def execute_task(task_config):
     # TODO: Implement resource stress emulation...
+
     response_object = {
-        "status": "Task executed",
+        "status": "CPU-bounded task executed",
         "data": {
+            "svc_name": origin_service_name
             "task_id": task_config["task_id"]
         }
     }
     return response_object
 
-def make_request(remote_service, forward_headers={}):
+async def execute_io_bounded_task(session, target_service, forward_headers={}):
     # TODO: Request forwarding to a service on a particular cluster is not supported yet
     # TODO: Requests for other protocols than html are not supported yet
-    logger.info(remote_service)
+    logger.info(target_service)
 
-    dst = FORMATTED_REMOTE_URL.format(remote_service["service"], remote_service["endpoint"])
-    traffic_forward_ratio = remote_service["traffic_forward_ratio"]
-    request_type = remote_service["requests"]
-
-    # TODO: Asynchronous forwarding of traffic not supported yet
+    dst = FORMATTED_REMOTE_URL.format(target_service["service"], target_service["endpoint"])
     forward_headers.update({'Content-type' : 'application/json'})
-    for _ in range(traffic_forward_ratio):
-        res = requests.post(dst, headers=forward_headers)
+
+    # TODO: traffic_forward_ratio not supported yet
+    traffic_forward_ratio = target_service["trafficForwardRatio"]
+
+    res = await session.post(dst, headers=forward_headers)
+    return {'service': res.url, 'status': res.status}
