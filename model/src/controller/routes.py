@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 # TODO: So far, we only support one endpoint per service...
 service_endpoint = path.SERVICE_CONFIG["endpoints"][0]
 #service_namespace = path.SERVICE_CONFIG["namespace"]
-#service_processes = path.SERVICE_CONFIG["proccesses"]
+service_processes = path.SERVICE_CONFIG["processes"]
 
 def getForwardHeaders(request):
     '''
