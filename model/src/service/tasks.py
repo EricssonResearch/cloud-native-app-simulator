@@ -36,7 +36,7 @@ def execute_cpu_bounded_task(origin_service_name, target_service, headers):
     response_object = {
         "status": "CPU-bounded task executed",
         "data": {
-            "svc_name": origin_service_name
+            "svc_name": origin_service_name,
             "task_id": task_config["task_id"]
         }
     }

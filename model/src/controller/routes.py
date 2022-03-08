@@ -69,7 +69,7 @@ async def run_task():
             # TODO: CPU-bounded tasks not supported yet
             response = '<h1>Called services:</h1>'
             for svc in service_endpoint["calledServices"]:
-                res = execute_io_bounded_task(session=session, target_service=svc, forward_headers=headers))
+                res = execute_io_bounded_task(session=session, target_service=svc, forward_headers=headers)
                 response += f"<p>Service: {res['service']} --- Status Code: {res['status']}</p>"
 
         return response
