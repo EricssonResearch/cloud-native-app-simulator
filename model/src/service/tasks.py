@@ -18,8 +18,8 @@ import logging
 import uuid
 
 # TODO: So far, we only support a hard-coded namespace. For more flexible support of namespaces we will need to pass that info as part of the config map
-# TODO: Similarly for the port configuration, hard-coded to port 80
-FORMATTED_REMOTE_URL = "http://{0}.edge-namespace:80{1}"
+# TODO: So far, we only support http client
+FORMATTED_REMOTE_URL = "http://{0}.{1}:{2}{3}"
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ async def execute_io_bounded_task(session, target_service, forward_headers={}):
     # TODO: Requests for other protocols than html are not supported yet
     logger.info(target_service)
 
-    dst = FORMATTED_REMOTE_URL.format(target_service["service"], target_service["endpoint"])
+    dst = FORMATTED_REMOTE_URL.format(target_service["service"], target_service["namespace"], target_service["port"], target_service["endpoint"])
     forward_headers.update({'Content-type' : 'application/json'})
 
     # TODO: traffic_forward_ratio not supported yet
