@@ -188,8 +188,8 @@ func Create(config Config, readinessProbe int, clusters []string) {
 
 		// TODO: add processes param
 		serv_endpoints := []Endpoints(config.Services[i].Endpoints)
-		serv_processes := []Processes(config.Services[i].Processes)
-		serv_json, err := json.Marshal(map[string][]Processes{"processes": serv_processes},Endpoints{"endpoints": serv_endpoints})
+		serv_processes := []Services.Processes(config.Services[i].Processes)
+		serv_json, err := json.Marshal(map[string][]{Services.Processes{"processes": serv_processes}, Endpoints{"endpoints": serv_endpoints}})
 		if err != nil {
 			panic(err)
 		}
