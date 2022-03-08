@@ -194,7 +194,7 @@ func Create(config Config, readinessProbe int, clusters []string) {
 		// TODO: add processes param
 		cm_data := &ConfigMap{
 			Processes: int(config.Services[i].Processes),
-			Endpoints: []Endpoints(config.Services[i].Endpoints)
+			Endpoints: []Endpoints(config.Services[i].Endpoints),
 		}
 
 		serv_json, err := json.Marshal(cm_data)
