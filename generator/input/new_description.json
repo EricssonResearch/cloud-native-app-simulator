@@ -18,14 +18,15 @@
       ],
       "resources": {
         "limits": {
-          "memory": "1024",
-          "cpu": "1000"
+          "memory": "1024M",
+          "cpu": "1000m"
         },
         "requests": {
-          "memory": "512",
-          "cpu": "500"
+          "memory": "512M",
+          "cpu": "500m"
         }
       },
+      "processes": 2,
       "endpoints": [
         {
           "name": "/end-1",
@@ -33,13 +34,15 @@
           "cpu_consumption": 0.003,
           "network_consumption": 0.002,
           "memory_consumption": 0.003,
+          "forward_requests": "asynchronous",
           "calledservices": [
             {
               "cluster": "cluster-1",
+              "namespace": "ns-2",
               "service": "service-2",
+              "port": "80",
               "endpoint": "/end-2",
-              "traffic_forward_ratio": 1,
-              "requests": "asynchronous"
+              "traffic_forward_ratio": 1
             }
           ]
         }

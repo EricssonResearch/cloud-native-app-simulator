@@ -59,17 +59,19 @@ var (
 
 type CalledServices struct {
 	Cluster             string  `json:"cluster"`
+	Namespace           string	`json:"namespace"`
 	Service             string  `json:"service"`
+	Port           			string	`json:"port"`
 	Endpoint            string  `json:"endpoint"`
 	Protocol            string  `json:"protocol"`
 	TrafficForwardRatio float32 `json:"traffic_forward_ratio"`
-	Requests            string  `json:"requests"`
 }
 type Endpoints struct {
 	Name               string           `json:"name"`
 	CpuConsumption     float64          `json:"cpuConsumption"`
 	NetworkConsumption float64          `json:"networkConsumption"`
 	MemoryConsumption  float64          `json:"memoryConsumption"`
+	ForwardRequests    string  					`json:"forwardRequests"`
 	CalledServices     []CalledServices `json:"calledServices"`
 }
 type ResourceLimits struct {
@@ -88,6 +90,7 @@ type Services struct {
 	Name      string      `json:"name"`
 	Clusters  []Clusters  `json:"clusters"`
 	Resources Resources   `json:"resources"`
+	Processes	uint				`json:"processes"`
 	Endpoints []Endpoints `json:"endpoints"`
 }
 
@@ -183,6 +186,7 @@ func Create(config Config, readinessProbe int, clusters []string) {
 			resources.Requests.Memory = requestsMemoryDefault
 		}
 
+		// TODO: add processes param
 		serv_endpoints := []Endpoints(config.Services[i].Endpoints)
 		serv_ep_json, err := json.Marshal(map[string][]Endpoints{"endpoints": serv_endpoints})
 		if err != nil {
