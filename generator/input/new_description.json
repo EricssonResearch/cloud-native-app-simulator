@@ -42,6 +42,7 @@
               "service": "service-2",
               "port": "80",
               "endpoint": "/end-2",
+              "protocol": "http",
               "traffic_forward_ratio": 1
             }
           ]
