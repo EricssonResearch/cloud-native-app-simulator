@@ -25,6 +25,7 @@ The Cloud-Native-App-Simulator build system is designed to run with minimal depe
 
 These dependencies are need to be set up before building and running the code.
 - [Setting Up Docker](#setting-up-docker)
+- [Build the worker image](#build-the-worker-image)
 - [Setting Up Kind](#setting-up-kind)
 
 
@@ -32,6 +33,12 @@ These dependencies are need to be set up before building and running the code.
 To use docker to build you will need:
 - **docker tools:** To download and install Docker follow [these instructions](https://docs.docker.com/install/).
 
+### Build the worker image
+Now we need to build the docker image and push it to the kind clusters to test.
+```
+cd model/
+docker build -t app-demo .
+```
 ### Setting Up Kind
 To be able to run the *app-demo container* on a sample cluster, we use 
 [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/).
@@ -46,8 +53,20 @@ script.
 # Each of the created clusters has 3 worker nodes and one control plane by default.
 #
 
-./kind-setup-clusters.sh [number of clusters (default 3)] [config of each cluster (default kind-cluster-3-nodes.yaml)]
+cd community
+./kind-setup-clusters.sh [number of clusters (default 2)] [config of each cluster (default kind-cluster-3-nodes.yaml)]
 ```
+
+### Pushing the image to a cluster
+Initially when you setup a cluster, the initial image is pushed to the clusters, but you might need to 
+push the image in all kind clusters. 
+
+```
+cd community
+./push-image-to-clusters [number of clusters (default 2)]
+```
+
+
 
 
 
