@@ -62,15 +62,16 @@ type CalledServices struct {
 	Port           			string	`json:"port"`
 	Endpoint            string  `json:"endpoint"`
 	Protocol            string  `json:"protocol"`
-	TrafficForwardRatio float32 `json:"trafficForwardRatio"`
+	TrafficForwardRatio float32 `json:"traffic_forward_ratio"`
 }
 type Endpoints struct {
 	Name               string           `json:"name"`
-	CpuConsumption     float64          `json:"cpuConsumption"`
-	NetworkConsumption float64          `json:"networkConsumption"`
-	MemoryConsumption  float64          `json:"memoryConsumption"`
-	ForwardRequests    string  					`json:"forwardRequests"`
-	CalledServices     []CalledServices `json:"calledServices"`
+	Protocol           string						`json:"protocol"`
+	CpuConsumption     float64          `json:"cpu_onsumption"`
+	NetworkConsumption float64          `json:"network_consumption"`
+	MemoryConsumption  float64          `json:"memory_consumption"`
+	ForwardRequests    string  					`json:"forward_requests"`
+	CalledServices     []CalledServices `json:"called_services"`
 }
 type ResourceLimits struct {
 	Cpu    string `json:"cpu"`
@@ -88,7 +89,7 @@ type Services struct {
 	Name      string      `json:"name"`
 	Clusters  []Clusters  `json:"clusters"`
 	Resources Resources   `json:"resources"`
-	Processes	int			`json:"processes"`
+	Processes	int					`json:"processes"`
 	Endpoints []Endpoints `json:"endpoints"`
 }
 

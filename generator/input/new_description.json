@@ -35,7 +35,7 @@
           "network_consumption": 0.002,
           "memory_consumption": 0.003,
           "forward_requests": "asynchronous",
-          "calledservices": [
+          "called_services": [
             {
               "service": "service-2",
               "port": "80",
