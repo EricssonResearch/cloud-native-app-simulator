@@ -27,9 +27,9 @@ def execute_cpu_bounded_task(origin_service_name, target_service, headers):
     task_id = str(uuid.uuid4())
     task_config = {}
     task_config["task_id"] = task_id
-    task_config["cpu_consumption"] = target_service["cpuConsumption"]
-    task_config["network_consumption"] = target_service["networkConsumption"]
-    task_config["memory_consumption"] = target_service["memoryConsumption"]
+    task_config["cpu_consumption"] = target_service["cpu_consumption"]
+    task_config["network_consumption"] = target_service["network_consumption"]
+    task_config["memory_consumption"] = target_service["memory_consumption"]
 
     # TODO: Implement resource stress emulation...
 

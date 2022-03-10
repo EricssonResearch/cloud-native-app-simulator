@@ -48,11 +48,11 @@ def getForwardHeaders(request):
 async def run_task():
     headers = getForwardHeaders(request)
 
-    if service_endpoint["forwardRequests"] == "asynchronous":
+    if service_endpoint["forward_requests"] == "asynchronous":
         async with ClientSession() as session:
             # TODO: CPU-bounded tasks not supported yet
             io_tasks = []
-            for svc in service_endpoint["calledServices"]:
+            for svc in service_endpoint["called_services"]:
                 io_task = asyncio.create_task(execute_io_bounded_task(session=session, target_service=svc, forward_headers=headers))
                 io_tasks.append(io_task)
             services = await asyncio.gather(*io_tasks)
@@ -67,7 +67,7 @@ async def run_task():
         async with ClientSession() as session:
             # TODO: CPU-bounded tasks not supported yet
             response = '<h1>Called services:</h1>'
-            for svc in service_endpoint["calledServices"]:
+            for svc in service_endpoint["called_services"]:
                 res = execute_io_bounded_task(session=session, target_service=svc, forward_headers=headers)
                 response += f"<p>Service: {res['service']} --- Status Code: {res['status']}</p>"
 
