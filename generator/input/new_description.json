@@ -37,8 +37,6 @@
           "forward_requests": "asynchronous",
           "calledservices": [
             {
-              "cluster": "cluster-1",
-              "namespace": "ns-2",
               "service": "service-2",
               "port": "80",
               "endpoint": "/end-2",

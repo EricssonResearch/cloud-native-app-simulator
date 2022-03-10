@@ -58,8 +58,6 @@ var (
 )
 
 type CalledServices struct {
-	Cluster             string  `json:"cluster"`
-	Namespace           string	`json:"namespace"`
 	Service             string  `json:"service"`
 	Port           			string	`json:"port"`
 	Endpoint            string  `json:"endpoint"`
