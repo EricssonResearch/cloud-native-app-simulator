@@ -26,7 +26,6 @@ logger = logging.getLogger(__name__)
 
 # TODO: So far, we only support one endpoint per service...
 service_endpoint = path.SERVICE_CONFIG["endpoints"][0]
-#service_namespace = path.SERVICE_CONFIG["namespace"]
 service_processes = path.SERVICE_CONFIG["processes"]
 
 def getForwardHeaders(request):
@@ -65,7 +64,7 @@ async def run_task():
         return response
 
     else: # "synchronous"
-        with ClientSession() as session:
+        async with ClientSession() as session:
             # TODO: CPU-bounded tasks not supported yet
             response = '<h1>Called services:</h1>'
             for svc in service_endpoint["calledServices"]:

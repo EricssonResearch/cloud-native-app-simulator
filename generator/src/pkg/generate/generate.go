@@ -191,7 +191,6 @@ func Create(config Config, readinessProbe int, clusters []string) {
 			resources.Requests.Memory = requestsMemoryDefault
 		}
 
-		// TODO: add processes param
 		cm_data := &ConfigMap{
 			Processes: int(config.Services[i].Processes),
 			Endpoints: []Endpoints(config.Services[i].Endpoints),
