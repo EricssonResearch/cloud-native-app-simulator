@@ -57,10 +57,14 @@ async def run_task():
                 io_tasks.append(io_task)
             services = await asyncio.gather(*io_tasks)
 
-        # Generate the HTML response
-        response = '<h1>Called services:</h1>'
+        # Concatenate json responses
+        response = {}
+        response["services"] = []
+        response["statuses"] = []
+
         for svc in services:
-            response += f"<p>Service: {svc['service']} --- Status Code: {svc['status']}</p>"
+            response["services"] += svc["services"]
+            response["statuses"] += svc["statuses"]
         return response
 
     else: # "synchronous"
