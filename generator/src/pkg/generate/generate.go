@@ -67,7 +67,7 @@ type CalledServices struct {
 type Endpoints struct {
 	Name               string           `json:"name"`
 	Protocol           string						`json:"protocol"`
-	CpuConsumption     float64          `json:"cpu_onsumption"`
+	CpuConsumption     float64          `json:"cpu_consumption"`
 	NetworkConsumption float64          `json:"network_consumption"`
 	MemoryConsumption  float64          `json:"memory_consumption"`
 	ForwardRequests    string  					`json:"forward_requests"`
