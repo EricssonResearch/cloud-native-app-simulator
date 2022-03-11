@@ -42,7 +42,7 @@ def execute_cpu_bounded_task(origin_service_name, target_service, headers):
     }
     return response_object
 
-async def execute_io_bounded_task(session, target_service, forward_headers={}):
+async def execute_io_bounded_task(session, target_service, json_data, forward_headers={}):
     # TODO: Request forwarding to a service on a particular cluster is not supported yet
     # TODO: Requests for other protocols than html are not supported yet
     logger.info(target_service)
@@ -53,9 +53,9 @@ async def execute_io_bounded_task(session, target_service, forward_headers={}):
     # TODO: traffic_forward_ratio not supported yet
     traffic_forward_ratio = target_service["traffic_forward_ratio"]
 
-    res = await session.post(dst, headers=forward_headers)
+    res = await session.post(dst, data=json_data, headers=forward_headers)
     res_payload = await res.json()
-    
+
     response = {}
     response["services"] = res_payload["services"]
     response['services'].append(str(res.url))

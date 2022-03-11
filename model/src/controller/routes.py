@@ -53,7 +53,7 @@ async def run_task():
             # TODO: CPU-bounded tasks not supported yet
             io_tasks = []
             for svc in service_endpoint["called_services"]:
-                io_task = asyncio.create_task(execute_io_bounded_task(session=session, target_service=svc, forward_headers=headers))
+                io_task = asyncio.create_task(execute_io_bounded_task(session=session, target_service=svc, json_data=request.json, forward_headers=headers))
                 io_tasks.append(io_task)
             services = await asyncio.gather(*io_tasks)
 
@@ -74,7 +74,7 @@ async def run_task():
             response["services"] = []
             response["statuses"] = []
             for svc in service_endpoint["called_services"]:
-                res = execute_io_bounded_task(session=session, target_service=svc, forward_headers=headers)
+                res = execute_io_bounded_task(session=session, target_service=svc, json_data=request.json, forward_headers=headers)
                 response["services"] += res["services"]
                 response["statuses"] += res["statuses"]
 
