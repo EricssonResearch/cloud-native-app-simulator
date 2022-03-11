@@ -49,3 +49,7 @@ tsung stop
 ```
 
 For more information see [doc folder](generator/doc) and [masther thesis report](http://www.diva-portal.org/smash/record.jsf?pid=diva2%3A1506576&dswid=8090).
+
+## Contribution Guideline
+If you are interested in contribution, please visit the [community page](community) to learn about development environment 
+setup.
