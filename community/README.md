@@ -23,14 +23,14 @@ The Cloud-Native-App-Simulator build system is designed to run with minimal depe
 - docker
 - git
 
-These dependencies are need to be set up before building and running the code.
+These dependencies need to be set up before building and running the code.
 - [Setting Up Docker](#setting-up-docker)
 - [Build the worker image](#build-the-worker-image)
 - [Setting Up Kind](#setting-up-kind)
 
 
 ### Setting Up Docker
-To use docker to build you will need:
+To use docker to build required images you will need:
 - **docker tools:** To download and install Docker follow [these instructions](https://docs.docker.com/install/).
 
 ### Build the worker image
