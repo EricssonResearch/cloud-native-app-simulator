@@ -70,10 +70,13 @@ async def run_task():
     else: # "synchronous"
         async with ClientSession() as session:
             # TODO: CPU-bounded tasks not supported yet
-            response = '<h1>Called services:</h1>'
+            response = {}
+            response["services"] = []
+            response["statuses"] = []
             for svc in service_endpoint["called_services"]:
                 res = execute_io_bounded_task(session=session, target_service=svc, forward_headers=headers)
-                response += f"<p>Service: {res['service']} --- Status Code: {res['status']}</p>"
+                response["services"] += res["services"]
+                response["statuses"] += res["statuses"]
 
         return response
 

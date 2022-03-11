@@ -54,8 +54,11 @@ async def execute_io_bounded_task(session, target_service, forward_headers={}):
     traffic_forward_ratio = target_service["traffic_forward_ratio"]
 
     res = await session.post(dst, headers=forward_headers)
-
-    res_payload = res.content.json()
-    res_payload['services'].append(res.url)
-    res_payload['statuses'].append(res.status)
-    return res_payload
+    res_payload = await res.json()
+    
+    response = {}
+    response["services"] = res_payload["services"]
+    response['services'].append(str(res.url))
+    response["statuses"] = res_payload["statuses"]
+    response['statuses'].append(res.status)
+    return response
