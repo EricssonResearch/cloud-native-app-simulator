@@ -14,16 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
-import sys
 from flask import Flask
 from src.controller import routes
 from src.service import logger
+
 def create_app(script_info=None):
     app = Flask(__name__)
     app.config.from_object("src.config.DevelopmentConfig")
 
     app.register_blueprint(routes.simple_page)
     app.shell_context_processor({"app" : app})
+    app.run(threaded=True, processes=routes.service_processes)
 
     return app

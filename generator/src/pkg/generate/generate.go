@@ -58,19 +58,20 @@ var (
 )
 
 type CalledServices struct {
-	Cluster             string  `json:"cluster"`
 	Service             string  `json:"service"`
+	Port           			string	`json:"port"`
 	Endpoint            string  `json:"endpoint"`
 	Protocol            string  `json:"protocol"`
 	TrafficForwardRatio float32 `json:"traffic_forward_ratio"`
-	Requests            string  `json:"requests"`
 }
 type Endpoints struct {
 	Name               string           `json:"name"`
-	CpuConsumption     float64          `json:"cpuConsumption"`
-	NetworkConsumption float64          `json:"networkConsumption"`
-	MemoryConsumption  float64          `json:"memoryConsumption"`
-	CalledServices     []CalledServices `json:"calledServices"`
+	Protocol           string						`json:"protocol"`
+	CpuConsumption     float64          `json:"cpu_consumption"`
+	NetworkConsumption float64          `json:"network_consumption"`
+	MemoryConsumption  float64          `json:"memory_consumption"`
+	ForwardRequests    string  					`json:"forward_requests"`
+	CalledServices     []CalledServices `json:"called_services"`
 }
 type ResourceLimits struct {
 	Cpu    string `json:"cpu"`
@@ -88,6 +89,7 @@ type Services struct {
 	Name      string      `json:"name"`
 	Clusters  []Clusters  `json:"clusters"`
 	Resources Resources   `json:"resources"`
+	Processes	int					`json:"processes"`
 	Endpoints []Endpoints `json:"endpoints"`
 }
 
@@ -106,6 +108,11 @@ type Latencies struct {
 type Config struct {
 	Latencies []Latencies `json:"cluster_latencies"`
 	Services  []Services  `json:"services"`
+}
+
+type ConfigMap struct {
+	Processes	int					`json:"processes"`
+	Endpoints []Endpoints	`json:"endpoints"`
 }
 
 // the slices to store services, cluster and endpoints for counting and printing
@@ -183,8 +190,12 @@ func Create(config Config, readinessProbe int, clusters []string) {
 			resources.Requests.Memory = requestsMemoryDefault
 		}
 
-		serv_endpoints := []Endpoints(config.Services[i].Endpoints)
-		serv_ep_json, err := json.Marshal(map[string][]Endpoints{"endpoints": serv_endpoints})
+		cm_data := &ConfigMap{
+			Processes: int(config.Services[i].Processes),
+			Endpoints: []Endpoints(config.Services[i].Endpoints),
+		}
+
+		serv_json, err := json.Marshal(cm_data)
 		if err != nil {
 			panic(err)
 		}
@@ -205,7 +216,7 @@ func Create(config Config, readinessProbe int, clusters []string) {
 				manifests = append(manifests, string(yamlDoc))
 				return nil
 			}
-			configmap = s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_ep_json))
+			configmap = s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json))
 			appendManifest(configmap)
 			if nodeAffinity == "" {
 				deployment := s.CreateDeployment(serv, serv, c_id, replicaNumber, serv, c_id, namespace,

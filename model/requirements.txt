@@ -1,4 +1,4 @@
-Flask==1.1.1
+Flask[async]==2.0
 Flask-Bootstrap==3.3.7.1
 Flask-Testing==0.7.1
 Flask-WTF==0.14.2
@@ -6,3 +6,4 @@ itsdangerous==2.0.1
 requests==2.23
 flatten_json
 six
+aiohttp

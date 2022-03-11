@@ -16,14 +16,17 @@ limitations under the License.
 
 import logging
 from flask import Blueprint, jsonify, request
-from src.service.tasks import attend_request
+from src.service.tasks import execute_io_bounded_task
 from src.service import path
+from aiohttp import ClientSession
+import asyncio
 
 simple_page = Blueprint("simple_page", __name__,)
 logger = logging.getLogger(__name__)
 
 # TODO: So far, we only support one endpoint per service...
-service_config = path.SERVICE_CONFIG[0]
+service_endpoint = path.SERVICE_CONFIG["endpoints"][0]
+service_processes = path.SERVICE_CONFIG["processes"]
 
 def getForwardHeaders(request):
     '''
@@ -41,19 +44,42 @@ def getForwardHeaders(request):
             headers[ihdr] = val
     return headers
 
-@simple_page.route(service_config["name"], methods=["POST", "GET"])
-def run_task():
-    if request.method == "POST":
-        headers = getForwardHeaders(request)
-        response_object = attend_request(service_config, headers)
-        return jsonify(response_object), 200
-    else:
-        return "request received"
+@simple_page.route(service_endpoint["name"], methods=["POST"])
+async def run_task():
+    headers = getForwardHeaders(request)
 
-@simple_page.route("/", methods=["POST", "GET"])
+    if service_endpoint["forward_requests"] == "asynchronous":
+        async with ClientSession() as session:
+            # TODO: CPU-bounded tasks not supported yet
+            io_tasks = []
+            for svc in service_endpoint["called_services"]:
+                io_task = asyncio.create_task(execute_io_bounded_task(session=session, target_service=svc, json_data=request.json, forward_headers=headers))
+                io_tasks.append(io_task)
+            services = await asyncio.gather(*io_tasks)
+
+        # Concatenate json responses
+        response = {}
+        response["services"] = []
+        response["statuses"] = []
+
+        for svc in services:
+            response["services"] += svc["services"]
+            response["statuses"] += svc["statuses"]
+        return response
+
+    else: # "synchronous"
+        async with ClientSession() as session:
+            # TODO: CPU-bounded tasks not supported yet
+            response = {}
+            response["services"] = []
+            response["statuses"] = []
+            for svc in service_endpoint["called_services"]:
+                res = execute_io_bounded_task(session=session, target_service=svc, json_data=request.json, forward_headers=headers)
+                response["services"] += res["services"]
+                response["statuses"] += res["statuses"]
+
+        return response
+
+@simple_page.route("/", methods=["GET"])
 def task_status():
     return "OK", 200
-
-@simple_page.route("/loadtest", methods=["GET"])
-def load_test():
-    return "request received"

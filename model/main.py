@@ -19,7 +19,6 @@ from src import create_app
 from flask.cli import FlaskGroup
 from src.service import logger
 
-app = create_app()
 cli = FlaskGroup(create_app=create_app)
 if __name__ == "__main__":
     logger.initialize_logging()
