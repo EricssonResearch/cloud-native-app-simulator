@@ -16,17 +16,18 @@ limitations under the License.
 
 import logging
 from flask import Blueprint, jsonify, request
-from src.service.tasks import execute_io_bounded_task
-from src.service import path
+import path
 from aiohttp import ClientSession
 import asyncio
+import uuid
 
-simple_page = Blueprint("simple_page", __name__,)
-logger = logging.getLogger(__name__)
+# TODO: So far, we only support a hard-coded namespace. For more flexible support of namespaces we will need to pass that info as part of the config map
+# TODO: So far, we only support http client
+FORMATTED_REMOTE_URL = "http://{0}:{1}{2}"
 
 # TODO: So far, we only support one endpoint per service...
-service_endpoint = path.SERVICE_CONFIG["endpoints"][0]
 service_processes = path.SERVICE_CONFIG["processes"]
+
 
 def getForwardHeaders(request):
     '''
@@ -44,8 +45,7 @@ def getForwardHeaders(request):
             headers[ihdr] = val
     return headers
 
-@simple_page.route(service_endpoint["name"], methods=["POST"])
-async def run_task():
+async def run_task(service_endpoint):
     headers = getForwardHeaders(request)
 
     if service_endpoint["forward_requests"] == "asynchronous":
@@ -66,7 +66,6 @@ async def run_task():
             response["services"] += svc["services"]
             response["statuses"] += svc["statuses"]
         return response
-
     else: # "synchronous"
         async with ClientSession() as session:
             # TODO: CPU-bounded tasks not supported yet
@@ -80,6 +79,44 @@ async def run_task():
 
         return response
 
-@simple_page.route("/", methods=["GET"])
-def task_status():
-    return "OK", 200
+
+def execute_cpu_bounded_task(origin_service_name, target_service, headers):
+    task_id = str(uuid.uuid4())
+    task_config = {}
+    task_config["task_id"] = task_id
+    task_config["cpu_consumption"] = target_service["cpu_consumption"]
+    task_config["network_consumption"] = target_service["network_consumption"]
+    task_config["memory_consumption"] = target_service["memory_consumption"]
+
+    # TODO: Implement resource stress emulation...
+
+    response_object = {
+        "status": "CPU-bounded task executed",
+        "data": {
+            "svc_name": origin_service_name,
+            "task_id": task_config["task_id"]
+        }
+    }
+    return response_object
+
+
+async def execute_io_bounded_task(session, target_service, json_data, forward_headers={}):
+    # TODO: Request forwarding to a service on a particular cluster is not supported yet
+    # TODO: Requests for other protocols than html are not supported yet
+    logger.info(target_service)
+
+    dst = FORMATTED_REMOTE_URL.format(target_service["service"], target_service["port"], target_service["endpoint"])
+    forward_headers.update({'Content-type' : 'application/json'})
+
+    # TODO: traffic_forward_ratio not supported yet
+    traffic_forward_ratio = target_service["traffic_forward_ratio"]
+
+    res = await session.post(dst, data=json_data, headers=forward_headers)
+    res_payload = await res.json()
+
+    response = {}
+    response["services"] = res_payload["services"]
+    response['services'].append(str(res.url))
+    response["statuses"] = res_payload["statuses"]
+    response['statuses'].append(res.status)
+    return response

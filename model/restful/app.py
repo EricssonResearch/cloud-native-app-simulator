@@ -13,10 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+from flask import Flask
+from flask_restful import Api
+from restful.resources.endpoint import Endpoint
+from restful.utils import task
 
-import logging.config
-import os
 
-def initialize_logging():
-    config_file_path = os.path.join(os.getcwd(), 'src/config/logging.ini')
-    logging.config.fileConfig(config_file_path, disable_existing_loggers=False)
+app = Flask(__name__)
+api = Api(app)
+api.add_resource(Endpoint, '/', '/<string:endpoint>')
+if __name__ == 'restful.app':
+    app.run(threaded=True, processes=task.service_processes)
+
+

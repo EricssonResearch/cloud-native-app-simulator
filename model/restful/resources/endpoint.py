@@ -14,21 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-
-class BaseConfig(object):
-    """Base configuration."""
-
-    WTF_CSRF_ENABLED = True
+from flask_restful import Resource, abort
+from path import SERVICE_CONFIG
+from restful.utils import task
 
 
-class DevelopmentConfig(BaseConfig):
-    """Development configuration."""
+def not_found(endpoint):
+    abort(404, message="Endpoint {} doesn't exist".format(endpoint))
 
-    WTF_CSRF_ENABLED = False
 
-class TestingConfig(BaseConfig):
-    """Testing configuration."""
+class Endpoint(Resource):
+    def get(self, endpoint):
+        for ep in SERVICE_CONFIG['endpoints']:
+            if ep['name'] == endpoint:
+                res = task.run_task(service_endpoint=ep)
+                return res
+        not_found(endpoint)
 
-    TESTING = True
-    WTF_CSRF_ENABLED = False
-    PRESERVE_CONTEXT_ON_EXCEPTION = False
+

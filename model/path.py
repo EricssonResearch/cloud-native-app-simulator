@@ -21,6 +21,7 @@ import os
 configFilePath = os.environ['CONF']
 logger = logging.getLogger(__name__)
 
+
 def process_configfile():
     with open(configFilePath) as f:
         d = json.load(f)
