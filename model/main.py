@@ -14,12 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import logging
-from src import create_app
-from flask.cli import FlaskGroup
-from src.service import logger
+from path import SERVICE_CONFIG
 
-cli = FlaskGroup(create_app=create_app)
+
 if __name__ == "__main__":
-    logger.initialize_logging()
-    cli()
+    if SERVICE_CONFIG['endpoints'][0]['calledServices'][0]['protocol'] == "http":
+        from restful import app
