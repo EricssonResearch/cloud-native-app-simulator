@@ -24,11 +24,15 @@ def not_found(endpoint):
 
 
 class Endpoint(Resource):
-    def get(self, endpoint):
-        for ep in SERVICE_CONFIG['endpoints']:
-            if ep['name'] == endpoint:
-                res = task.run_task(service_endpoint=ep)
-                return res
+    def get(self, endpoint=None):
+        if endpoint is None:
+            message = {"status": "ok"}
+            return message
+        else:
+            for ep in SERVICE_CONFIG['endpoints']:
+                if ep['name'] == endpoint:
+                    res = task.run_task(service_endpoint=ep)
+                    return res
         not_found(endpoint)
 
 
