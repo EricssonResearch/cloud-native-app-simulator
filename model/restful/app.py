@@ -23,6 +23,6 @@ app = Flask(__name__)
 api = Api(app)
 api.add_resource(Endpoint, '/', '/<string:endpoint>')
 if __name__ == 'restful.app':
-    app.run(threaded=True, processes=task.service_processes)
+    app.run()
 
 

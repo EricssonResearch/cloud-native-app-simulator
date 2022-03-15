@@ -1,3 +1,4 @@
+#!/bin/sh
 #
 # Copyright 2021 Ericsson AB
 #
@@ -14,23 +15,11 @@
 # limitations under the License.
 #
 
-FROM python:3.8.0-alpine
 
-RUN mkdir -p /usr/src/app
+PROTOCOL="$(jq '.endpoints[0].protocol' conf.json -r)"
+PROCESSES=$(jq '.processes' conf.json -r)
 
-RUN apk update \
- && apk add jq \
- && rm -rf /var/cache/apk/*
-
-WORKDIR /usr/src/app
-
-ADD ./requirements.txt /usr/src/app/requirements.txt
-
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
-
-ENV CONF="/usr/src/app/config/conf.json"
-COPY . /usr/src/app
-
-#EXPOSE 5000
-ENTRYPOINT ["/usr/src/app/run.sh"]
+if [ $PROTOCOL == "http" ];
+then
+  $(gunicorn --chdir restful -w $PROCESSES app:app -b 0.0.0.0:5000 );
+fi

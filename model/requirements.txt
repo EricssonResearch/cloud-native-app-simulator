@@ -8,3 +8,4 @@ requests==2.23
 flatten_json
 six
 aiohttp
+gunicorn==20.1.0
