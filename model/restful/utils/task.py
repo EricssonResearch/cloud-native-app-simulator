@@ -25,9 +25,6 @@ import uuid
 # TODO: So far, we only support http client
 FORMATTED_REMOTE_URL = "http://{0}:{1}{2}"
 
-# TODO: So far, we only support one endpoint per service...
-service_processes = path.SERVICE_CONFIG["processes"]
-
 
 def getForwardHeaders(request):
     '''
@@ -44,6 +41,7 @@ def getForwardHeaders(request):
         if val is not None:
             headers[ihdr] = val
     return headers
+
 
 async def run_task(service_endpoint):
     headers = getForwardHeaders(request)
