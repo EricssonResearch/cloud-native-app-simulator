@@ -63,7 +63,7 @@ var (
 
 type ConfigMap struct {
 	Processes	int					`json:"processes"`
-	Endpoints []Endpoint	`json:"endpoints"`
+	Endpoints []model.Endpoint	`json:"endpoints"`
 }
 
 // the slices to store services, cluster and endpoints for counting and printing
@@ -153,7 +153,7 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 
 		cm_data := &ConfigMap{
 			Processes: processes,
-			Endpoints: []Endpoint(config.Services[i].Endpoints),
+			Endpoints: []model.Endpoint(config.Services[i].Endpoints),
 		}
 
 		serv_json, err := json.Marshal(cm_data)
@@ -210,7 +210,7 @@ func CreateJsonInput(clusterConfig model.ClusterConfig) (string) {
 	path, _ := os.Getwd()
 	path = path + "/input/new_description_test.json"
 
-	var inputConfig FileConfig
+	var inputConfig model.FileConfig
 
 	// TODO: Generate cluster latencies
 
@@ -218,21 +218,21 @@ func CreateJsonInput(clusterConfig model.ClusterConfig) (string) {
 	// TODO: Replace this hard-coded number of services by the ones given by the user
 	serviceNumber := rand.Intn(10)
 	for i := 1; i <= serviceNumber; i++ {
-		var service Service
+		var service model.Service
 
-		service.Name = "service" + i
+		service.Name = "service" + strconv.Itoa(i)
 
 		// Randomly associating services to clusters
 		// TODO: Replace this hard-coded number of service replicas by the ones given by the user
 		replicaNumber := rand.Intn(5)
 		for j := 1; j <= replicaNumber; j++ {
-			var cluster Cluster
+			var cluster model.Cluster
 
-			rIndex := rand.Intn(len(clusterConfig.clusters))
-			cluster.cluster = clusterConfig.clusters[rIndex]
+			rIndex := rand.Intn(len(clusterConfig.Clusters))
+			cluster.cluster = clusterConfig.ClusterConfiglusters[rIndex]
 
-			rIndex = rand.Intn(len(clusterConfig.namespaces))
-			cluster.namespace = clusterConfig.namespaces[rIndex]
+			rIndex = rand.Intn(len(clusterConfig.Namespaces))
+			cluster.namespace = clusterConfig.Namespaces[rIndex]
 
 			service.Clusters = append(service.Clusters, cluster)
 		}
