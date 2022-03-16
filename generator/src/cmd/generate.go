@@ -38,8 +38,8 @@ var generateCmd = &cobra.Command{
 
 			// TODO: Change this hard-coded cluster configuration for actual user inputs
 			clusterConfig := ClusterConfig{
-				Clusters: 	["cluster1", "cluster2", "cluster3", "cluster4", "cluster5"],
-				Namespaces: ["namespace1", "namespace2", "namespace3"],
+				Clusters: 	[]string(["cluster1", "cluster2", "cluster3", "cluster4", "cluster5"]),
+				Namespaces: []string(["namespace1", "namespace2", "namespace3"]),
 			}
 
 			inputFile := CreateJsonInput(clusterConfig)
