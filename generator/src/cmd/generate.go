@@ -18,7 +18,6 @@ package cmd
 import (
 	"application-generator/src/pkg/generate"
 	"github.com/spf13/cobra"
-	"strconv"
 )
 
 type ClusterConfig struct {
@@ -34,17 +33,17 @@ var generateCmd = &cobra.Command{
 
 		mode := args[0]
 
+		var inputFile string
 		if mode == "random" {
-
 			// TODO: Change this hard-coded cluster configuration for actual user inputs
 			clusterConfig := ClusterConfig{
-				Clusters: 	[]string(["cluster1", "cluster2", "cluster3", "cluster4", "cluster5"]),
-				Namespaces: []string(["namespace1", "namespace2", "namespace3"]),
+				Clusters: 	[]string{"cluster1", "cluster2", "cluster3", "cluster4", "cluster5"},
+				Namespaces: []string{"namespace1", "namespace2", "namespace3"},
 			}
 
-			inputFile := CreateJsonInput(clusterConfig)
+			inputFile = generate.CreateJsonInput(clusterConfig)
 		} else if mode == "preset" {
-			inputFile := args[1]
+			inputFile = args[1]
 		}
 
 		config, clusters := generate.Parse(inputFile)
