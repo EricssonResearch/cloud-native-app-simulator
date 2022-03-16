@@ -242,7 +242,7 @@ func CreateJsonInput(clusterConfig model.ClusterConfig) (string) {
 		resources.Limits.Cpu = limitsCPUDefault
 		resources.Limits.Memory = limitsMemoryDefault
 		resources.Requests.Cpu = requestsCPUDefault
-		resources.Requests.memory = requestsMemoryDefault
+		resources.Requests.Memory = requestsMemoryDefault
 		service.Resources = resources
 
 		service.Processes = serviceProcessesDefault
