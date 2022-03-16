@@ -18,12 +18,8 @@ package cmd
 import (
 	"application-generator/src/pkg/generate"
 	"github.com/spf13/cobra"
+	"application-generator/src/pkg/model"
 )
-
-type ClusterConfig struct {
-  Clusters		[]string
-  Namespaces	[]string
-}
 
 var generateCmd = &cobra.Command{
 	Use:   "generate [mode] [input-file]",
@@ -36,7 +32,7 @@ var generateCmd = &cobra.Command{
 		var inputFile string
 		if mode == "random" {
 			// TODO: Change this hard-coded cluster configuration for actual user inputs
-			clusterConfig := ClusterConfig{
+			clusterConfig := model.ClusterConfig{
 				Clusters: 	[]string{"cluster1", "cluster2", "cluster3", "cluster4", "cluster5"},
 				Namespaces: []string{"namespace1", "namespace2", "namespace3"},
 			}
