@@ -25,6 +25,7 @@ import (
 	"os"
 	"strings"
 	"math/rand"
+	"strconv"
 )
 
 const (
@@ -238,10 +239,10 @@ func CreateJsonInput(clusterConfig model.ClusterConfig) (string) {
 		}
 
 		var resources model.Resources
-		resources.ResourceLimits.Cpu = limitsCPUDefault
-		resources.ResourceLimits.Memory = limitsMemoryDefault
-		resources.ResourceRequests.Cpu = requestsCPUDefault
-		resources.ResourceRequests.memory = requestsMemoryDefault
+		resources.Limits.Cpu = limitsCPUDefault
+		resources.Limits.Memory = limitsMemoryDefault
+		resources.Requests.Cpu = requestsCPUDefault
+		resources.Requests.memory = requestsMemoryDefault
 		service.Resources = resources
 
 		service.Processes = serviceProcessesDefault
