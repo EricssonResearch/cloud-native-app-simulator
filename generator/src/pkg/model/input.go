@@ -74,3 +74,8 @@ type FileConfig struct {
 	ClusterLatencies	[]ClusterLatency	`json:"cluster_latencies"`
 	Services  				[]Service	  			`json:"services"`
 }
+
+type ClusterConfig struct {
+  Clusters		[]string
+  Namespaces	[]string
+}

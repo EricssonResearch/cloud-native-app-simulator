@@ -63,7 +63,7 @@ var (
 
 type ConfigMap struct {
 	Processes	int					`json:"processes"`
-	Endpoints []Endpoints	`json:"endpoints"`
+	Endpoints []Endpoint	`json:"endpoints"`
 }
 
 // the slices to store services, cluster and endpoints for counting and printing
@@ -83,7 +83,7 @@ func Unique(strSlice []string) []string {
 }
 
 // Parse microservice config file, and return a config struct
-func Parse(configFilename string) (FileConfig, []string) {
+func Parse(configFilename string) (model.FileConfig, []string) {
 	configFile, err := os.Open(configFilename)
 	configFileByteValue, _ := ioutil.ReadAll(configFile)
 
@@ -91,7 +91,7 @@ func Parse(configFilename string) (FileConfig, []string) {
 		fmt.Println(err)
 	}
 
-	var loaded_config FileConfig
+	var loaded_config model.FileConfig
 	json.Unmarshal(configFileByteValue, &loaded_config)
 	for i := 0; i < len(loaded_config.Services); i++ {
 		services = append(services, loaded_config.Services[i].Name)
@@ -115,7 +115,7 @@ func Parse(configFilename string) (FileConfig, []string) {
 	return loaded_config, clusters
 }
 
-func CreateK8sYaml(config FileConfig, clusters []string) {
+func CreateK8sYaml(config model.FileConfig, clusters []string) {
 	path, _ := os.Getwd()
 	path = path + "/k8s"
 
@@ -126,7 +126,7 @@ func CreateK8sYaml(config FileConfig, clusters []string) {
 
 	for i := 0; i < len(config.Services); i++ {
 		serv := config.Services[i].Name
-		resources := Resources(config.Services[i].Resources)
+		resources := model.Resources(config.Services[i].Resources)
 
 		if resources.Limits.Cpu == "" {
 			resources.Limits.Cpu = limitsCPUDefault
@@ -142,18 +142,18 @@ func CreateK8sYaml(config FileConfig, clusters []string) {
 		}
 
 		readinessProbe := config.Services[i].ReadinessProbe
-		if readinessProbe == NULL {
+		if readinessProbe == nil {
 			readinessProbe = serviceReadinessProbeDefault
 		}
 
 		processes := config.Services[i].Processes
-		if processes == NULL {
+		if processes == nil {
 			processes = serviceProcessesDefault
 		}
 
 		cm_data := &ConfigMap{
 			Processes: processes,
-			Endpoints: []Endpoints(config.Services[i].Endpoints),
+			Endpoints: []Endpoint(config.Services[i].Endpoints),
 		}
 
 		serv_json, err := json.Marshal(cm_data)
@@ -206,7 +206,7 @@ func CreateK8sYaml(config FileConfig, clusters []string) {
 	}
 }
 
-func CreateJsonInput(clusterConfig ClusterConfig) (string) {
+func CreateJsonInput(clusterConfig model.ClusterConfig) (string) {
 	path, _ := os.Getwd()
 	path = path + "/input/new_description_test.json"
 
@@ -255,7 +255,7 @@ func CreateJsonInput(clusterConfig ClusterConfig) (string) {
 		panic(err)
 	}
 
-	err := ioutil.WriteFile(path, input_json, 0644)
+	err = ioutil.WriteFile(path, input_json, 0644)
 	if err != nil {
 		fmt.Print(err)
 		return
