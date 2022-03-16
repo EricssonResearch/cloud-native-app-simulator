@@ -15,13 +15,68 @@ limitations under the License.
 """
 
 import logging
+from flask import Blueprint, jsonify, request
+import path
+from aiohttp import ClientSession
+import asyncio
 import uuid
 
 # TODO: So far, we only support a hard-coded namespace. For more flexible support of namespaces we will need to pass that info as part of the config map
 # TODO: So far, we only support http client
 FORMATTED_REMOTE_URL = "http://{0}:{1}{2}"
 
-logger = logging.getLogger(__name__)
+
+def getForwardHeaders(request):
+    '''
+    function to propagate header from inbound to outbound
+    '''
+
+    #incoming_headers = ['user-agent', 'x-request-id', 'x-datadog-trace-id', 'x-datadog-parent-id', 'x-datadog-sampled']
+    incoming_headers = ['user-agent', 'end-user', 'x-request-id', 'x-b3-traceid', 'x-b3-spanid', 'x-b3-parentspanid', 'x-b3-sampled', 'x-b3-flags']
+
+    # propagate headers manually
+    headers = {}
+    for ihdr in incoming_headers:
+        val = request.headers.get(ihdr)
+        if val is not None:
+            headers[ihdr] = val
+    return headers
+
+
+async def run_task(service_endpoint):
+    headers = getForwardHeaders(request)
+
+    if service_endpoint["forward_requests"] == "asynchronous":
+        async with ClientSession() as session:
+            # TODO: CPU-bounded tasks not supported yet
+            io_tasks = []
+            for svc in service_endpoint["called_services"]:
+                io_task = asyncio.create_task(execute_io_bounded_task(session=session, target_service=svc, json_data=request.json, forward_headers=headers))
+                io_tasks.append(io_task)
+            services = await asyncio.gather(*io_tasks)
+
+        # Concatenate json responses
+        response = {}
+        response["services"] = []
+        response["statuses"] = []
+
+        for svc in services:
+            response["services"] += svc["services"]
+            response["statuses"] += svc["statuses"]
+        return response
+    else: # "synchronous"
+        async with ClientSession() as session:
+            # TODO: CPU-bounded tasks not supported yet
+            response = {}
+            response["services"] = []
+            response["statuses"] = []
+            for svc in service_endpoint["called_services"]:
+                res = execute_io_bounded_task(session=session, target_service=svc, json_data=request.json, forward_headers=headers)
+                response["services"] += res["services"]
+                response["statuses"] += res["statuses"]
+
+        return response
+
 
 def execute_cpu_bounded_task(origin_service_name, target_service, headers):
     task_id = str(uuid.uuid4())
@@ -41,6 +96,7 @@ def execute_cpu_bounded_task(origin_service_name, target_service, headers):
         }
     }
     return response_object
+
 
 async def execute_io_bounded_task(session, target_service, json_data, forward_headers={}):
     # TODO: Request forwarding to a service on a particular cluster is not supported yet

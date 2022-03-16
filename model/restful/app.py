@@ -13,22 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+from flask import Flask
+from flask_restful import Api
+from restful.resources.endpoint import Endpoint
+from restful.utils import task
 
 
-class BaseConfig(object):
-    """Base configuration."""
+app = Flask(__name__)
+api = Api(app)
+api.add_resource(Endpoint, '/', '/<string:endpoint>')
+if __name__ == 'restful.app':
+    app.run()
 
-    WTF_CSRF_ENABLED = True
 
-
-class DevelopmentConfig(BaseConfig):
-    """Development configuration."""
-
-    WTF_CSRF_ENABLED = False
-
-class TestingConfig(BaseConfig):
-    """Testing configuration."""
-
-    TESTING = True
-    WTF_CSRF_ENABLED = False
-    PRESERVE_CONTEXT_ON_EXCEPTION = False

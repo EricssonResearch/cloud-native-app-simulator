@@ -14,3 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import json
+import logging
+import os
+
+configFilePath = os.environ['CONF']
+logger = logging.getLogger(__name__)
+
+
+def process_configfile():
+    with open(configFilePath) as f:
+        d = json.load(f)
+    return d
+
+config_data = process_configfile()
+
+SERVICE_CONFIG = config_data
