@@ -216,13 +216,15 @@ func CreateJsonInput(clusterConfig ClusterConfig) (string) {
 	// TODO: Generate cluster latencies
 
 	// Generating random services
+	// TODO: Replace this hard-coded number of services by the ones given by the user
 	serviceNumber := rand.Intn(10)
 	for i := 1; i <= serviceNumber; i++ {
 		var service Service
 
-		service.name = "service" + i
+		service.Name = "service" + i
 
 		// Randomly associating services to clusters
+		// TODO: Replace this hard-coded number of service replicas by the ones given by the user
 		replicaNumber := rand.Intn(5)
 		for j := 1; j <= replicaNumber; j++ {
 			var cluster Cluster
@@ -233,20 +235,20 @@ func CreateJsonInput(clusterConfig ClusterConfig) (string) {
 			rIndex = rand.Intn(len(clusterConfig.namespaces))
 			cluster.namespace = clusterConfig.namespaces[rIndex]
 
-			service.clusters = append(service.clusters, cluster)
+			service.Clusters = append(service.Clusters, cluster)
 		}
 
-		var resource Resource
-		resource.limits.cpu = limitsCPUDefault
-		resource.limits.memory = limitsMemoryDefault
-		resource.requests.cpu = requestsCPUDefault
-		resource.requests.memory = requestsMemoryDefault
-		service.resource = resource
+		var resources Resources
+		resources.ResourceLimits.Cpu = limitsCPUDefault
+		resources.ResourceLimits.Memory = limitsMemoryDefault
+		resources.ResourceRequests.Cpu = requestsCPUDefault
+		resources.ResourceRequests.memory = requestsMemoryDefault
+		service.Resources = resources
 
-		service.processes = serviceProcessesDefault
-		service.readinessProbe = serviceReadinessProbeDefault
+		service.Processes = serviceProcessesDefault
+		service.ReadinessProbe = serviceReadinessProbeDefault
 
-		inputConfig.services = append(inputConfig.services, service)
+		inputConfig.Services = append(inputConfig.Services, service)
 	}
 
 	input_json, err := json.MarshalIndent(inputConfig, "", " ")
