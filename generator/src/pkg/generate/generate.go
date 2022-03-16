@@ -142,12 +142,12 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 		}
 
 		readinessProbe := config.Services[i].ReadinessProbe
-		if readinessProbe == nil {
+		if readinessProbe == 0 {
 			readinessProbe = serviceReadinessProbeDefault
 		}
 
 		processes := config.Services[i].Processes
-		if processes == nil {
+		if processes == 0 {
 			processes = serviceProcessesDefault
 		}
 
@@ -229,15 +229,15 @@ func CreateJsonInput(clusterConfig model.ClusterConfig) (string) {
 			var cluster model.Cluster
 
 			rIndex := rand.Intn(len(clusterConfig.Clusters))
-			cluster.cluster = clusterConfig.ClusterConfiglusters[rIndex]
+			cluster.Cluster = clusterConfig.Clusters[rIndex]
 
 			rIndex = rand.Intn(len(clusterConfig.Namespaces))
-			cluster.namespace = clusterConfig.Namespaces[rIndex]
+			cluster.Namespace = clusterConfig.Namespaces[rIndex]
 
 			service.Clusters = append(service.Clusters, cluster)
 		}
 
-		var resources Resources
+		var resources model.Resources
 		resources.ResourceLimits.Cpu = limitsCPUDefault
 		resources.ResourceLimits.Memory = limitsMemoryDefault
 		resources.ResourceRequests.Cpu = requestsCPUDefault
@@ -258,7 +258,6 @@ func CreateJsonInput(clusterConfig model.ClusterConfig) (string) {
 	err = ioutil.WriteFile(path, input_json, 0644)
 	if err != nil {
 		fmt.Print(err)
-		return
 	}
 
 	return path
