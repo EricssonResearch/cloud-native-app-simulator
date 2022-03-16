@@ -21,17 +21,34 @@ import (
 	"strconv"
 )
 
-var generateCmd = &cobra.Command{
-	Use:   "generate [chain-file] [cluster-file] [k8s-readiness-probe]",
-	Short: "This commands generates Kubernetes manifest files by using example files in chains and clusters directory and also uses k8s readiness probe time",
-	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
-		chain := args[0]
-		readinessProbe, err := strconv.Atoi(args[1])
-		exitIfError(err)
+type ClusterConfig struct {
+  Clusters		[]string
+  Namespaces	[]string
+}
 
-		config, clusters := generate.Parse(chain)
-		generate.Create(config, readinessProbe, clusters)
+var generateCmd = &cobra.Command{
+	Use:   "generate [mode] [input-file]",
+	Short: "This commands can be run under two different modes: (i) 'random' mode which generates a random description file or (ii) 'preset' mode which generates Kubernetes manifest based on a description file in the input directory",
+	Args:  cobra.RangeArgs(1, 2),
+	Run: func(cmd *cobra.Command, args []string) {
+
+		mode := args[0]
+
+		if mode == "random" {
+
+			// TODO: Change this hard-coded cluster configuration for actual user inputs
+			clusterConfig := ClusterConfig{
+				Clusters: 	["cluster1", "cluster2", "cluster3", "cluster4", "cluster5"],
+				Namespaces: ["namespace1", "namespace2", "namespace3"],
+			}
+
+			inputFile := CreateJsonInput(clusterConfig)
+		} else if mode == "preset" {
+			inputFile := args[1]
+		}
+
+		config, clusters := generate.Parse(inputFile)
+		generate.CreateK8sYaml(config, clusters)
 	},
 }
 

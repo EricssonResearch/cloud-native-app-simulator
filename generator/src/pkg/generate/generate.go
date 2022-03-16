@@ -26,6 +26,7 @@ import (
 	"os"
 	"strings"
 	"text/template"
+	"math/rand"
 )
 
 const (
@@ -46,6 +47,9 @@ const (
 	requestsMemoryDefault = "256M"
 	limitsCPUDefault      = "1000m"
 	limitsMemoryDefault   = "1024M"
+
+	serviceProcessesDefault = 2
+	serviceReadinessProbeDefault = 5
 )
 
 var (
@@ -56,59 +60,6 @@ var (
 	virtualService   model.VirtualServiceInstance
 	workerDeployment model.DeploymentInstance
 )
-
-type CalledServices struct {
-	Service             string  `json:"service"`
-	Port                string  `json:"port"`
-	Endpoint            string  `json:"endpoint"`
-	Protocol            string  `json:"protocol"`
-	TrafficForwardRatio float32 `json:"traffic_forward_ratio"`
-}
-type Endpoints struct {
-	Name               string           `json:"name"`
-	Protocol           string           `json:"protocol"`
-	CpuConsumption     float64          `json:"cpu_consumption"`
-	NetworkConsumption float64          `json:"network_consumption"`
-	MemoryConsumption  float64          `json:"memory_consumption"`
-	ForwardRequests    string           `json:"forward_requests"`
-	CalledServices     []CalledServices `json:"called_services"`
-}
-type ResourceLimits struct {
-	Cpu    string `json:"cpu"`
-	Memory string `json:"memory"`
-}
-type ResourceRequests struct {
-	Cpu    string `json:"cpu"`
-	Memory string `json:"memory"`
-}
-type Resources struct {
-	Limits   ResourceLimits   `json:"limits"`
-	Requests ResourceRequests `json:"requests"`
-}
-type Services struct {
-	Name      string      `json:"name"`
-	Clusters  []Clusters  `json:"clusters"`
-	Resources Resources   `json:"resources"`
-	Processes int         `json:"processes"`
-	Endpoints []Endpoints `json:"endpoints"`
-}
-
-type Clusters struct {
-	Cluster   string `json:"cluster"`
-	Namespace string `json:"namespace"`
-	Node      string `json:"node,omitempty"`
-}
-
-type Latencies struct {
-	Src     string  `json:"src"`
-	Dest    string  `json:"dest"`
-	Latancy float64 `json:"latency"`
-}
-
-type Config struct {
-	Latencies []Latencies `json:"cluster_latencies"`
-	Services  []Services  `json:"services"`
-}
 
 type ConfigMap struct {
 	Processes int         `json:"processes"`
@@ -132,7 +83,7 @@ func Unique(strSlice []string) []string {
 }
 
 // Parse microservice config file, and return a config struct
-func Parse(configFilename string) (Config, []string) {
+func Parse(configFilename string) (FileConfig, []string) {
 	configFile, err := os.Open(configFilename)
 	configFileByteValue, _ := ioutil.ReadAll(configFile)
 
@@ -140,7 +91,7 @@ func Parse(configFilename string) (Config, []string) {
 		fmt.Println(err)
 	}
 
-	var loaded_config Config
+	var loaded_config FileConfig
 	json.Unmarshal(configFileByteValue, &loaded_config)
 	for i := 0; i < len(loaded_config.Services); i++ {
 		services = append(services, loaded_config.Services[i].Name)
@@ -164,7 +115,7 @@ func Parse(configFilename string) (Config, []string) {
 	return loaded_config, clusters
 }
 
-func Create(config Config, readinessProbe int, clusters []string) {
+func CreateK8sYaml(config FileConfig, clusters []string) {
 	path, _ := os.Getwd()
 	proto_temp, _ := template.ParseFiles(path + "/template/service.tmpl")
 	path = path + "/k8s"
@@ -197,8 +148,18 @@ func Create(config Config, readinessProbe int, clusters []string) {
 			resources.Requests.Memory = requestsMemoryDefault
 		}
 
+		readinessProbe := config.Services[i].ReadinessProbe
+		if readinessProbe == NULL {
+			readinessProbe = serviceReadinessProbeDefault
+		}
+
+		processes := config.Services[i].Processes
+		if processes == NULL {
+			processes = serviceProcessesDefault
+		}
+
 		cm_data := &ConfigMap{
-			Processes: int(config.Services[i].Processes),
+			Processes: processes,
 			Endpoints: []Endpoints(config.Services[i].Endpoints),
 		}
 
@@ -244,4 +205,60 @@ func Create(config Config, readinessProbe int, clusters []string) {
 
 		}
 	}
+}
+
+func CreateJsonInput(clusterConfig ClusterConfig) (string) {
+	path, _ := os.Getwd()
+	path = path + "/input/new_description_test.json"
+
+	var inputConfig FileConfig
+
+	// TODO: Generate cluster latencies
+
+	// Generating random services
+	serviceNumber := rand.Intn(10)
+	for i := 1; i <= serviceNumber; i++ {
+		var service Service
+
+		service.name = "service" + i
+
+		// Randomly associating services to clusters
+		replicaNumber := rand.Intn(5)
+		for j := 1; j <= replicaNumber; j++ {
+			var cluster Cluster
+
+			rIndex := rand.Intn(len(clusterConfig.clusters))
+			cluster.cluster = clusterConfig.clusters[rIndex]
+
+			rIndex = rand.Intn(len(clusterConfig.namespaces))
+			cluster.namespace = clusterConfig.namespaces[rIndex]
+
+			service.clusters = append(service.clusters, cluster)
+		}
+
+		var resource Resource
+		resource.limits.cpu = limitsCPUDefault
+		resource.limits.memory = limitsMemoryDefault
+		resource.requests.cpu = requestsCPUDefault
+		resource.requests.memory = requestsMemoryDefault
+		service.resource = resource
+
+		service.processes = serviceProcessesDefault
+		service.readinessProbe = serviceReadinessProbeDefault
+
+		inputConfig.services = append(inputConfig.services, service)
+	}
+
+	input_json, err := json.MarshalIndent(inputConfig, "", " ")
+	if err != nil {
+		panic(err)
+	}
+
+	err := ioutil.WriteFile(path, input_json, 0644)
+	if err != nil {
+		fmt.Print(err)
+		return
+	}
+
+	return path
 }
