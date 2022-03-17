@@ -75,7 +75,7 @@ var (
 
 type ConfigMap struct {
 	Processes 	int			`json:"processes"`
-	Threads		int()			`json:"threads"`
+	Threads		int			`json:"threads"`
 	Endpoints 	[]model.Endpoint	`json:"endpoints"`
 }
 
