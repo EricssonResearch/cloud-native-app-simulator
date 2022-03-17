@@ -249,11 +249,11 @@ func CreateJsonInput(clusterConfig model.ClusterConfig) (string) {
 		for j := 1; j <= replicaNumber; j++ {
 			var cluster model.Cluster
 
-			rIndex := rand.Intn(len(clusterConfig.Clusters))
-			cluster.Cluster = clusterConfig.Clusters[rIndex]
+			cRIndex := rand.Intn(len(clusterConfig.Clusters))
+			cluster.Cluster = clusterConfig.Clusters[cRIndex]
 
-			rIndex = rand.Intn(len(clusterConfig.Namespaces))
-			cluster.Namespace = clusterConfig.Namespaces[rIndex]
+			nRIndex := rand.Intn(len(clusterConfig.Namespaces))
+			cluster.Namespace = clusterConfig.Namespaces[nRIndex]
 
 			service.Clusters = append(service.Clusters, cluster)
 		}
@@ -266,6 +266,7 @@ func CreateJsonInput(clusterConfig model.ClusterConfig) (string) {
 		service.Resources = resources
 
 		service.Processes = svcProcessesDefault
+		service.Threads = svcThreadsDefault
 		service.ReadinessProbe = svcReadinessProbeDefault
 
 		// Randomly generating service endpoints
