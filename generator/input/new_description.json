@@ -27,6 +27,7 @@
         }
       },
       "processes": 2,
+      "threads": 2,
       "readiness_probe": 5,
       "endpoints": [
         {
