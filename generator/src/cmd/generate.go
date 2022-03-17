@@ -33,8 +33,8 @@ var generateCmd = &cobra.Command{
 		if mode == "random" {
 			// TODO: Change this hard-coded cluster configuration for actual user inputs
 			clusterConfig := model.ClusterConfig{
-				Clusters: 	[]string{"cluster1", "cluster2", "cluster3", "cluster4", "cluster5"},
-				Namespaces: []string{"namespace1", "namespace2", "namespace3"},
+				Clusters: 	[]string{"cluster-1", "cluster-2", "cluster-3", "cluster-4", "cluster-5"},
+				Namespaces: []string{"ns-1", "ns-2", "ns-3"},
 			}
 
 			inputFile = generate.CreateJsonInput(clusterConfig)
