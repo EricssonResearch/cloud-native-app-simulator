@@ -292,7 +292,7 @@ func CreateJsonInput(clusterConfig model.ClusterConfig) (string) {
 					var calledService model.CalledService
 
 					calledService.Service = svcNamePrefix + strconv.Itoa(n)
-					calledService.Port, _ = strconv.Atoi(defaultExtPort)
+					calledService.Port = strconv.Itoa(defaultExtPort)
 					// NOTE: Always calling the first endpoint of the called service
 					calledService.Endpoint = epNamePrefix + "1"
 					calledService.Protocol = protocol
