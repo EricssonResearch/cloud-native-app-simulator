@@ -9,3 +9,7 @@ flatten_json
 six
 aiohttp
 gunicorn==20.1.0
+grpcio==1.45.0
+grpcio-tools==1.45.0
+grpcio-reflection==1.45.0
+grpcio-health-checking==1.45.0

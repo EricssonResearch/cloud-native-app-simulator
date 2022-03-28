@@ -14,23 +14,30 @@
 # limitations under the License.
 #
 
-FROM python:3.8.0-alpine
+FROM python:3.8.0-slim
 
 RUN mkdir -p /usr/src/app
-
-RUN apk update \
- && apk add jq \
- && rm -rf /var/cache/apk/*
+RUN apt update
+RUN apt install -y jq \
+    wget \
+    2to3
 
 WORKDIR /usr/src/app
+RUN ls
 
 ADD ./requirements.txt /usr/src/app/requirements.txt
 
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
+# download the grpc health probe
+RUN GRPC_HEALTH_PROBE_VERSION=v0.4.8 && \
+    wget -qO/bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 && \
+    chmod +x /bin/grpc_health_probe
+
 ENV CONF="/usr/src/app/config/conf.json"
+
 COPY . /usr/src/app
 
-#EXPOSE 5000
+EXPOSE 5000
 ENTRYPOINT ["/usr/src/app/run.sh"]
