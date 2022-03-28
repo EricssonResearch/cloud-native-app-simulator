@@ -100,6 +100,7 @@ type ContainerInstance struct {
 	Name            string                    `yaml:"name"`
 	Image           string                    `yaml:"image"`
 	ImagePullPolicy string                    `yaml:"imagePullPolicy"`
+	Env             []EnvInstance             `yaml:"env"`
 	Ports           []ContainerPortInstance   `yaml:"ports"`
 	Volumes         []ContainerVolumeInstance `yaml:"volumeMounts"`
 	ReadinessProbe  ReadinessProbeInstance    `yaml:"readinessProbe,omitempty"`
@@ -110,6 +111,11 @@ type ContainerPortInstance struct {
 	ContainerPort int `yaml:"containerPort"`
 }
 
+type EnvInstance struct {
+	Name  string `yaml:"name"`
+	Value string `yaml:"value"`
+}
+
 type ContainerVolumeInstance struct {
 	MountPath string `yaml:"mountPath,omitempty"`
 	MountName string `yaml:"name,omitempty"`
@@ -117,9 +123,12 @@ type ContainerVolumeInstance struct {
 
 type ReadinessProbeInstance struct {
 	HttpGet struct {
-		Path string `yaml:"path"`
-		Port int    `yaml:"port"`
-	} `yaml:"httpGet"`
+		Path string `yaml:"path,omitempty"`
+		Port int    `yaml:"port,omitempty"`
+	} `yaml:"httpGet,omitempty"`
+	Exec struct {
+		Command []string `yaml:"command,flow,omitempty"`
+	} `yaml:"exec,omitempty"`
 	InitialDelaySeconds int `yaml:"initialDelaySeconds"`
 	PeriodSeconds       int `yaml:"periodSeconds"`
 }
