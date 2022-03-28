@@ -35,8 +35,6 @@ const (
 	imageName = "app"
 	imageURL  = "app-demo:latest"
 
-	protocol = "http"
-
 	defaultExtPort = 80
 	defaultPort    = 5000
 
@@ -184,6 +182,7 @@ func Create(config Config, readinessProbe int, clusters []string) {
 	for i := 0; i < len(config.Services); i++ {
 		serv := config.Services[i].Name
 		resources := Resources(config.Services[i].Resources)
+		protocol := config.Services[i].Endpoints[0].Protocol
 
 		if resources.Limits.Cpu == "" {
 			resources.Limits.Cpu = limitsCPUDefault
