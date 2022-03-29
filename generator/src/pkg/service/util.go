@@ -20,62 +20,12 @@ import (
 	"fmt"
 )
 
-func CreateDeployment(metadataName, selectorAppName, selectorClusterName string, numberOfReplicas int,
-	templateAppLabel, templateClusterLabel, namespace string, containerPort int, containerName, containerImage,
-	mountPath string, volumeName, configMapName string, readinessProbe int, requestCPU, requestMemory, limitCPU,
-	limitMemory string) (deploymentInstance model.DeploymentInstance) {
-
-	var deployment model.DeploymentInstance
-	var containerInstance model.ContainerInstance
-
-	var containerPortInstance model.ContainerPortInstance
-	var containerVolume model.ContainerVolumeInstance
-	var volumeInstance model.VolumeInstance
-
-	containerPortInstance.ContainerPort = containerPort
-	volumeInstance.Name = volumeName
-	volumeInstance.ConfigMap.Name = configMapName
-
-	containerVolume.MountName = volumeName
-	containerVolume.MountPath = mountPath
-
-	containerInstance.Volumes = append(containerInstance.Volumes, containerVolume)
-	containerInstance.Ports = append(containerInstance.Ports, containerPortInstance)
-	containerInstance.Name = containerName
-	containerInstance.Image = containerImage
-	containerInstance.ImagePullPolicy = "Never"
-	containerInstance.ReadinessProbe.HttpGet.Path = "/"
-	containerInstance.ReadinessProbe.HttpGet.Port = containerPort
-	containerInstance.ReadinessProbe.InitialDelaySeconds = readinessProbe
-	containerInstance.ReadinessProbe.PeriodSeconds = 1
-	containerInstance.Resources.ResourceRequests.Cpu = requestCPU
-	containerInstance.Resources.ResourceRequests.Memory = requestMemory
-	containerInstance.Resources.ResourceLimits.Cpu = limitCPU
-	containerInstance.Resources.ResourceLimits.Memory = limitMemory
-
-	deployment.APIVersion = "apps/v1"
-	deployment.Kind = "Deployment"
-	deployment.Metadata.Name = metadataName
-	deployment.Metadata.Namespace = namespace
-	deployment.Metadata.Labels.Cluster = templateClusterLabel
-	deployment.Spec.Selector.MatchLabels.App = selectorAppName
-	deployment.Spec.Selector.MatchLabels.Cluster = selectorClusterName
-	deployment.Spec.Replicas = numberOfReplicas
-	deployment.Spec.Template.Metadata.Labels.App = templateAppLabel
-	deployment.Spec.Template.Metadata.Labels.Cluster = templateClusterLabel
-	deployment.Spec.Template.Spec.Containers = append(deployment.Spec.Template.Spec.Containers, containerInstance)
-	deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, volumeInstance)
-
-	return deployment
-
-}
-
 func CreateDeploymentWithAffinity(metadataName, selectorAppName, selectorClusterName string, numberOfReplicas int,
 	templateAppLabel, templateClusterLabel, namespace string, containerPort int, containerName, containerImage,
 	mountPath string, volumeName, configMapName string, readinessProbe int, requestCPU, requestMemory, limitCPU,
-	limitMemory, nodeAffinity string) (deploymentInstance model.DeploymentInstanceWithAffinity) {
+	limitMemory, nodeAffinity string) (deploymentInstance model.DeploymentInstance) {
 
-	var deployment model.DeploymentInstanceWithAffinity
+	var deployment model.DeploymentInstance
 	var containerInstance model.ContainerInstance
 	var containerPortInstance model.ContainerPortInstance
 	var containerVolume model.ContainerVolumeInstance

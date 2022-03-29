@@ -59,18 +59,18 @@ var (
 
 type CalledServices struct {
 	Service             string  `json:"service"`
-	Port           			string	`json:"port"`
+	Port                string  `json:"port"`
 	Endpoint            string  `json:"endpoint"`
 	Protocol            string  `json:"protocol"`
 	TrafficForwardRatio float32 `json:"traffic_forward_ratio"`
 }
 type Endpoints struct {
 	Name               string           `json:"name"`
-	Protocol           string						`json:"protocol"`
+	Protocol           string           `json:"protocol"`
 	CpuConsumption     float64          `json:"cpu_consumption"`
 	NetworkConsumption float64          `json:"network_consumption"`
 	MemoryConsumption  float64          `json:"memory_consumption"`
-	ForwardRequests    string  					`json:"forward_requests"`
+	ForwardRequests    string           `json:"forward_requests"`
 	CalledServices     []CalledServices `json:"called_services"`
 }
 type ResourceLimits struct {
@@ -89,14 +89,14 @@ type Services struct {
 	Name      string      `json:"name"`
 	Clusters  []Clusters  `json:"clusters"`
 	Resources Resources   `json:"resources"`
-	Processes	int					`json:"processes"`
+	Processes int         `json:"processes"`
 	Endpoints []Endpoints `json:"endpoints"`
 }
 
 type Clusters struct {
 	Cluster   string `json:"cluster"`
 	Namespace string `json:"namespace"`
-	Node      string `json:"node"`
+	Node      string `json:"node,omitempty"`
 }
 
 type Latencies struct {
@@ -111,8 +111,8 @@ type Config struct {
 }
 
 type ConfigMap struct {
-	Processes	int					`json:"processes"`
-	Endpoints []Endpoints	`json:"endpoints"`
+	Processes int         `json:"processes"`
+	Endpoints []Endpoints `json:"endpoints"`
 }
 
 // the slices to store services, cluster and endpoints for counting and printing
@@ -218,18 +218,11 @@ func Create(config Config, readinessProbe int, clusters []string) {
 			}
 			configmap = s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json))
 			appendManifest(configmap)
-			if nodeAffinity == "" {
-				deployment := s.CreateDeployment(serv, serv, c_id, replicaNumber, serv, c_id, namespace,
-					defaultPort, imageName, imageURL, volumePath, volumeName, "config-"+serv, readinessProbe,
-					resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory)
 
-				appendManifest(deployment)
-			} else {
-				deployment := s.CreateDeploymentWithAffinity(serv, serv, c_id, replicaNumber, serv, c_id, namespace,
-					defaultPort, imageName, imageURL, volumePath, volumeName, "config-"+serv, readinessProbe,
-					resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory, nodeAffinity)
-				appendManifest(deployment)
-			}
+			deployment := s.CreateDeploymentWithAffinity(serv, serv, c_id, replicaNumber, serv, c_id, namespace,
+				defaultPort, imageName, imageURL, volumePath, volumeName, "config-"+serv, readinessProbe,
+				resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory, nodeAffinity)
+			appendManifest(deployment)
 
 			service = s.CreateService(serv, serv, protocol, uri, c_id, namespace, defaultExtPort, defaultPort)
 			appendManifest(service)

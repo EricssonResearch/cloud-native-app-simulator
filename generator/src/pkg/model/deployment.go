@@ -41,50 +41,13 @@ type DeploymentInstance struct {
 					Cluster string `yaml:"version"`
 				} `yaml:"labels"`
 			} `yaml:"metadata"`
-			Spec SpecInstance `yaml:"spec"`
+			Spec specInstance `yaml:"spec"`
 		} `yaml:"template"`
 	} `yaml:"spec"`
 }
 
-type DeploymentInstanceWithAffinity struct {
-	APIVersion string `yaml:"apiVersion"`
-	Kind       string `yaml:"kind"`
-	Metadata   struct {
-		Name      string `yaml:"name"`
-		Namespace string `yaml:"namespace"`
-		Labels    struct {
-			App     string `yaml:"app,omitempty"`
-			Cluster string `yaml:"version,omitempty"`
-		} ` yaml:"labels"`
-	} `yaml:"metadata"`
-	Spec struct {
-		Selector struct {
-			MatchLabels struct {
-				App     string `yaml:"app"`
-				Cluster string `yaml:"version"`
-			} `yaml:"matchLabels"`
-		} `yaml:"selector"`
-		Replicas int `yaml:"replicas"`
-		Template struct {
-			Metadata struct {
-				Labels struct {
-					App     string `yaml:"app"`
-					Cluster string `yaml:"version"`
-				} `yaml:"labels"`
-			} `yaml:"metadata"`
-			Spec specInstanceWithAffinity `yaml:"spec"`
-		} `yaml:"template"`
-	} `yaml:"spec"`
-}
-
-type SpecInstance struct {
-	ServiceAccount string              `yaml:"serviceAccountName,omitempty"`
-	Containers     []ContainerInstance `yaml:"containers"`
-	Volumes        []VolumeInstance    `yaml:"volumes"`
-}
-
-type specInstanceWithAffinity struct {
-	NodeName       string              `yaml:"nodeName"`
+type specInstance struct {
+	NodeName       string              `yaml:"nodeName,omitempty"`
 	ServiceAccount string              `yaml:"serviceAccountName,omitempty"`
 	Containers     []ContainerInstance `yaml:"containers"`
 	Volumes        []VolumeInstance    `yaml:"volumes"`
