@@ -226,7 +226,7 @@ func Create(config Config, readinessProbe int, clusters []string) {
 			configmap = s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json), proto_temp_filled)
 			appendManifest(configmap)
 
-			deployment := s.CreateDeploymentWithAffinity(serv, serv, c_id, replicaNumber, serv, c_id, namespace,
+			deployment := s.CreateDeployment(serv, serv, c_id, replicaNumber, serv, c_id, namespace,
 				defaultPort, imageName, imageURL, volumePath, volumeName, "config-"+serv, readinessProbe,
 				resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory, nodeAffinity, protocol)
 			appendManifest(deployment)
