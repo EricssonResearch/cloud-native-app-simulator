@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+{{ range . }}
+service {{ .Name }} {
+    {{ range .Endpoints }}
+    rpc {{ .Name }} (Request) returns (Response) {}
+    {{ end }}
+}
+{{ end }}
+
+message Request {
+    string data = 1;
+}
+
+message Response {
+    string data = 1;
+}

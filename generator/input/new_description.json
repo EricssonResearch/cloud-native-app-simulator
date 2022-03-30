@@ -8,11 +8,11 @@
   ],
   "services": [
     {
-      "name": "service-1",
+      "name": "service1",
       "clusters": [
         {
           "cluster": "cluster-1",
-          "namespace": "ns-1",
+          "namespace": "default",
           "node": "node-1"
         }
       ],
@@ -29,7 +29,7 @@
       "processes": 2,
       "endpoints": [
         {
-          "name": "/end-1",
+          "name": "end1",
           "protocol": "http",
           "cpu_consumption": 0.003,
           "network_consumption": 0.002,
@@ -37,9 +37,9 @@
           "forward_requests": "asynchronous",
           "called_services": [
             {
-              "service": "service-2",
+              "service": "service2",
               "port": "80",
-              "endpoint": "/end-2",
+              "endpoint": "end2",
               "protocol": "http",
               "traffic_forward_ratio": 1
             }

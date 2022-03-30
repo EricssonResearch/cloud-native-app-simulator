@@ -20,17 +20,21 @@ import (
 	"fmt"
 )
 
-func CreateDeploymentWithAffinity(metadataName, selectorAppName, selectorClusterName string, numberOfReplicas int,
+func CreateDeployment(metadataName, selectorAppName, selectorClusterName string, numberOfReplicas int,
 	templateAppLabel, templateClusterLabel, namespace string, containerPort int, containerName, containerImage,
 	mountPath string, volumeName, configMapName string, readinessProbe int, requestCPU, requestMemory, limitCPU,
-	limitMemory, nodeAffinity string) (deploymentInstance model.DeploymentInstance) {
+	limitMemory, nodeAffinity, protocol string) (deploymentInstance model.DeploymentInstance) {
 
 	var deployment model.DeploymentInstance
 	var containerInstance model.ContainerInstance
+	var envInstance model.EnvInstance
+
 	var containerPortInstance model.ContainerPortInstance
 	var containerVolume model.ContainerVolumeInstance
 	var volumeInstance model.VolumeInstance
 
+	envInstance.Name = "SERVICE_NAME"
+	envInstance.Value = metadataName
 	containerPortInstance.ContainerPort = containerPort
 	volumeInstance.Name = volumeName
 	volumeInstance.ConfigMap.Name = configMapName
@@ -43,8 +47,14 @@ func CreateDeploymentWithAffinity(metadataName, selectorAppName, selectorCluster
 	containerInstance.Name = containerName
 	containerInstance.Image = containerImage
 	containerInstance.ImagePullPolicy = "Never"
-	containerInstance.ReadinessProbe.HttpGet.Path = "/"
-	containerInstance.ReadinessProbe.HttpGet.Port = containerPort
+	if protocol == "http" {
+		containerInstance.ReadinessProbe.HttpGet.Path = "/"
+		containerInstance.ReadinessProbe.HttpGet.Port = containerPort
+	}
+	if protocol == "grpc" {
+		containerInstance.ReadinessProbe.Exec.Command = append(containerInstance.ReadinessProbe.Exec.Command, string("/bin/grpc_health_probe"))
+		containerInstance.ReadinessProbe.Exec.Command = append(containerInstance.ReadinessProbe.Exec.Command, "-addr=:5000")
+	}
 	containerInstance.ReadinessProbe.InitialDelaySeconds = readinessProbe
 	containerInstance.ReadinessProbe.PeriodSeconds = 1
 	containerInstance.Resources.ResourceRequests.Cpu = requestCPU
@@ -64,7 +74,6 @@ func CreateDeploymentWithAffinity(metadataName, selectorAppName, selectorCluster
 	deployment.Spec.Template.Metadata.Labels.Cluster = templateClusterLabel
 	deployment.Spec.Template.Spec.Containers = append(deployment.Spec.Template.Spec.Containers, containerInstance)
 	deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, volumeInstance)
-	deployment.Spec.Template.Spec.NodeName = nodeAffinity
 
 	return deployment
 
@@ -144,7 +153,7 @@ func CreateServiceAccount(metadataName, accountName string) (serviceAccountInsta
 	return serviceAccount
 }
 
-func CreateConfig(metadataName, metadataLabelName, metadataLabelCluster, namespace, config string) (configMapInstance model.ConfigMapInstance) {
+func CreateConfig(metadataName, metadataLabelName, metadataLabelCluster, namespace, config, proto string) (configMapInstance model.ConfigMapInstance) {
 
 	const apiVersion = "v1"
 
@@ -159,6 +168,7 @@ func CreateConfig(metadataName, metadataLabelName, metadataLabelCluster, namespa
 	configMap.Metadata.Labels.Name = metadataLabelName
 	configMap.Metadata.Namespace = namespace
 	configMap.Data.Config = config
+	configMap.Data.Service = proto
 
 	return configMap
 }

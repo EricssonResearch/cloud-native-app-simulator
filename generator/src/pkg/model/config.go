@@ -21,13 +21,14 @@ type ConfigMapInstance struct {
 	Metadata   struct {
 		Name   string `yaml:"name"`
 		Labels struct {
-			Name string `yaml:"name"`
-			Cluster string  `yaml:"version,omitempty"`
+			Name    string `yaml:"name"`
+			Cluster string `yaml:"version,omitempty"`
 		} `yaml:"labels"`
 		Namespace string `yaml:"namespace"`
 	} `yaml:"metadata"`
 	Data struct {
-		Config string `yaml:"conf.json"`
+		Config  string `yaml:"conf.json"`
+		Service string `yaml:"service.proto"`
 	} `yaml:"data"`
 }
 

@@ -18,12 +18,14 @@ package generate
 import (
 	"application-generator/src/pkg/model"
 	s "application-generator/src/pkg/service"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
 	"strings"
+	"text/template"
 )
 
 const (
@@ -32,8 +34,6 @@ const (
 
 	imageName = "app"
 	imageURL  = "app-demo:latest"
-
-	protocol = "http"
 
 	defaultExtPort = 80
 	defaultPort    = 5000
@@ -166,16 +166,23 @@ func Parse(configFilename string) (Config, []string) {
 
 func Create(config Config, readinessProbe int, clusters []string) {
 	path, _ := os.Getwd()
+	proto_temp, _ := template.ParseFiles(path + "/template/service.tmpl")
 	path = path + "/k8s"
 
 	for i := 0; i < len(clusters); i++ {
 		directory := fmt.Sprintf(path+"/%s", clusters[i])
 		os.Mkdir(directory, 0777)
 	}
-
+	var proto_temp_filled_byte bytes.Buffer
+	err := proto_temp.Execute(&proto_temp_filled_byte, config.Services)
+	if err != nil {
+		panic(err)
+	}
+	proto_temp_filled := proto_temp_filled_byte.String()
 	for i := 0; i < len(config.Services); i++ {
 		serv := config.Services[i].Name
 		resources := Resources(config.Services[i].Resources)
+		protocol := config.Services[i].Endpoints[0].Protocol
 
 		if resources.Limits.Cpu == "" {
 			resources.Limits.Cpu = limitsCPUDefault
@@ -216,12 +223,12 @@ func Create(config Config, readinessProbe int, clusters []string) {
 				manifests = append(manifests, string(yamlDoc))
 				return nil
 			}
-			configmap = s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json))
+			configmap = s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json), proto_temp_filled)
 			appendManifest(configmap)
 
 			deployment := s.CreateDeploymentWithAffinity(serv, serv, c_id, replicaNumber, serv, c_id, namespace,
 				defaultPort, imageName, imageURL, volumePath, volumeName, "config-"+serv, readinessProbe,
-				resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory, nodeAffinity)
+				resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory, nodeAffinity, protocol)
 			appendManifest(deployment)
 
 			service = s.CreateService(serv, serv, protocol, uri, c_id, namespace, defaultExtPort, defaultPort)
