@@ -23,7 +23,6 @@ RUN apt install -y jq \
     2to3
 
 WORKDIR /usr/src/app
-RUN ls
 
 ADD ./requirements.txt /usr/src/app/requirements.txt
 
