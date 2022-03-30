@@ -14,12 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+PROTOCOL=$(jq '.endpoints[0].protocol' config/conf.json -r)
+PROCESSES=$(jq '.processes' config/conf.json -r)
 
-
-PROTOCOL="$(jq '.endpoints[0].protocol' conf.json -r)"
-PROCESSES=$(jq '.processes' conf.json -r)
-
-if [ $PROTOCOL == "http" ];
-then
+if [ $PROTOCOL = "http" ]; then
   $(gunicorn --chdir restful -w $PROCESSES app:app -b 0.0.0.0:5000 );
+elif [ $PROTOCOL = "grpc" ]; then
+  $(cat config/service.proto > service.proto)
+  $(python -m grpc_tools.protoc -I. --python_out=./common --grpc_python_out=./common service.proto);
+  $(cd grpc && python pre_app.py)
+  2to3 common/ -w -n
+  # Uninstall the extra apps
+  apt remove -y 2to3 wget
+  $(cd grpc && python app.py)
 fi
