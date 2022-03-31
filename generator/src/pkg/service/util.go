@@ -18,73 +18,15 @@ package service
 import (
 	"application-generator/src/pkg/model"
 	"fmt"
+	"strconv"
 )
 
 func CreateDeployment(metadataName, selectorAppName, selectorClusterName string, numberOfReplicas int,
 	templateAppLabel, templateClusterLabel, namespace string, containerPort int, containerName, containerImage,
 	mountPath string, volumeName, configMapName string, readinessProbe int, requestCPU, requestMemory, limitCPU,
-	limitMemory, protocol string) (deploymentInstance model.DeploymentInstance) {
+	limitMemory, nodeAffinity, protocol string) (deploymentInstance model.DeploymentInstance) {
 
 	var deployment model.DeploymentInstance
-	var containerInstance model.ContainerInstance
-	var envInstance model.EnvInstance
-
-	var containerPortInstance model.ContainerPortInstance
-	var containerVolume model.ContainerVolumeInstance
-	var volumeInstance model.VolumeInstance
-
-	envInstance.Name = "SERVICE_NAME"
-	envInstance.Value = metadataName
-	containerPortInstance.ContainerPort = containerPort
-	volumeInstance.Name = volumeName
-	volumeInstance.ConfigMap.Name = configMapName
-
-	containerVolume.MountName = volumeName
-	containerVolume.MountPath = mountPath
-
-	containerInstance.Volumes = append(containerInstance.Volumes, containerVolume)
-	containerInstance.Ports = append(containerInstance.Ports, containerPortInstance)
-	containerInstance.Name = containerName
-	containerInstance.Image = containerImage
-	containerInstance.ImagePullPolicy = "Never"
-	if protocol == "http" {
-		containerInstance.ReadinessProbe.HttpGet.Path = "/"
-		containerInstance.ReadinessProbe.HttpGet.Port = containerPort
-	}
-	if protocol == "grpc" {
-		containerInstance.ReadinessProbe.Exec.Command = append(containerInstance.ReadinessProbe.Exec.Command, string("/bin/grpc_health_probe"))
-		containerInstance.ReadinessProbe.Exec.Command = append(containerInstance.ReadinessProbe.Exec.Command, "-addr=:5000")
-	}
-	containerInstance.ReadinessProbe.InitialDelaySeconds = readinessProbe
-	containerInstance.ReadinessProbe.PeriodSeconds = 1
-	containerInstance.Resources.ResourceRequests.Cpu = requestCPU
-	containerInstance.Resources.ResourceRequests.Memory = requestMemory
-	containerInstance.Resources.ResourceLimits.Cpu = limitCPU
-	containerInstance.Resources.ResourceLimits.Memory = limitMemory
-
-	deployment.APIVersion = "apps/v1"
-	deployment.Kind = "Deployment"
-	deployment.Metadata.Name = metadataName
-	deployment.Metadata.Namespace = namespace
-	deployment.Metadata.Labels.Cluster = templateClusterLabel
-	deployment.Spec.Selector.MatchLabels.App = selectorAppName
-	deployment.Spec.Selector.MatchLabels.Cluster = selectorClusterName
-	deployment.Spec.Replicas = numberOfReplicas
-	deployment.Spec.Template.Metadata.Labels.App = templateAppLabel
-	deployment.Spec.Template.Metadata.Labels.Cluster = templateClusterLabel
-	deployment.Spec.Template.Spec.Containers = append(deployment.Spec.Template.Spec.Containers, containerInstance)
-	deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, volumeInstance)
-
-	return deployment
-
-}
-
-func CreateDeploymentWithAffinity(metadataName, selectorAppName, selectorClusterName string, numberOfReplicas int,
-	templateAppLabel, templateClusterLabel, namespace string, containerPort int, containerName, containerImage,
-	mountPath string, volumeName, configMapName string, readinessProbe int, requestCPU, requestMemory, limitCPU,
-	limitMemory, nodeAffinity, protocol string) (deploymentInstance model.DeploymentInstanceWithAffinity) {
-
-	var deployment model.DeploymentInstanceWithAffinity
 	var containerInstance model.ContainerInstance
 	var envInstance model.EnvInstance
 	var containerPortInstance model.ContainerPortInstance
@@ -111,7 +53,7 @@ func CreateDeploymentWithAffinity(metadataName, selectorAppName, selectorCluster
 		containerInstance.ReadinessProbe.HttpGet.Port = containerPort
 	}
 	if protocol == "grpc" {
-		containerInstance.ReadinessProbe.Exec.Command = append(containerInstance.ReadinessProbe.Exec.Command, ("/bin/grpc_health_probe"), "-addr=:"+string(containerPort))
+		containerInstance.ReadinessProbe.Exec.Command = append(containerInstance.ReadinessProbe.Exec.Command, ("/bin/grpc_health_probe"), "-addr=:"+strconv.Itoa(containerPort))
 
 	}
 

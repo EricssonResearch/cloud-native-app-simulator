@@ -96,7 +96,7 @@ type Services struct {
 type Clusters struct {
 	Cluster   string `json:"cluster"`
 	Namespace string `json:"namespace"`
-	Node      string `json:"node"`
+	Node      string `json:"node,omitempty"`
 }
 
 type Latencies struct {
@@ -225,19 +225,12 @@ func Create(config Config, readinessProbe int, clusters []string) {
 			}
 			configmap = s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json), proto_temp_filled)
 			appendManifest(configmap)
-			if nodeAffinity == "" {
-				deployment := s.CreateDeployment(serv, serv, c_id, replicaNumber, serv, c_id, namespace,
-					defaultPort, imageName, imageURL, volumePath, volumeName, "config-"+serv, readinessProbe,
-					resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory, protocol)
 
-				appendManifest(deployment)
-			} else {
-				deployment := s.CreateDeploymentWithAffinity(serv, serv, c_id, replicaNumber, serv, c_id, namespace,
-					defaultPort, imageName, imageURL, volumePath, volumeName, "config-"+serv, readinessProbe,
-					resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory,
-					nodeAffinity, protocol)
-				appendManifest(deployment)
-			}
+			deployment := s.CreateDeployment(serv, serv, c_id, replicaNumber, serv, c_id, namespace,
+				defaultPort, imageName, imageURL, volumePath, volumeName, "config-"+serv, readinessProbe,
+				resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory,
+				nodeAffinity, protocol)
+			appendManifest(deployment)
 
 			service = s.CreateService(serv, serv, protocol, uri, c_id, namespace, defaultExtPort, defaultPort)
 			appendManifest(service)
