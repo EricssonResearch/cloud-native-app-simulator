@@ -85,18 +85,18 @@ var generateCmd = &cobra.Command{
 
 			// NOTE: Here we assume numerically consecutive names for clusters and namespaces
 			clusterNamePrefix := stringPrompt("What is your cluster name prefix?")
-			clusterNumber := strconv.Atoi(stringPrompt("How many clusters do you have?"))
+			clusterNumber, _ := strconv.Atoi(stringPrompt("How many clusters do you have?"))
 			nsNamePrefix := stringPrompt("What is your namespace prefix?")
-			nsNumber := strconv.Atoi(stringPrompt("How many namespaces do you have?"))
+			nsNumber, _ := strconv.Atoi(stringPrompt("How many namespaces do you have?"))
 
 			svcMaxNumber := SvcMaxNumberDefault
 			svcReplicaMaxNumber := SvcReplicaMaxNumberDefault
 			svcEpMaxNumber := SvcEpMaxNumberDefault
 
 			if !simpleMode {
-				svcMaxNumber = strconv.Atoi(stringPrompt("Up to how many services do you want to have? (influences fan-out)"))
-				svcReplicaMaxNumber = strconv.Atoi(stringPrompt("Up to how many service replicas do you want to have?"))
-				svcEpMaxNumber = strconv.Atoi(stringPrompt("Up to how many service endpoints do you want to have? (fan-in)"))
+				svcMaxNumber, _ = strconv.Atoi(stringPrompt("Up to how many services do you want to have? (influences fan-out)"))
+				svcReplicaMaxNumber, _ = strconv.Atoi(stringPrompt("Up to how many service replicas do you want to have?"))
+				svcEpMaxNumber, _ = strconv.Atoi(stringPrompt("Up to how many service endpoints do you want to have? (fan-in)"))
 			}
 
 			var clusters, namespaces []string
