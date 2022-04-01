@@ -23,6 +23,13 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"strconv"
+)
+
+const (
+	SvcMaxNumberDefault = 10
+	SvcReplicaMaxNumberDefault = 10
+	SvcEpMaxNumberDefault = 5
 )
 
 func yesNoPrompt(label string, def bool) bool {
@@ -74,28 +81,47 @@ var generateCmd = &cobra.Command{
 
 		var inputFile string
 		if mode == "random" {
-			// TODO: Change this hard-coded cluster configuration for actual user inputs
-
 			simpleMode := yesNoPrompt("Do you want to set simple configuration? (otherwise, extended)", true)
 
+			// NOTE: Here we assume numerically consecutive names for clusters and namespaces
 			clusterNamePrefix := stringPrompt("What is your cluster name prefix?")
-			clusterNumber := stringPrompt("How many clusters do you have?")
+			clusterNumber := strconv.Atoi(stringPrompt("How many clusters do you have?"))
 			nsNamePrefix := stringPrompt("What is your namespace prefix?")
-			nsNumber := stringPrompt("How many namespaces do you have?")
+			nsNumber := strconv.Atoi(stringPrompt("How many namespaces do you have?"))
+
+			svcMaxNumber := svcMaxNumberDefault
+			svcReplicaMaxNumber := SvcReplicaMaxNumberDefault
+			svcEpMaxNumber := SvcEpMaxNumberDefault
 
 			if !simpleMode {
-				svcMaxNumber := stringPrompt("Up to how many services do you want to have?")
-				svcReplicaMaxNumber := stringPrompt("Up to how many service replicas do you want to have?")
-				svcInMaxNumber := stringPrompt("Up to how many service endpoints do you want to have? (fan-in)")
-				svcOutMaxNumber := stringPrompt("Up to how many service calls do you want to have? (fan-out)")
+				svcMaxNumber = strconv.Atoi(stringPrompt("Up to how many services do you want to have? (influences fan-out)"))
+				svcReplicaMaxNumber = strconv.Atoi(stringPrompt("Up to how many service replicas do you want to have?"))
+				svcEpMaxNumber = strconv.Atoi(stringPrompt("Up to how many service endpoints do you want to have? (fan-in)"))
 			}
 
-			clusterConfig := model.ClusterConfig{
-				Clusters: 	[]string{"cluster-1", "cluster-2", "cluster-3", "cluster-4", "cluster-5"},
-				Namespaces: []string{"ns-1", "ns-2", "ns-3"},
+			var clusters, namespaces []string
+
+			for i := 1; i <= clusterNumber; i++ {
+				clusters = append(clusters, clusterNamePrefix + strconv.Itoa(i))
 			}
 
-			inputFile = generate.CreateJsonInput(clusterConfig)
+			for j := 1; j <= nsNumber; j++ {
+				namespaces = append(namespaces, nsNamePrefix + strconv.Itoa(j))
+			}
+
+			userConfig := model.UserConfig {
+				Clusters: 						clusters,
+				Namespaces: 					namespaces,
+				ClusterNamePrefix:		clusterNamePrefix,
+				ClusterNumber:				clusterNumber,
+				NsNamePrefix:					nsNamePrefix,
+				NsNumber:							nsNumber,
+				SvcMaxNumber:					svcMaxNumber,
+				SvcReplicaMaxNumber:	svcReplicaMaxNumber,
+				SvcEpMaxNumber:				svcEpMaxNumber,
+			}
+
+			inputFile = generate.CreateJsonInput(userConfig)
 		} else if mode == "preset" {
 			inputFile = args[1]
 		}
