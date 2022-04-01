@@ -89,7 +89,7 @@ var generateCmd = &cobra.Command{
 			nsNamePrefix := stringPrompt("What is your namespace prefix?")
 			nsNumber := strconv.Atoi(stringPrompt("How many namespaces do you have?"))
 
-			svcMaxNumber := svcMaxNumberDefault
+			svcMaxNumber := SvcMaxNumberDefault
 			svcReplicaMaxNumber := SvcReplicaMaxNumberDefault
 			svcEpMaxNumber := SvcEpMaxNumberDefault
 
