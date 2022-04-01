@@ -236,7 +236,7 @@ func CreateJsonInput(userConfig model.UserConfig) (string) {
 	// TODO: Generate cluster latencies
 
 	// Generating random services
-	serviceNumber := rand.Intn(userConfig.svcMaxNumber) + 1
+	serviceNumber := rand.Intn(userConfig.SvcMaxNumber) + 1
 	for i := 1; i <= serviceNumber; i++ {
 		var service model.Service
 
