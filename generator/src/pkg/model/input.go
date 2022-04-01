@@ -76,7 +76,14 @@ type FileConfig struct {
 	Services  				[]Service	  			`json:"services"`
 }
 
-type ClusterConfig struct {
-  Clusters		[]string
-  Namespaces	[]string
+type UserConfig struct {
+  Clusters						[]string
+  Namespaces					[]string
+	ClusterNamePrefix		string
+	ClusterNumber				int
+	NsNamePrefix				string
+	NsNumber						int
+	SvcMaxNumber				int
+	SvcReplicaMaxNumber int
+	SvcEpMaxNumber			int
 }

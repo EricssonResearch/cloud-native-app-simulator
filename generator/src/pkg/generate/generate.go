@@ -225,7 +225,7 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 	}
 }
 
-func CreateJsonInput(clusterConfig model.ClusterConfig) (string) {
+func CreateJsonInput(userConfig model.UserConfig) (string) {
 	path, _ := os.Getwd()
 	path = path + "/input/new_description_test.json"
 
@@ -236,24 +236,22 @@ func CreateJsonInput(clusterConfig model.ClusterConfig) (string) {
 	// TODO: Generate cluster latencies
 
 	// Generating random services
-	// TODO: Replace this hard-coded number of services with the ones given by the user
-	serviceNumber := rand.Intn(10) + 1
+	serviceNumber := rand.Intn(userConfig.svcMaxNumber) + 1
 	for i := 1; i <= serviceNumber; i++ {
 		var service model.Service
 
 		service.Name = svcNamePrefix + strconv.Itoa(i)
 
 		// Randomly associating services to clusters
-		// TODO: Replace this hard-coded number of service replicas with the ones given by the user
-		replicaNumber := rand.Intn(5) + 1
+		replicaNumber := rand.Intn(userConfig.SvcReplicaMaxNumber) + 1
 		for j := 1; j <= replicaNumber; j++ {
 			var cluster model.Cluster
 
-			cRIndex := rand.Intn(len(clusterConfig.Clusters))
-			cluster.Cluster = clusterConfig.Clusters[cRIndex]
+			cRIndex := rand.Intn(len(userConfig.Clusters))
+			cluster.Cluster = userConfig.Clusters[cRIndex]
 
-			nRIndex := rand.Intn(len(clusterConfig.Namespaces))
-			cluster.Namespace = clusterConfig.Namespaces[nRIndex]
+			nRIndex := rand.Intn(len(userConfig.Namespaces))
+			cluster.Namespace = userConfig.Namespaces[nRIndex]
 
 			service.Clusters = append(service.Clusters, cluster)
 		}
@@ -270,8 +268,7 @@ func CreateJsonInput(clusterConfig model.ClusterConfig) (string) {
 		service.ReadinessProbe = svcReadinessProbeDefault
 
 		// Randomly generating service endpoints
-		// TODO: Replace this hard-coded number of service endpoints with the ones given by the user
-		endpointNumber := rand.Intn(5) + 1
+		endpointNumber := rand.Intn(userConfig.SvcEpMaxNumber) + 1
 		for k := 1; k <= endpointNumber; k++ {
 			var endpoint model.Endpoint
 
@@ -283,8 +280,6 @@ func CreateJsonInput(clusterConfig model.ClusterConfig) (string) {
 			endpoint.ForwardRequests = epForwardRequests
 
 			// Randomly generating called services
-			// TODO: Replace this hard-coded number of called services with the ones given by the user
-
 			// NOTE: Last service does not call any service to ensure the sequence of calls ends
 			if i < serviceNumber {
 				// NOTE: Services only call subsequent services to avoid endless loops
