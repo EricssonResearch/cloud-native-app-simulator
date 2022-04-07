@@ -32,40 +32,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const (
-	volumeName = "config-data-volume"
-	volumePath = "/usr/src/app/config"
-
-	imageName = "app"
-	imageURL  = "app-demo:latest"
-
-	defaultExtPort  = 80
-	defaultPort     = 5000
-	defaultProtocol = "http"
-
-	uri = "/"
-
-	replicaNumber = 1
-
-	requestsCPUDefault    = "500m"
-	requestsMemoryDefault = "256M"
-	limitsCPUDefault      = "1000m"
-	limitsMemoryDefault   = "1024M"
-
-	svcNamePrefix            = "service"
-	svcProcessesDefault      = 2
-	svcThreadsDefault        = 2
-	svcReadinessProbeDefault = 5
-
-	epNamePrefix                = "/end"
-	epCPUConsumptionDefault     = 0.003
-	epNetworkConsumptionDefault = 0.002
-	epMemoryConsumptionDefault  = 0.003
-	epForwardRequests           = "asynchronous"
-
-	csTrafficForwardRatio = 1
-)
-
 // the slices to store services, cluster and endpoints for counting and printing
 var services, clusters, endpoints []string
 
@@ -138,31 +104,31 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 		protocol := config.Services[i].Endpoints[0].Protocol
 
 		if resources.Limits.Cpu == "" {
-			resources.Limits.Cpu = limitsCPUDefault
+			resources.Limits.Cpu = s.LimitsCPUDefault
 		}
 		if resources.Limits.Memory == "" {
-			resources.Limits.Memory = limitsMemoryDefault
+			resources.Limits.Memory = s.LimitsMemoryDefault
 		}
 		if resources.Requests.Cpu == "" {
-			resources.Requests.Cpu = requestsCPUDefault
+			resources.Requests.Cpu = s.RequestsCPUDefault
 		}
 		if resources.Requests.Memory == "" {
-			resources.Requests.Memory = requestsMemoryDefault
+			resources.Requests.Memory = s.RequestsMemoryDefault
 		}
 
 		readinessProbe := config.Services[i].ReadinessProbe
 		if readinessProbe == 0 {
-			readinessProbe = svcReadinessProbeDefault
+			readinessProbe = s.SvcReadinessProbeDefault
 		}
 
 		processes := config.Services[i].Processes
 		if processes == 0 {
-			processes = svcProcessesDefault
+			processes = s.SvcProcessesDefault
 		}
 
 		threads := config.Services[i].Threads
 		if threads == 0 {
-			processes = svcThreadsDefault
+			processes = s.SvcThreadsDefault
 		}
 
 		cm_data := s.CreateConfigMap(processes, threads, config.Services[i].Endpoints)
@@ -191,13 +157,13 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 			configmap := s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json), proto_temp_filled)
 			appendManifest(configmap)
 
-			deployment := s.CreateDeployment(serv, serv, c_id, replicaNumber, serv, c_id, namespace,
-				defaultPort, imageName, imageURL, volumePath, volumeName, "config-"+serv, readinessProbe,
+			deployment := s.CreateDeployment(serv, serv, c_id, s.ReplicaNumber, serv, c_id, namespace,
+				s.DefaultPort, s.ImageName, s.ImageURL, s.VolumePath, s.VolumeName, "config-"+serv, readinessProbe,
 				resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory,
 				nodeAffinity, protocol)
 			appendManifest(deployment)
 
-			service := s.CreateService(serv, serv, protocol, uri, c_id, namespace, defaultExtPort, defaultPort)
+			service := s.CreateService(serv, serv, protocol, s.Uri, c_id, namespace, s.DefaultExtPort, s.DefaultPort)
 			appendManifest(service)
 
 			yamlDocString := strings.Join(manifests, "---\n")
@@ -226,7 +192,7 @@ func CreateJsonInput(userConfig model.UserConfig) string {
 	for i := 1; i <= serviceNumber; i++ {
 		service := s.CreateInputService()
 
-		service.Name = svcNamePrefix + strconv.Itoa(i)
+		service.Name = s.SvcNamePrefix + strconv.Itoa(i)
 
 		// Randomly associating services to clusters
 		replicaNumber := rand.Intn(userConfig.SvcReplicaMaxNumber) + 1
@@ -243,27 +209,18 @@ func CreateJsonInput(userConfig model.UserConfig) string {
 		}
 
 		resources := s.CreateInputResources()
-		resources.Limits.Cpu = limitsCPUDefault
-		resources.Limits.Memory = limitsMemoryDefault
-		resources.Requests.Cpu = requestsCPUDefault
-		resources.Requests.Memory = requestsMemoryDefault
 		service.Resources = resources
 
-		service.Processes = svcProcessesDefault
-		service.Threads = svcThreadsDefault
-		service.ReadinessProbe = svcReadinessProbeDefault
+		service.Processes = s.SvcProcessesDefault
+		service.Threads = s.SvcThreadsDefault
+		service.ReadinessProbe = s.SvcReadinessProbeDefault
 
 		// Randomly generating service endpoints
 		endpointNumber := rand.Intn(userConfig.SvcEpMaxNumber) + 1
 		for k := 1; k <= endpointNumber; k++ {
 			endpoint := s.CreateInputEndpoint()
 
-			endpoint.Name = epNamePrefix + strconv.Itoa(k)
-			endpoint.Protocol = defaultProtocol
-			endpoint.CpuConsumption = epCPUConsumptionDefault
-			endpoint.NetworkConsumption = epNetworkConsumptionDefault
-			endpoint.MemoryConsumption = epMemoryConsumptionDefault
-			endpoint.ForwardRequests = epForwardRequests
+			endpoint.Name = s.EpNamePrefix + strconv.Itoa(k)
 
 			// Randomly generating called services
 			// NOTE: Last service does not call any service to ensure the sequence of calls ends
@@ -273,12 +230,9 @@ func CreateJsonInput(userConfig model.UserConfig) string {
 				for n := i + 1; n <= calledServiceNumber; n++ {
 					calledService := s.CreateInputCalledSvc()
 
-					calledService.Service = svcNamePrefix + strconv.Itoa(n)
-					calledService.Port = strconv.Itoa(defaultExtPort)
+					calledService.Service = s.SvcNamePrefix + strconv.Itoa(n)
 					// NOTE: Always calling the first endpoint of the called service
-					calledService.Endpoint = epNamePrefix + "1"
-					calledService.Protocol = defaultProtocol
-					calledService.TrafficForwardRatio = csTrafficForwardRatio
+					calledService.Endpoint = s.EpNamePrefix + "1"
 
 					endpoint.CalledServices = append(endpoint.CalledServices, calledService)
 				}

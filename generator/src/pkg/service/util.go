@@ -21,6 +21,40 @@ import (
 	"strconv"
 )
 
+const (
+	VolumeName = "config-data-volume"
+	VolumePath = "/usr/src/app/config"
+
+	ImageName = "app"
+	ImageURL  = "app-demo:latest"
+
+	DefaultExtPort  = 80 //
+	DefaultPort     = 5000
+	defaultProtocol = "http" //
+
+	Uri = "/"
+
+	ReplicaNumber = 1
+
+	RequestsCPUDefault    = "500m"  //
+	RequestsMemoryDefault = "256M"  //
+	LimitsCPUDefault      = "1000m" //
+	LimitsMemoryDefault   = "1024M" //
+
+	SvcNamePrefix            = "service"
+	SvcProcessesDefault      = 2 //
+	SvcThreadsDefault        = 2 //
+	SvcReadinessProbeDefault = 5 //
+
+	EpNamePrefix                = "/end"
+	EpCPUConsumptionDefault     = 0.003          //
+	EpNetworkConsumptionDefault = 0.002          //
+	EpMemoryConsumptionDefault  = 0.003          //
+	EpForwardRequests           = "asynchronous" //
+
+	CsTrafficForwardRatio = 1 //
+)
+
 func CreateDeployment(metadataName, selectorAppName, selectorClusterName string, numberOfReplicas int,
 	templateAppLabel, templateClusterLabel, namespace string, containerPort int, containerName, containerImage,
 	mountPath string, volumeName, configMapName string, readinessProbe int, requestCPU, requestMemory, limitCPU,
@@ -239,7 +273,18 @@ func CreateConfigMap(processes int, threads int, ep []model.Endpoint) *model.Con
 
 func CreateInputResources() model.Resources {
 
+	var limits model.ResourceLimits
+	limits.Cpu = LimitsCPUDefault
+	limits.Memory = LimitsMemoryDefault
+
+	var requests model.ResourceRequests
+	requests.Cpu = RequestsCPUDefault
+	requests.Memory = RequestsMemoryDefault
+
 	var resources model.Resources
+
+	resources.Limits = limits
+	resources.Requests = requests
 
 	return resources
 }
@@ -247,6 +292,10 @@ func CreateInputResources() model.Resources {
 func CreateInputService() model.Service {
 
 	var service model.Service
+
+	service.Processes = SvcProcessesDefault
+	service.Threads = SvcThreadsDefault
+	service.ReadinessProbe = SvcReadinessProbeDefault
 
 	return service
 }
@@ -262,12 +311,22 @@ func CreateInputEndpoint() model.Endpoint {
 
 	var ep model.Endpoint
 
+	ep.Protocol = defaultProtocol
+	ep.CpuConsumption = EpCPUConsumptionDefault
+	ep.NetworkConsumption = EpNetworkConsumptionDefault
+	ep.MemoryConsumption = EpMemoryConsumptionDefault
+	ep.ForwardRequests = EpForwardRequests
+
 	return ep
 }
 
 func CreateInputCalledSvc() model.CalledService {
 
 	var calledSvc model.CalledService
+
+	calledSvc.Port = strconv.Itoa(DefaultExtPort)
+	calledSvc.Protocol = defaultProtocol
+	calledSvc.TrafficForwardRatio = CsTrafficForwardRatio
 
 	return calledSvc
 }
