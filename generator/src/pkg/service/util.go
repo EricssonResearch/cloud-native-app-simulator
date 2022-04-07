@@ -175,6 +175,7 @@ func CreateConfig(metadataName, metadataLabelName, metadataLabelCluster, namespa
 
 	return configMap
 }
+
 func CreateGateway(hosts []string) model.GatewayInstance {
 
 	var server model.GatewayServers
@@ -216,4 +217,57 @@ func CreateVirtualService(metadataName, hostname, gatewayHost string, port int) 
 
 	return *virtualService
 
+}
+
+func CreateFileConfig() model.FileConfig {
+
+	var fileConfig model.FileConfig
+
+	return fileConfig
+}
+
+func CreateConfigMap(processes int, threads int, ep []model.Endpoint) *model.ConfigMap {
+
+	cm_data := &model.ConfigMap{
+		Processes: processes,
+		Threads:   threads,
+		Endpoints: []model.Endpoint(ep),
+	}
+
+	return cm_data
+}
+
+func CreateInputResources() model.Resources {
+
+	var resources model.Resources
+
+	return resources
+}
+
+func CreateInputService() model.Service {
+
+	var service model.Service
+
+	return service
+}
+
+func CreateInputCluster() model.Cluster {
+
+	var cluster model.Cluster
+
+	return cluster
+}
+
+func CreateInputEndpoint() model.Endpoint {
+
+	var ep model.Endpoint
+
+	return ep
+}
+
+func CreateInputCalledSvc() model.CalledService {
+
+	var calledSvc model.CalledService
+
+	return calledSvc
 }

@@ -21,14 +21,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"io/ioutil"
+	"math/rand"
 	"os"
+	"strconv"
 	"strings"
 	"text/template"
-	"math/rand"
 	"time"
-	"strconv"
+
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -38,8 +39,9 @@ const (
 	imageName = "app"
 	imageURL  = "app-demo:latest"
 
-	defaultExtPort = 80
-	defaultPort    = 5000
+	defaultExtPort  = 80
+	defaultPort     = 5000
+	defaultProtocol = "http"
 
 	uri = "/"
 
@@ -50,34 +52,19 @@ const (
 	limitsCPUDefault      = "1000m"
 	limitsMemoryDefault   = "1024M"
 
-	svcNamePrefix = "service-"
-	svcProcessesDefault = 2
-	svcThreadsDefault = 2
+	svcNamePrefix            = "service"
+	svcProcessesDefault      = 2
+	svcThreadsDefault        = 2
 	svcReadinessProbeDefault = 5
 
-	epNamePrefix = "/end-"
-	epCPUConsumptionDefault = 0.003
+	epNamePrefix                = "/end"
+	epCPUConsumptionDefault     = 0.003
 	epNetworkConsumptionDefault = 0.002
-	epMemoryConsumptionDefault = 0.003
-	epForwardRequests = "asynchronous"
+	epMemoryConsumptionDefault  = 0.003
+	epForwardRequests           = "asynchronous"
 
 	csTrafficForwardRatio = 1
 )
-
-var (
-	configmap        model.ConfigMapInstance
-	deployment       model.DeploymentInstance
-	service          model.ServiceInstance
-	serviceAccount   model.ServiceAccountInstance
-	virtualService   model.VirtualServiceInstance
-	workerDeployment model.DeploymentInstance
-)
-
-type ConfigMap struct {
-	Processes 	int			`json:"processes"`
-	Threads		int			`json:"threads"`
-	Endpoints 	[]model.Endpoint	`json:"endpoints"`
-}
 
 // the slices to store services, cluster and endpoints for counting and printing
 var services, clusters, endpoints []string
@@ -104,7 +91,8 @@ func Parse(configFilename string) (model.FileConfig, []string) {
 		fmt.Println(err)
 	}
 
-	var loaded_config model.FileConfig
+	loaded_config := s.CreateFileConfig()
+
 	json.Unmarshal(configFileByteValue, &loaded_config)
 	for i := 0; i < len(loaded_config.Services); i++ {
 		services = append(services, loaded_config.Services[i].Name)
@@ -145,7 +133,8 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 	proto_temp_filled := proto_temp_filled_byte.String()
 	for i := 0; i < len(config.Services); i++ {
 		serv := config.Services[i].Name
-		resources := model.Resources(config.Services[i].Resources)
+		resources := s.CreateInputResources()
+		resources = config.Services[i].Resources
 		protocol := config.Services[i].Endpoints[0].Protocol
 
 		if resources.Limits.Cpu == "" {
@@ -176,11 +165,7 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 			processes = svcThreadsDefault
 		}
 
-		cm_data := &ConfigMap{
-			Processes:	processes,
-			Threads:		threads,
-			Endpoints:	[]model.Endpoint(config.Services[i].Endpoints),
-		}
+		cm_data := s.CreateConfigMap(processes, threads, config.Services[i].Endpoints)
 
 		serv_json, err := json.Marshal(cm_data)
 		if err != nil {
@@ -203,7 +188,7 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 				manifests = append(manifests, string(yamlDoc))
 				return nil
 			}
-			configmap = s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json), proto_temp_filled)
+			configmap := s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json), proto_temp_filled)
 			appendManifest(configmap)
 
 			deployment := s.CreateDeployment(serv, serv, c_id, replicaNumber, serv, c_id, namespace,
@@ -212,7 +197,7 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 				nodeAffinity, protocol)
 			appendManifest(deployment)
 
-			service = s.CreateService(serv, serv, protocol, uri, c_id, namespace, defaultExtPort, defaultPort)
+			service := s.CreateService(serv, serv, protocol, uri, c_id, namespace, defaultExtPort, defaultPort)
 			appendManifest(service)
 
 			yamlDocString := strings.Join(manifests, "---\n")
@@ -226,27 +211,27 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 	}
 }
 
-func CreateJsonInput(userConfig model.UserConfig) (string) {
+func CreateJsonInput(userConfig model.UserConfig) string {
 	path, _ := os.Getwd()
-	path = path + "/input/new_description_test.json"
+	path = path + "/input/" + userConfig.OutputFileName
 
 	rand.Seed(time.Now().UnixNano())
 
-	var inputConfig model.FileConfig
+	inputConfig := s.CreateFileConfig()
 
 	// TODO: Generate cluster latencies
 
 	// Generating random services
 	serviceNumber := rand.Intn(userConfig.SvcMaxNumber) + 1
 	for i := 1; i <= serviceNumber; i++ {
-		var service model.Service
+		service := s.CreateInputService()
 
 		service.Name = svcNamePrefix + strconv.Itoa(i)
 
 		// Randomly associating services to clusters
 		replicaNumber := rand.Intn(userConfig.SvcReplicaMaxNumber) + 1
 		for j := 1; j <= replicaNumber; j++ {
-			var cluster model.Cluster
+			cluster := s.CreateInputCluster()
 
 			cRIndex := rand.Intn(len(userConfig.Clusters))
 			cluster.Cluster = userConfig.Clusters[cRIndex]
@@ -257,7 +242,7 @@ func CreateJsonInput(userConfig model.UserConfig) (string) {
 			service.Clusters = append(service.Clusters, cluster)
 		}
 
-		var resources model.Resources
+		resources := s.CreateInputResources()
 		resources.Limits.Cpu = limitsCPUDefault
 		resources.Limits.Memory = limitsMemoryDefault
 		resources.Requests.Cpu = requestsCPUDefault
@@ -271,10 +256,10 @@ func CreateJsonInput(userConfig model.UserConfig) (string) {
 		// Randomly generating service endpoints
 		endpointNumber := rand.Intn(userConfig.SvcEpMaxNumber) + 1
 		for k := 1; k <= endpointNumber; k++ {
-			var endpoint model.Endpoint
+			endpoint := s.CreateInputEndpoint()
 
 			endpoint.Name = epNamePrefix + strconv.Itoa(k)
-			endpoint.Protocol = protocol
+			endpoint.Protocol = defaultProtocol
 			endpoint.CpuConsumption = epCPUConsumptionDefault
 			endpoint.NetworkConsumption = epNetworkConsumptionDefault
 			endpoint.MemoryConsumption = epMemoryConsumptionDefault
@@ -284,15 +269,15 @@ func CreateJsonInput(userConfig model.UserConfig) (string) {
 			// NOTE: Last service does not call any service to ensure the sequence of calls ends
 			if i < serviceNumber {
 				// NOTE: Services only call subsequent services to avoid endless loops
-				calledServiceNumber := rand.Intn(serviceNumber - i  + 1) + i // (max - min + 1) + min
+				calledServiceNumber := rand.Intn(serviceNumber-i+1) + i // (max - min + 1) + min
 				for n := i + 1; n <= calledServiceNumber; n++ {
-					var calledService model.CalledService
+					calledService := s.CreateInputCalledSvc()
 
 					calledService.Service = svcNamePrefix + strconv.Itoa(n)
 					calledService.Port = strconv.Itoa(defaultExtPort)
 					// NOTE: Always calling the first endpoint of the called service
 					calledService.Endpoint = epNamePrefix + "1"
-					calledService.Protocol = protocol
+					calledService.Protocol = defaultProtocol
 					calledService.TrafficForwardRatio = csTrafficForwardRatio
 
 					endpoint.CalledServices = append(endpoint.CalledServices, calledService)

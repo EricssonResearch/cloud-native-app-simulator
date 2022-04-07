@@ -18,20 +18,20 @@ package model
 
 type CalledService struct {
 	Service             string  `json:"service"`
-	Port           			string	`json:"port"`
+	Port                string  `json:"port"`
 	Endpoint            string  `json:"endpoint"`
 	Protocol            string  `json:"protocol"`
 	TrafficForwardRatio float32 `json:"traffic_forward_ratio"`
 }
 
 type Endpoint struct {
-	Name               string           `json:"name"`
-	Protocol           string						`json:"protocol"`
-	CpuConsumption     float64          `json:"cpu_consumption"`
-	NetworkConsumption float64          `json:"network_consumption"`
-	MemoryConsumption  float64          `json:"memory_consumption"`
-	ForwardRequests    string  					`json:"forward_requests"`
-	CalledServices     []CalledService	`json:"called_services"`
+	Name               string          `json:"name"`
+	Protocol           string          `json:"protocol"`
+	CpuConsumption     float64         `json:"cpu_consumption"`
+	NetworkConsumption float64         `json:"network_consumption"`
+	MemoryConsumption  float64         `json:"memory_consumption"`
+	ForwardRequests    string          `json:"forward_requests"`
+	CalledServices     []CalledService `json:"called_services"`
 }
 
 type ResourceLimits struct {
@@ -50,13 +50,13 @@ type Resources struct {
 }
 
 type Service struct {
-	Name      			string      `json:"name"`
-	Clusters  			[]Cluster		`json:"clusters"`
-	Resources 			Resources   `json:"resources"`
-	Processes				int					`json:"processes"`
-	Threads					int					`json:"threads"`
-	ReadinessProbe	int					`json:"readiness_probe"`
-	Endpoints 			[]Endpoint	`json:"endpoints"`
+	Name           string     `json:"name"`
+	Clusters       []Cluster  `json:"clusters"`
+	Resources      Resources  `json:"resources"`
+	Processes      int        `json:"processes"`
+	Threads        int        `json:"threads"`
+	ReadinessProbe int        `json:"readiness_probe"`
+	Endpoints      []Endpoint `json:"endpoints"`
 }
 
 type Cluster struct {
@@ -72,18 +72,19 @@ type ClusterLatency struct {
 }
 
 type FileConfig struct {
-	ClusterLatencies	[]ClusterLatency	`json:"cluster_latencies"`
-	Services  				[]Service	  			`json:"services"`
+	ClusterLatencies []ClusterLatency `json:"cluster_latencies"`
+	Services         []Service        `json:"services"`
 }
 
 type UserConfig struct {
-  Clusters						[]string
-  Namespaces					[]string
-	ClusterNamePrefix		string
-	ClusterNumber				int
-	NsNamePrefix				string
-	NsNumber						int
-	SvcMaxNumber				int
+	Clusters            []string
+	Namespaces          []string
+	ClusterNamePrefix   string
+	ClusterNumber       int
+	NsNamePrefix        string
+	NsNumber            int
+	SvcMaxNumber        int
 	SvcReplicaMaxNumber int
-	SvcEpMaxNumber			int
+	SvcEpMaxNumber      int
+	OutputFileName      string
 }

@@ -32,6 +32,8 @@ type ConfigMapInstance struct {
 	} `yaml:"data"`
 }
 
-type ConfigDataInstance struct {
-	Hop []string `json:"Hop"`
+type ConfigMap struct {
+	Processes int        `json:"processes"`
+	Threads   int        `json:"threads"`
+	Endpoints []Endpoint `json:"endpoints"`
 }

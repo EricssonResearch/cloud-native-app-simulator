@@ -17,58 +17,59 @@ package cmd
 
 import (
 	"application-generator/src/pkg/generate"
-	"github.com/spf13/cobra"
 	"application-generator/src/pkg/model"
 	"bufio"
 	"fmt"
 	"os"
-	"strings"
 	"strconv"
+	"strings"
+
+	"github.com/spf13/cobra"
 )
 
 const (
-	SvcMaxNumberDefault = 10
+	SvcMaxNumberDefault        = 10
 	SvcReplicaMaxNumberDefault = 10
-	SvcEpMaxNumberDefault = 5
+	SvcEpMaxNumberDefault      = 5
 )
 
 func yesNoPrompt(label string, def bool) bool {
-  choices := "Y/n"
-  if !def {
-      choices = "y/N"
-  }
+	choices := "Y/n"
+	if !def {
+		choices = "y/N"
+	}
 
-  r := bufio.NewReader(os.Stdin)
-  var s string
+	r := bufio.NewReader(os.Stdin)
+	var s string
 
-  for {
-      fmt.Fprintf(os.Stderr, "%s (%s) ", label, choices)
-      s, _ = r.ReadString('\n')
-      s = strings.TrimSpace(s)
-      if s == "" {
-          return def
-      }
-      s = strings.ToLower(s)
-      if s == "y" || s == "yes" {
-          return true
-      }
-      if s == "n" || s == "no" {
-          return false
-      }
-  }
+	for {
+		fmt.Fprintf(os.Stderr, "%s (%s) ", label, choices)
+		s, _ = r.ReadString('\n')
+		s = strings.TrimSpace(s)
+		if s == "" {
+			return def
+		}
+		s = strings.ToLower(s)
+		if s == "y" || s == "yes" {
+			return true
+		}
+		if s == "n" || s == "no" {
+			return false
+		}
+	}
 }
 
 func stringPrompt(label string) string {
-  var s string
-  r := bufio.NewReader(os.Stdin)
-  for {
-      fmt.Fprint(os.Stderr, label+" ")
-      s, _ = r.ReadString('\n')
-      if s != "" {
-          break
-      }
-  }
-  return strings.TrimSpace(s)
+	var s string
+	r := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Fprint(os.Stderr, label+" ")
+		s, _ = r.ReadString('\n')
+		if s != "" {
+			break
+		}
+	}
+	return strings.TrimSpace(s)
 }
 
 var generateCmd = &cobra.Command{
@@ -99,26 +100,29 @@ var generateCmd = &cobra.Command{
 				svcEpMaxNumber, _ = strconv.Atoi(stringPrompt("Up to how many service endpoints do you want to have? (fan-in)"))
 			}
 
+			outputFileName := stringPrompt("What name you want the output file to have?")
+
 			var clusters, namespaces []string
 
 			for i := 1; i <= clusterNumber; i++ {
-				clusters = append(clusters, clusterNamePrefix + strconv.Itoa(i))
+				clusters = append(clusters, clusterNamePrefix+strconv.Itoa(i))
 			}
 
 			for j := 1; j <= nsNumber; j++ {
-				namespaces = append(namespaces, nsNamePrefix + strconv.Itoa(j))
+				namespaces = append(namespaces, nsNamePrefix+strconv.Itoa(j))
 			}
 
-			userConfig := model.UserConfig {
-				Clusters: 						clusters,
-				Namespaces: 					namespaces,
-				ClusterNamePrefix:		clusterNamePrefix,
-				ClusterNumber:				clusterNumber,
-				NsNamePrefix:					nsNamePrefix,
-				NsNumber:							nsNumber,
-				SvcMaxNumber:					svcMaxNumber,
-				SvcReplicaMaxNumber:	svcReplicaMaxNumber,
-				SvcEpMaxNumber:				svcEpMaxNumber,
+			userConfig := model.UserConfig{
+				Clusters:            clusters,
+				Namespaces:          namespaces,
+				ClusterNamePrefix:   clusterNamePrefix,
+				ClusterNumber:       clusterNumber,
+				NsNamePrefix:        nsNamePrefix,
+				NsNumber:            nsNumber,
+				SvcMaxNumber:        svcMaxNumber,
+				SvcReplicaMaxNumber: svcReplicaMaxNumber,
+				SvcEpMaxNumber:      svcEpMaxNumber,
+				OutputFileName:      outputFileName,
 			}
 
 			inputFile = generate.CreateJsonInput(userConfig)
