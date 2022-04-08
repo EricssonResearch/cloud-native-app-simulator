@@ -21,99 +21,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"io/ioutil"
+	"math/rand"
 	"os"
+	"strconv"
 	"strings"
 	"text/template"
+	"time"
+
+	"gopkg.in/yaml.v3"
 )
-
-const (
-	volumeName = "config-data-volume"
-	volumePath = "/usr/src/app/config"
-
-	imageName = "app"
-	imageURL  = "app-demo:latest"
-
-	defaultExtPort = 80
-	defaultPort    = 5000
-
-	uri = "/"
-
-	replicaNumber = 1
-
-	requestsCPUDefault    = "500m"
-	requestsMemoryDefault = "256M"
-	limitsCPUDefault      = "1000m"
-	limitsMemoryDefault   = "1024M"
-)
-
-var (
-	configmap        model.ConfigMapInstance
-	deployment       model.DeploymentInstance
-	service          model.ServiceInstance
-	serviceAccount   model.ServiceAccountInstance
-	virtualService   model.VirtualServiceInstance
-	workerDeployment model.DeploymentInstance
-)
-
-type CalledServices struct {
-	Service             string  `json:"service"`
-	Port                string  `json:"port"`
-	Endpoint            string  `json:"endpoint"`
-	Protocol            string  `json:"protocol"`
-	TrafficForwardRatio float32 `json:"traffic_forward_ratio"`
-}
-type Endpoints struct {
-	Name               string           `json:"name"`
-	Protocol           string           `json:"protocol"`
-	CpuConsumption     float64          `json:"cpu_consumption"`
-	NetworkConsumption float64          `json:"network_consumption"`
-	MemoryConsumption  float64          `json:"memory_consumption"`
-	ForwardRequests    string           `json:"forward_requests"`
-	CalledServices     []CalledServices `json:"called_services"`
-}
-type ResourceLimits struct {
-	Cpu    string `json:"cpu"`
-	Memory string `json:"memory"`
-}
-type ResourceRequests struct {
-	Cpu    string `json:"cpu"`
-	Memory string `json:"memory"`
-}
-type Resources struct {
-	Limits   ResourceLimits   `json:"limits"`
-	Requests ResourceRequests `json:"requests"`
-}
-type Services struct {
-	Name      string      `json:"name"`
-	Clusters  []Clusters  `json:"clusters"`
-	Resources Resources   `json:"resources"`
-	Processes int         `json:"processes"`
-	Endpoints []Endpoints `json:"endpoints"`
-}
-
-type Clusters struct {
-	Cluster   string `json:"cluster"`
-	Namespace string `json:"namespace"`
-	Node      string `json:"node,omitempty"`
-}
-
-type Latencies struct {
-	Src     string  `json:"src"`
-	Dest    string  `json:"dest"`
-	Latancy float64 `json:"latency"`
-}
-
-type Config struct {
-	Latencies []Latencies `json:"cluster_latencies"`
-	Services  []Services  `json:"services"`
-}
-
-type ConfigMap struct {
-	Processes int         `json:"processes"`
-	Endpoints []Endpoints `json:"endpoints"`
-}
 
 // the slices to store services, cluster and endpoints for counting and printing
 var services, clusters, endpoints []string
@@ -132,7 +49,7 @@ func Unique(strSlice []string) []string {
 }
 
 // Parse microservice config file, and return a config struct
-func Parse(configFilename string) (Config, []string) {
+func Parse(configFilename string) (model.FileConfig, []string) {
 	configFile, err := os.Open(configFilename)
 	configFileByteValue, _ := ioutil.ReadAll(configFile)
 
@@ -140,7 +57,8 @@ func Parse(configFilename string) (Config, []string) {
 		fmt.Println(err)
 	}
 
-	var loaded_config Config
+	loaded_config := s.CreateFileConfig()
+
 	json.Unmarshal(configFileByteValue, &loaded_config)
 	for i := 0; i < len(loaded_config.Services); i++ {
 		services = append(services, loaded_config.Services[i].Name)
@@ -164,7 +82,7 @@ func Parse(configFilename string) (Config, []string) {
 	return loaded_config, clusters
 }
 
-func Create(config Config, readinessProbe int, clusters []string) {
+func CreateK8sYaml(config model.FileConfig, clusters []string) {
 	path, _ := os.Getwd()
 	proto_temp, _ := template.ParseFiles(path + "/template/service.tmpl")
 	path = path + "/k8s"
@@ -181,26 +99,39 @@ func Create(config Config, readinessProbe int, clusters []string) {
 	proto_temp_filled := proto_temp_filled_byte.String()
 	for i := 0; i < len(config.Services); i++ {
 		serv := config.Services[i].Name
-		resources := Resources(config.Services[i].Resources)
+		resources := s.CreateInputResources()
+		resources = config.Services[i].Resources
 		protocol := config.Services[i].Endpoints[0].Protocol
 
 		if resources.Limits.Cpu == "" {
-			resources.Limits.Cpu = limitsCPUDefault
+			resources.Limits.Cpu = s.LimitsCPUDefault
 		}
 		if resources.Limits.Memory == "" {
-			resources.Limits.Memory = limitsMemoryDefault
+			resources.Limits.Memory = s.LimitsMemoryDefault
 		}
 		if resources.Requests.Cpu == "" {
-			resources.Requests.Cpu = requestsCPUDefault
+			resources.Requests.Cpu = s.RequestsCPUDefault
 		}
 		if resources.Requests.Memory == "" {
-			resources.Requests.Memory = requestsMemoryDefault
+			resources.Requests.Memory = s.RequestsMemoryDefault
 		}
 
-		cm_data := &ConfigMap{
-			Processes: int(config.Services[i].Processes),
-			Endpoints: []Endpoints(config.Services[i].Endpoints),
+		readinessProbe := config.Services[i].ReadinessProbe
+		if readinessProbe == 0 {
+			readinessProbe = s.SvcReadinessProbeDefault
 		}
+
+		processes := config.Services[i].Processes
+		if processes == 0 {
+			processes = s.SvcProcessesDefault
+		}
+
+		threads := config.Services[i].Threads
+		if threads == 0 {
+			processes = s.SvcThreadsDefault
+		}
+
+		cm_data := s.CreateConfigMap(processes, threads, config.Services[i].Endpoints)
 
 		serv_json, err := json.Marshal(cm_data)
 		if err != nil {
@@ -223,16 +154,16 @@ func Create(config Config, readinessProbe int, clusters []string) {
 				manifests = append(manifests, string(yamlDoc))
 				return nil
 			}
-			configmap = s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json), proto_temp_filled)
+			configmap := s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json), proto_temp_filled)
 			appendManifest(configmap)
 
-			deployment := s.CreateDeployment(serv, serv, c_id, replicaNumber, serv, c_id, namespace,
-				defaultPort, imageName, imageURL, volumePath, volumeName, "config-"+serv, readinessProbe,
+			deployment := s.CreateDeployment(serv, serv, c_id, s.ReplicaNumber, serv, c_id, namespace,
+				s.DefaultPort, s.ImageName, s.ImageURL, s.VolumePath, s.VolumeName, "config-"+serv, readinessProbe,
 				resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory,
 				nodeAffinity, protocol)
 			appendManifest(deployment)
 
-			service = s.CreateService(serv, serv, protocol, uri, c_id, namespace, defaultExtPort, defaultPort)
+			service := s.CreateService(serv, serv, protocol, s.Uri, c_id, namespace, s.DefaultExtPort, s.DefaultPort)
 			appendManifest(service)
 
 			yamlDocString := strings.Join(manifests, "---\n")
@@ -244,4 +175,84 @@ func Create(config Config, readinessProbe int, clusters []string) {
 
 		}
 	}
+}
+
+func CreateJsonInput(userConfig model.UserConfig) string {
+	path, _ := os.Getwd()
+	path = path + "/input/" + userConfig.OutputFileName
+
+	rand.Seed(time.Now().UnixNano())
+
+	inputConfig := s.CreateFileConfig()
+
+	// TODO: Generate cluster latencies
+
+	// Generating random services
+	serviceNumber := rand.Intn(userConfig.SvcMaxNumber) + 1
+	for i := 1; i <= serviceNumber; i++ {
+		service := s.CreateInputService()
+
+		service.Name = s.SvcNamePrefix + strconv.Itoa(i)
+
+		// Randomly associating services to clusters
+		replicaNumber := rand.Intn(userConfig.SvcReplicaMaxNumber) + 1
+		for j := 1; j <= replicaNumber; j++ {
+			cluster := s.CreateInputCluster()
+
+			cRIndex := rand.Intn(len(userConfig.Clusters))
+			cluster.Cluster = userConfig.Clusters[cRIndex]
+
+			nRIndex := rand.Intn(len(userConfig.Namespaces))
+			cluster.Namespace = userConfig.Namespaces[nRIndex]
+
+			service.Clusters = append(service.Clusters, cluster)
+		}
+
+		resources := s.CreateInputResources()
+		service.Resources = resources
+
+		service.Processes = s.SvcProcessesDefault
+		service.Threads = s.SvcThreadsDefault
+		service.ReadinessProbe = s.SvcReadinessProbeDefault
+
+		// Randomly generating service endpoints
+		endpointNumber := rand.Intn(userConfig.SvcEpMaxNumber) + 1
+		for k := 1; k <= endpointNumber; k++ {
+			endpoint := s.CreateInputEndpoint()
+
+			endpoint.Name = s.EpNamePrefix + strconv.Itoa(k)
+
+			// Randomly generating called services
+			// NOTE: Last service does not call any service to ensure the sequence of calls ends
+			if i < serviceNumber {
+				// NOTE: Services only call subsequent services to avoid endless loops
+				calledServiceNumber := rand.Intn(serviceNumber-i+1) + i // (max - min + 1) + min
+				for n := i + 1; n <= calledServiceNumber; n++ {
+					calledService := s.CreateInputCalledSvc()
+
+					calledService.Service = s.SvcNamePrefix + strconv.Itoa(n)
+					// NOTE: Always calling the first endpoint of the called service
+					calledService.Endpoint = s.EpNamePrefix + "1"
+
+					endpoint.CalledServices = append(endpoint.CalledServices, calledService)
+				}
+			}
+
+			service.Endpoints = append(service.Endpoints, endpoint)
+		}
+
+		inputConfig.Services = append(inputConfig.Services, service)
+	}
+
+	input_json, err := json.MarshalIndent(inputConfig, "", " ")
+	if err != nil {
+		panic(err)
+	}
+
+	err = ioutil.WriteFile(path, input_json, 0644)
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	return path
 }

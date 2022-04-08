@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: config-service9
+    labels:
+        name: config-service9
+        version: cluster3
+    namespace: namespace2
+data:
+    conf.json: '{"processes":2,"threads":2,"endpoints":[{"name":"/end1","protocol":"http","cpu_consumption":0.003,"network_consumption":0.002,"memory_consumption":0.003,"forward_requests":"asynchronous","called_services":null},{"name":"/end2","protocol":"http","cpu_consumption":0.003,"network_consumption":0.002,"memory_consumption":0.003,"forward_requests":"asynchronous","called_services":[{"service":"service10","port":"80","endpoint":"/end1","protocol":"http","traffic_forward_ratio":1}]},{"name":"/end3","protocol":"http","cpu_consumption":0.003,"network_consumption":0.002,"memory_consumption":0.003,"forward_requests":"asynchronous","called_services":null}]}'
+    service.proto: "syntax = \"proto3\";\n\n\nservice service1 {\n    \n    rpc /end1 (Request) returns (Response) {}\n    \n}\n\nservice service2 {\n    \n    rpc /end1 (Request) returns (Response) {}\n    \n}\n\nservice service3 {\n    \n    rpc /end1 (Request) returns (Response) {}\n    \n    rpc /end2 (Request) returns (Response) {}\n    \n}\n\nservice service4 {\n    \n    rpc /end1 (Request) returns (Response) {}\n    \n    rpc /end2 (Request) returns (Response) {}\n    \n    rpc /end3 (Request) returns (Response) {}\n    \n    rpc /end4 (Request) returns (Response) {}\n    \n    rpc /end5 (Request) returns (Response) {}\n    \n}\n\nservice service5 {\n    \n    rpc /end1 (Request) returns (Response) {}\n    \n    rpc /end2 (Request) returns (Response) {}\n    \n}\n\nservice service6 {\n    \n    rpc /end1 (Request) returns (Response) {}\n    \n    rpc /end2 (Request) returns (Response) {}\n    \n    rpc /end3 (Request) returns (Response) {}\n    \n    rpc /end4 (Request) returns (Response) {}\n    \n    rpc /end5 (Request) returns (Response) {}\n    \n}\n\nservice service7 {\n    \n    rpc /end1 (Request) returns (Response) {}\n    \n}\n\nservice service8 {\n    \n    rpc /end1 (Request) returns (Response) {}\n    \n    rpc /end2 (Request) returns (Response) {}\n    \n    rpc /end3 (Request) returns (Response) {}\n    \n}\n\nservice service9 {\n    \n    rpc /end1 (Request) returns (Response) {}\n    \n    rpc /end2 (Request) returns (Response) {}\n    \n    rpc /end3 (Request) returns (Response) {}\n    \n}\n\nservice service10 {\n    \n    rpc /end1 (Request) returns (Response) {}\n    \n    rpc /end2 (Request) returns (Response) {}\n    \n    rpc /end3 (Request) returns (Response) {}\n    \n}\n\n\nmessage Request {\n    string data = 1;\n}\n\nmessage Response {\n    string data = 1;\n}"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: service9
+    namespace: namespace2
+    labels:
+        version: cluster3
+spec:
+    selector:
+        matchLabels:
+            app: service9
+            version: cluster3
+    replicas: 1
+    template:
+        metadata:
+            labels:
+                app: service9
+                version: cluster3
+        spec:
+            containers:
+                - name: app
+                  image: app-demo:latest
+                  imagePullPolicy: Never
+                  env:
+                    - name: SERVICE_NAME
+                      value: service9
+                  ports:
+                    - containerPort: 5000
+                  volumeMounts:
+                    - mountPath: /usr/src/app/config
+                      name: config-data-volume
+                  readinessProbe:
+                    httpGet:
+                        path: /
+                        port: 5000
+                    initialDelaySeconds: 5
+                    periodSeconds: 1
+                  resources:
+                    limits:
+                        cpu: 1000m
+                        memory: 1024M
+                    requests:
+                        cpu: 500m
+                        memory: 256M
+            volumes:
+                - name: config-data-volume
+                  configMap:
+                    name: config-service9
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: service9
+    namespace: namespace2
+    labels:
+        version: cluster3
+    annotations:
+        http: /
+spec:
+    selector:
+        app: service9
+    ports:
+        - name: http
+          port: 80
+          targetPort: 5000

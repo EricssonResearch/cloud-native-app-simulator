@@ -20,20 +20,21 @@ kind load docker-image app-demo --name={cluster$i}
 5. go (for installation, configuration and basic testing, follow instructions in e.g. [How to Install GoLang (Go Programming Language) in Linux](HTtps://www.tecmint.com/install-go-in-linux/); make sure go environment variables and path are configured accordingly)
 
 ## Environment Preparation
-1. Make sure the application-generator folder is located under path ~/go_projects/src/ and initialize module by executing go mod init
-2. If needed, install go module dependencies, e.g. cobra and yaml
-3. Modify any of the input files under the input directory according to the requirements.
-4. Generate and deploy kubernetes manifest files by running 'generator.sh' script. It accepts two arguments, path to input file and value for readiness probe in seconds.
+1. To generate and deploy microservice-based applications, go to the /generator directory
+2. Make sure the /generator directory is located under path ~/go_projects/src/ and initialize module by executing go mod init
+3. If needed, install go module dependencies, e.g. cobra and yaml
+4. Modify any of the input files under the **input** directory according to your own requirements (see some json examples under the **examples** directory).
+5. Generate and deploy kubernetes manifest files by running the 'generator.sh' script. This command can be run under two different modes: (i) 'random' mode which generates a random description file or (ii) 'preset' mode which generates Kubernetes manifest based on a description file in the input directory". Note that this commands generates k8s yaml files which are stored under the **k8s** directory (see some yaml examples under the **examples** directory).
   ```bash
-  ./generator.sh {input file} {readiness probe}
-  ```
-5. Modify the necessary files for request generator
+  ./generator.sh {mode} {input file}
+  ```  
+6. Modify the necessary files for request generation with tsung
     - Change the initial field of json files under the **tsung** directory according the chain configuration.
     - Change the chain_no field of json files under the **tsung** directory according the chain configuration. For example, for first chain it should be **1**
     - Update the request_task_type of json files under the **tsung** directory for assigning user defined task to each microservice in the chain
     - Change server host ip address in conf.xml file with istio-ingress gateway for first microservice in chain.
     - Change the chain json file under the request section in conf.xml to send request to the desired chain. For example, if first chain is targeted it should be **chain1.json**
-6. Change Kubernetes context to the main cluster
+7. Change Kubernetes context to the main cluster
 ```bash
 kubectl config use-context cluster1
 ```
