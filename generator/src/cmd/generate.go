@@ -23,6 +23,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/spf13/cobra"
 )
@@ -72,6 +73,50 @@ func stringPrompt(label string) string {
 	return strings.TrimSpace(s)
 }
 
+func expandInputString(names string) []string {
+	list := strings.Split(names, ",")
+
+	var subList []string
+	for index, item := range list {
+		item = strings.TrimSpace(item)
+		clusterRange := strings.Split(item, ":")
+
+		fmt.Println(len(clusterRange))
+
+		if len(clusterRange) == 2 {
+			prefix := getPrefix(clusterRange[0])
+			min, _ := strconv.Atoi(strings.TrimPrefix(clusterRange[0], prefix))
+			max, _ := strconv.Atoi(strings.TrimPrefix(clusterRange[1], prefix))
+
+			for i := min; i <= max; i++ {
+				subList = append(subList, prefix+strconv.Itoa(i))
+			}
+
+			// Remove element from list since it was expanded
+			copy(list[index:], list[index+1:])
+			list[len(list)-1] = ""
+			list = list[:len(list)-1]
+		}
+	}
+	list = append(list, subList...)
+
+	return list
+}
+
+func getPrefix(s string) string {
+	prefix := ""
+	for _, c := range s {
+		if !unicode.IsDigit(c) {
+			prefix = prefix + string(c)
+		} else {
+			break
+		}
+	}
+
+	fmt.Println(prefix)
+	return prefix
+}
+
 var generateCmd = &cobra.Command{
 	Use:   "generate [mode] [input-file]",
 	Short: "This command can be run under two different modes: (i) 'random' mode which generates a random description file or (ii) 'preset' mode which generates Kubernetes manifest based on a description file in the input directory",
@@ -84,11 +129,8 @@ var generateCmd = &cobra.Command{
 		if mode == "random" {
 			simpleMode := yesNoPrompt("Do you want to set simple configuration? (otherwise, extended)", true)
 
-			// NOTE: Here we assume numerically consecutive names for clusters and namespaces
-			clusterNamePrefix := stringPrompt("What is your cluster name prefix?")
-			clusterNumber, _ := strconv.Atoi(stringPrompt("How many clusters do you have?"))
-			nsNamePrefix := stringPrompt("What is your namespace prefix?")
-			nsNumber, _ := strconv.Atoi(stringPrompt("How many namespaces do you have?"))
+			clusterNames := stringPrompt("Enter your cluster names (separated by commas, consecutive numbers can be given as range using ':')")
+			nsNames := stringPrompt("Enter your namespaces (separated by commas, consecutive names with same prefix can be given as range using ':')")
 
 			svcMaxNumber := SvcMaxNumberDefault
 			svcReplicaMaxNumber := SvcReplicaMaxNumberDefault
@@ -102,23 +144,12 @@ var generateCmd = &cobra.Command{
 
 			outputFileName := stringPrompt("What name you want the output file to have?")
 
-			var clusters, namespaces []string
-
-			for i := 1; i <= clusterNumber; i++ {
-				clusters = append(clusters, clusterNamePrefix+strconv.Itoa(i))
-			}
-
-			for j := 1; j <= nsNumber; j++ {
-				namespaces = append(namespaces, nsNamePrefix+strconv.Itoa(j))
-			}
+			clusterList := expandInputString(clusterNames)
+			nsList := expandInputString(nsNames)
 
 			userConfig := model.UserConfig{
-				Clusters:            clusters,
-				Namespaces:          namespaces,
-				ClusterNamePrefix:   clusterNamePrefix,
-				ClusterNumber:       clusterNumber,
-				NsNamePrefix:        nsNamePrefix,
-				NsNumber:            nsNumber,
+				Clusters:            clusterList,
+				Namespaces:          nsList,
 				SvcMaxNumber:        svcMaxNumber,
 				SvcReplicaMaxNumber: svcReplicaMaxNumber,
 				SvcEpMaxNumber:      svcEpMaxNumber,

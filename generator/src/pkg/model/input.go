@@ -79,10 +79,6 @@ type FileConfig struct {
 type UserConfig struct {
 	Clusters            []string
 	Namespaces          []string
-	ClusterNamePrefix   string
-	ClusterNumber       int
-	NsNamePrefix        string
-	NsNumber            int
 	SvcMaxNumber        int
 	SvcReplicaMaxNumber int
 	SvcEpMaxNumber      int

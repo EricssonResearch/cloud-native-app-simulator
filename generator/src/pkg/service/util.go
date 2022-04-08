@@ -36,23 +36,23 @@ const (
 
 	ReplicaNumber = 1
 
-	RequestsCPUDefault    = "500m"  //
-	RequestsMemoryDefault = "256M"  //
-	LimitsCPUDefault      = "1000m" //
-	LimitsMemoryDefault   = "1024M" //
+	RequestsCPUDefault    = "500m"
+	RequestsMemoryDefault = "256M"
+	LimitsCPUDefault      = "1000m"
+	LimitsMemoryDefault   = "1024M"
 
 	SvcNamePrefix            = "service"
-	SvcProcessesDefault      = 2 //
-	SvcThreadsDefault        = 2 //
-	SvcReadinessProbeDefault = 5 //
+	SvcProcessesDefault      = 2
+	SvcThreadsDefault        = 2
+	SvcReadinessProbeDefault = 5
 
 	EpNamePrefix                = "/end"
-	EpCPUConsumptionDefault     = 0.003          //
-	EpNetworkConsumptionDefault = 0.002          //
-	EpMemoryConsumptionDefault  = 0.003          //
-	EpForwardRequests           = "asynchronous" //
+	EpCPUConsumptionDefault     = 0.003
+	EpNetworkConsumptionDefault = 0.002
+	EpMemoryConsumptionDefault  = 0.003
+	EpForwardRequests           = "asynchronous"
 
-	CsTrafficForwardRatio = 1 //
+	CsTrafficForwardRatio = 1
 )
 
 func CreateDeployment(metadataName, selectorAppName, selectorClusterName string, numberOfReplicas int,
