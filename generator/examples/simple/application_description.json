@@ -1,0 +1,53 @@
+{
+  "cluster_latencies": [
+    {
+      "src" : "cluster-1",
+      "dest": "cluster-2",
+      "latency": 0.002
+    }
+  ],
+  "services": [
+    {
+      "name": "service1",
+      "clusters": [
+        {
+          "cluster": "cluster-1",
+          "namespace": "default",
+          "node": "node-1"
+        }
+      ],
+      "resources": {
+        "limits": {
+          "memory": "1024M",
+          "cpu": "1000m"
+        },
+        "requests": {
+          "memory": "512M",
+          "cpu": "500m"
+        }
+      },
+      "processes": 2,
+      "threads": 2,
+      "readiness_probe": 5,
+      "endpoints": [
+        {
+          "name": "end1",
+          "protocol": "http",
+          "cpu_consumption": 0.003,
+          "network_consumption": 0.002,
+          "memory_consumption": 0.003,
+          "forward_requests": "asynchronous",
+          "called_services": [
+            {
+              "service": "service2",
+              "port": "80",
+              "endpoint": "end2",
+              "protocol": "http",
+              "traffic_forward_ratio": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

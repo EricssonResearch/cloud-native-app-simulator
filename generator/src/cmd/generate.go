@@ -74,7 +74,7 @@ func stringPrompt(label string) string {
 
 var generateCmd = &cobra.Command{
 	Use:   "generate [mode] [input-file]",
-	Short: "This commands can be run under two different modes: (i) 'random' mode which generates a random description file or (ii) 'preset' mode which generates Kubernetes manifest based on a description file in the input directory",
+	Short: "This command can be run under two different modes: (i) 'random' mode which generates a random description file or (ii) 'preset' mode which generates Kubernetes manifest based on a description file in the input directory",
 	Args:  cobra.RangeArgs(1, 2),
 	Run: func(cmd *cobra.Command, args []string) {
 
