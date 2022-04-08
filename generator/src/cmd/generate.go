@@ -81,8 +81,6 @@ func expandInputString(names string) []string {
 		item = strings.TrimSpace(item)
 		clusterRange := strings.Split(item, ":")
 
-		fmt.Println(len(clusterRange))
-
 		if len(clusterRange) == 2 {
 			prefix := getPrefix(clusterRange[0])
 			min, _ := strconv.Atoi(strings.TrimPrefix(clusterRange[0], prefix))
@@ -113,7 +111,6 @@ func getPrefix(s string) string {
 		}
 	}
 
-	fmt.Println(prefix)
 	return prefix
 }
 
