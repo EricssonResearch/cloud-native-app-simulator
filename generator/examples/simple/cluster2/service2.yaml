@@ -1,42 +1,42 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-    name: config-service1
+    name: config-service2
     labels:
-        name: config-service1
-        version: cluster-1
-    namespace: default
+        name: config-service2
+        version: cluster2
+    namespace: edge-namespace
 data:
-    conf.json: '{"processes":2,"threads":2,"endpoints":[{"name":"end1","protocol":"http","cpu_consumption":0.003,"network_consumption":0.002,"memory_consumption":0.003,"forward_requests":"asynchronous","called_services":[{"service":"service2","port":"80","endpoint":"end2","protocol":"http","traffic_forward_ratio":1}]}]}'
-    service.proto: "syntax = \"proto3\";\n\n\nservice service1 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n}\n\n\nmessage Request {\n    string data = 1;\n}\n\nmessage Response {\n    string data = 1;\n}"
+    conf.json: '{"processes":2,"threads":2,"endpoints":[{"name":"end2","protocol":"http","cpu_consumption":0.003,"network_consumption":0.002,"memory_consumption":0.003,"forward_requests":"asynchronous","called_services":[]}]}'
+    service.proto: "syntax = \"proto3\";\n\n\nservice service1 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n}\n\nservice service2 {\n    \n    rpc end2 (Request) returns (Response) {}\n    \n}\n\n\nmessage Request {\n    string data = 1;\n}\n\nmessage Response {\n    string data = 1;\n}"
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-    name: service1
-    namespace: default
+    name: service2
+    namespace: edge-namespace
     labels:
-        version: cluster-1
+        version: cluster2
 spec:
     selector:
         matchLabels:
-            app: service1
-            version: cluster-1
+            app: service2
+            version: cluster2
     replicas: 1
     template:
         metadata:
             labels:
-                app: service1
-                version: cluster-1
+                app: service2
+                version: cluster2
         spec:
-            nodeName: node-1
+            nodeName: cluster1-control-plane
             containers:
                 - name: app
                   image: app-demo:latest
                   imagePullPolicy: Never
                   env:
                     - name: SERVICE_NAME
-                      value: service1
+                      value: service2
                   ports:
                     - containerPort: 5000
                   volumeMounts:
@@ -58,20 +58,20 @@ spec:
             volumes:
                 - name: config-data-volume
                   configMap:
-                    name: config-service1
+                    name: config-service2
 ---
 apiVersion: v1
 kind: Service
 metadata:
-    name: service1
-    namespace: default
+    name: service2
+    namespace: edge-namespace
     labels:
-        version: cluster-1
+        version: cluster2
     annotations:
         http: /
 spec:
     selector:
-        app: service1
+        app: service2
     ports:
         - name: http
           port: 80

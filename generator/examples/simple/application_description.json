@@ -1,8 +1,8 @@
 {
   "cluster_latencies": [
     {
-      "src" : "cluster-1",
-      "dest": "cluster-2",
+      "src" : "cluster1",
+      "dest": "cluster2",
       "latency": 0.002
     }
   ],
@@ -11,9 +11,9 @@
       "name": "service1",
       "clusters": [
         {
-          "cluster": "cluster-1",
-          "namespace": "default",
-          "node": "node-1"
+          "cluster": "cluster1",
+          "namespace": "edge-namespace",
+          "node": "cluster1-control-plane"
         }
       ],
       "resources": {
@@ -46,6 +46,40 @@
               "traffic_forward_ratio": 1
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "service2",
+      "clusters": [
+        {
+          "cluster": "cluster2",
+          "namespace": "edge-namespace",
+          "node": "cluster2-control-plane"
+        }
+      ],
+      "resources": {
+        "limits": {
+          "memory": "1024M",
+          "cpu": "1000m"
+        },
+        "requests": {
+          "memory": "512M",
+          "cpu": "500m"
+        }
+      },
+      "processes": 2,
+      "threads": 2,
+      "readiness_probe": 5,
+      "endpoints": [
+        {
+          "name": "end2",
+          "protocol": "http",
+          "cpu_consumption": 0.003,
+          "network_consumption": 0.002,
+          "memory_consumption": 0.003,
+          "forward_requests": "asynchronous",
+          "called_services": []
         }
       ]
     }
