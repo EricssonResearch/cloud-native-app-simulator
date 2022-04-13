@@ -28,6 +28,12 @@ class Endpoint(Resource):
         if endpoint is None:
             message = {"status": "ok"}
             return message
+        not_found(endpoint)
+    
+    def post(self, endpoint=None):
+        if endpoint is None:
+            message = {"status": "ok"}
+            return message
         else:
             for ep in SERVICE_CONFIG['endpoints']:
                 if ep['name'] == endpoint:
