@@ -99,7 +99,7 @@ async def sync_tasks(service_endpoint, headers):
             json_data = request.json
         if len(service_endpoint["called_services"]) > 0:
             for svc in service_endpoint["called_services"]:
-                res = execute_io_bounded_task(session=session, target_service=svc, json_data=json_data, forward_headers=headers)
+                res = await execute_io_bounded_task(session=session, target_service=svc, json_data=json_data, forward_headers=headers)
                 response["services"] += res["services"]
                 response["statuses"] += res["statuses"]
 
