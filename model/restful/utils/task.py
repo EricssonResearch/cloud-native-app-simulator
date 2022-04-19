@@ -15,14 +15,14 @@ limitations under the License.
 """
 
 import logging
+from wsgiref import headers
 from flask import Blueprint, jsonify, request
 import path
 from aiohttp import ClientSession
 import asyncio
 import uuid
+import subprocess
 
-# TODO: So far, we only support a hard-coded namespace. For more flexible support of namespaces we will need to pass that info as part of the config map
-# TODO: So far, we only support http client
 FORMATTED_REMOTE_URL = "http://{0}:{1}/{2}"
 
 
@@ -46,36 +46,36 @@ def getForwardHeaders(request):
 def run_task(service_endpoint):
     headers = getForwardHeaders(request)
 
+    if request.get_data() == bytes("", "utf-8"):
+        json_data = {}
+    else:
+        json_data = request.json
+
     if service_endpoint["forward_requests"] == "asynchronous":
         asyncio.set_event_loop(asyncio.new_event_loop())
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(async_tasks(service_endpoint, headers))
+        response = loop.run_until_complete(async_tasks(service_endpoint, headers, json_data))
         return response
     else: # "synchronous"
         asyncio.set_event_loop(asyncio.new_event_loop())
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(sync_tasks(service_endpoint, headers))
+        response = loop.run_until_complete(sync_tasks(service_endpoint, headers, json_data))
 
         return response
 
 
-async def async_tasks(service_endpoint, headers):
+async def async_tasks(service_endpoint, headers, json_data):
     async with ClientSession() as session:
-        # TODO: CPU-bounded tasks not supported yet
         io_tasks = []
 
-        if request.get_data() == bytes("", "utf-8"):
-            json_data = {}
-        else:
-            json_data = request.json
         if len(service_endpoint["called_services"]) > 0:
             for svc in service_endpoint["called_services"]:
                 io_task = asyncio.create_task(execute_io_bounded_task(session=session, target_service=svc,
-                                                                      json_data=json_data, forward_headers=headers))
+                                                                      json_data=json_data, sync=False, forward_headers=headers))
                 io_tasks.append(io_task)
             services = await asyncio.gather(*io_tasks)
 
-        # Concatenate json responses
+    # Concatenate json responses
     response = {}
     response["services"] = []
     response["statuses"] = []
@@ -87,19 +87,15 @@ async def async_tasks(service_endpoint, headers):
     return response
 
 
-async def sync_tasks(service_endpoint, headers):
+async def sync_tasks(service_endpoint, headers, json_data):
     async with ClientSession() as session:
-        # TODO: CPU-bounded tasks not supported yet
         response = {}
         response["services"] = []
         response["statuses"] = []
-        if request.get_data() == bytes("", "utf-8"):
-            json_data = {}
-        else:
-            json_data = request.json
+        
         if len(service_endpoint["called_services"]) > 0:
             for svc in service_endpoint["called_services"]:
-                res = await execute_io_bounded_task(session=session, target_service=svc, json_data=json_data, forward_headers=headers)
+                res = await execute_io_bounded_task(session=session, target_service=svc, json_data=json_data, sync=True, forward_headers=headers)
                 response["services"] += res["services"]
                 response["statuses"] += res["statuses"]
 
@@ -114,6 +110,7 @@ def execute_cpu_bounded_task(origin_service_name, target_service, headers):
     task_config["network_consumption"] = target_service["network_consumption"]
     task_config["memory_consumption"] = target_service["memory_consumption"]
 
+    # TODO: CPU-bounded tasks not supported yet
     # TODO: Implement resource stress emulation...
 
     response_object = {
@@ -126,22 +123,46 @@ def execute_cpu_bounded_task(origin_service_name, target_service, headers):
     return response_object
 
 
-async def execute_io_bounded_task(session, target_service, json_data, forward_headers={}):
-    # TODO: Request forwarding to a service on a particular cluster is not supported yet
-    # TODO: Requests for other protocols than html are not supported yet
+async def execute_io_bounded_task(session, target_service, json_data, sync, forward_headers={}):
 
     dst = FORMATTED_REMOTE_URL.format(target_service["service"], target_service["port"], target_service["endpoint"])
     forward_headers.update({'Content-type' : 'application/json'})
 
-    # TODO: traffic_forward_ratio not supported yet
-    traffic_forward_ratio = target_service["traffic_forward_ratio"]
+    forward_ratio = target_service["traffic_forward_ratio"]
+    forward_payload_size = target_service["traffic_forward_payload"]
 
-    res = await session.post(dst, data=json_data, headers=forward_headers)
-    res_payload = await res.json()
+    if forward_payload_size:
+        with subprocess.run(['cat /dev/urandom | tr -dc "[:alnum:]" | head -c${1:-%s}' % forward_payload_size], shell=True) as json_data:
+            responses = {}
+            responses["services"] = []
+            responses["statuses"] = []
 
-    response = {}
-    response["services"] = res_payload["services"]
-    response['services'].append(str(res.url))
-    response["statuses"] = res_payload["statuses"]
-    response['statuses'].append(res.status)
-    return response
+            if forward_ratio > 0:
+                if not sync:
+                    async with ClientSession() as session:
+                        io_tasks = []
+
+                        for i in range(forward_ratio):
+                            io_task = asyncio.create_task(session.post(dst, data=json_data, headers=forward_headers))
+                            io_tasks.append(io_task)
+                        calls = await asyncio.gather(*io_tasks)
+
+                    # Concatenate json responses
+                    for res_payload in calls:
+                        responses["services"] = res_payload["services"]
+                        responses['services'].append(str(res.url))
+                        responses["statuses"] = res_payload["statuses"]
+                        responses['statuses'].append(res.status)
+
+                else: # "synchronous"
+                    async with ClientSession() as session:
+                        for i in range(forward_ratio):
+                            res = await session.post(dst, data=json_data, headers=forward_headers)
+                            res_payload = await res.json()
+
+                            responses["services"] = res_payload["services"]
+                            responses['services'].append(str(res.url))
+                            responses["statuses"] = res_payload["statuses"]
+                            responses['statuses'].append(res.status)
+
+        return responses
