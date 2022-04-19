@@ -234,7 +234,7 @@ func CreateJsonInput(userConfig model.UserConfig) string {
 					// NOTE: Always calling the first endpoint of the called service
 					calledService.Endpoint = s.EpNamePrefix + "1"
 
-					endpoint.CalledServices = append(endpoint.CalledServices, calledService)
+					endpoint.NetworkComplexity.CalledServices = append(endpoint.NetworkComplexity.CalledServices, calledService)
 				}
 			}
 

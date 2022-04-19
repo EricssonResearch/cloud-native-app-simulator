@@ -17,21 +17,26 @@ limitations under the License.
 package model
 
 type CalledService struct {
-	Service             string  `json:"service"`
-	Port                string  `json:"port"`
-	Endpoint            string  `json:"endpoint"`
-	Protocol            string  `json:"protocol"`
-	TrafficForwardRatio float32 `json:"traffic_forward_ratio"`
+	Service             string `json:"service"`
+	Port                string `json:"port"`
+	Endpoint            string `json:"endpoint"`
+	Protocol            string `json:"protocol"`
+	TrafficForwardRatio int    `json:"traffic_forward_ratio"`
+	RequestPayloadSize  int    `json:"request_payload_size"`
+}
+
+type NetworkComplexity struct {
+	ForwardRequests     string          `json:"forward_requests"`
+	ResponsePayloadSize int             `json:"response_payload_size"`
+	CalledServices      []CalledService `json:"called_services"`
 }
 
 type Endpoint struct {
-	Name               string          `json:"name"`
-	Protocol           string          `json:"protocol"`
-	CpuConsumption     float64         `json:"cpu_consumption"`
-	NetworkConsumption float64         `json:"network_consumption"`
-	MemoryConsumption  float64         `json:"memory_consumption"`
-	ForwardRequests    string          `json:"forward_requests"`
-	CalledServices     []CalledService `json:"called_services"`
+	Name              string            `json:"name"`
+	Protocol          string            `json:"protocol"`
+	CpuComplexity     float64           `json:"cpu_complexity"`
+	MemoryComplexity  float64           `json:"memory_complexity"`
+	NetworkComplexity NetworkComplexity `json:"network_complexity"`
 }
 
 type ResourceLimits struct {

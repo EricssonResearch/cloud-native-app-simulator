@@ -46,13 +46,14 @@ const (
 	SvcThreadsDefault        = 2
 	SvcReadinessProbeDefault = 5
 
-	EpNamePrefix                = "/end"
-	EpCPUConsumptionDefault     = 0.003
-	EpNetworkConsumptionDefault = 0.002
-	EpMemoryConsumptionDefault  = 0.003
-	EpForwardRequests           = "asynchronous"
+	EpNamePrefix               = "/end"
+	EpCPUConsumptionDefault    = 0.003
+	EpResponseSizeDefault      = 512
+	EpMemoryConsumptionDefault = 0.003
+	EpForwardRequests          = "asynchronous"
 
 	CsTrafficForwardRatio = 1
+	CsRequestSizeDefault  = 256
 )
 
 func CreateDeployment(metadataName, selectorAppName, selectorClusterName string, numberOfReplicas int,
@@ -312,10 +313,10 @@ func CreateInputEndpoint() model.Endpoint {
 	var ep model.Endpoint
 
 	ep.Protocol = defaultProtocol
-	ep.CpuConsumption = EpCPUConsumptionDefault
-	ep.NetworkConsumption = EpNetworkConsumptionDefault
-	ep.MemoryConsumption = EpMemoryConsumptionDefault
-	ep.ForwardRequests = EpForwardRequests
+	ep.CpuComplexity = EpCPUConsumptionDefault
+	ep.MemoryComplexity = EpMemoryConsumptionDefault
+	ep.NetworkComplexity.ForwardRequests = EpForwardRequests
+	ep.NetworkComplexity.ResponsePayloadSize = EpResponseSizeDefault
 
 	return ep
 }
@@ -327,6 +328,7 @@ func CreateInputCalledSvc() model.CalledService {
 	calledSvc.Port = strconv.Itoa(DefaultExtPort)
 	calledSvc.Protocol = defaultProtocol
 	calledSvc.TrafficForwardRatio = CsTrafficForwardRatio
+	calledSvc.RequestPayloadSize = CsRequestSizeDefault
 
 	return calledSvc
 }

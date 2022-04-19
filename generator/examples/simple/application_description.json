@@ -33,19 +33,22 @@
         {
           "name": "end1",
           "protocol": "http",
-          "cpu_consumption": 0.003,
-          "network_consumption": 0.002,
-          "memory_consumption": 0.003,
-          "forward_requests": "asynchronous",
-          "called_services": [
-            {
-              "service": "service2",
-              "port": "80",
-              "endpoint": "end2",
-              "protocol": "http",
-              "traffic_forward_ratio": 1
-            }
-          ]
+          "cpu_complexity": 0.003,
+          "memory_complexity": 0.003,
+          "network_complexity": {
+            "forward_requests": "asynchronous",
+            "response_payload_size": 512,
+            "called_services": [
+              {
+                "service": "service2",
+                "port": "80",
+                "endpoint": "end2",
+                "protocol": "http",
+                "traffic_forward_ratio": 1,
+                "request_payload_size": 256
+              }
+            ]
+          }
         }
       ]
     },
@@ -75,11 +78,13 @@
         {
           "name": "end2",
           "protocol": "http",
-          "cpu_consumption": 0.003,
-          "network_consumption": 0.002,
-          "memory_consumption": 0.003,
-          "forward_requests": "asynchronous",
-          "called_services": []
+          "cpu_complexity": 0.003,
+          "memory_complexity": 0.003,
+          "network_complexity": {
+            "forward_requests": "asynchronous",
+            "response_payload_size": 512,
+            "called_services": []
+          }
         }
       ]
     }
