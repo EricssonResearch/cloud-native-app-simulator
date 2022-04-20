@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: config-service2
+    labels:
+        name: config-service2
+        version: cluster2
+    namespace: edge-namespace
+data:
+    conf.json: '{"processes":2,"threads":2,"endpoints":[{"name":"end2","protocol":"http","cpu_complexity":{"execution_time":10,"methods":["fibonacci"],"workers":2,"execution_mode":"parallel","cpu_affinity":[0,2],"cpu_load":"80%"},"memory_complexity":0.003,"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[]}}]}'
+    service.proto: "syntax = \"proto3\";\n\n\nservice service1 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n}\n\nservice service2 {\n    \n    rpc end2 (Request) returns (Response) {}\n    \n}\n\n\nmessage Request {\n    string data = 1;\n}\n\nmessage Response {\n    string data = 1;\n}"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: service2
+    namespace: edge-namespace
+    labels:
+        version: cluster2
+spec:
+    selector:
+        matchLabels:
+            app: service2
+            version: cluster2
+    replicas: 1
+    template:
+        metadata:
+            labels:
+                app: service2
+                version: cluster2
+        spec:
+            nodeName: cluster2-control-plane
+            containers:
+                - name: app
+                  image: app-demo:latest
+                  imagePullPolicy: Never
+                  env:
+                    - name: SERVICE_NAME
+                      value: service2
+                  ports:
+                    - containerPort: 5000
+                  volumeMounts:
+                    - mountPath: /usr/src/app/config
+                      name: config-data-volume
+                  readinessProbe:
+                    httpGet:
+                        path: /
+                        port: 5000
+                    initialDelaySeconds: 5
+                    periodSeconds: 1
+                  resources:
+                    limits:
+                        cpu: 1000m
+                        memory: 1024M
+                    requests:
+                        cpu: 500m
+                        memory: 512M
+            volumes:
+                - name: config-data-volume
+                  configMap:
+                    name: config-service2
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: service2
+    namespace: edge-namespace
+    labels:
+        version: cluster2
+    annotations:
+        http: /
+spec:
+    selector:
+        app: service2
+    ports:
+        - name: http
+          port: 80
+          targetPort: 5000

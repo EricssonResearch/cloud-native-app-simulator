@@ -25,6 +25,15 @@ type CalledService struct {
 	RequestPayloadSize  int    `json:"request_payload_size"`
 }
 
+type CpuComplexity struct {
+	ExecutionTime float32  `json:"execution_time"`
+	Methods       []string `json:"methods"`
+	Workers       int      `json:"workers"`
+	ExecutionMode string   `json:"execution_mode"`
+	CpuAffinity   []int    `json:"cpu_affinity"`
+	CpuLoad       string   `json:"cpu_load"`
+}
+
 type NetworkComplexity struct {
 	ForwardRequests     string          `json:"forward_requests"`
 	ResponsePayloadSize int             `json:"response_payload_size"`
@@ -34,7 +43,7 @@ type NetworkComplexity struct {
 type Endpoint struct {
 	Name              string            `json:"name"`
 	Protocol          string            `json:"protocol"`
-	CpuComplexity     float64           `json:"cpu_complexity"`
+	CpuComplexity     CpuComplexity     `json:"cpu_complexity"`
 	MemoryComplexity  float64           `json:"memory_complexity"`
 	NetworkComplexity NetworkComplexity `json:"network_complexity"`
 }

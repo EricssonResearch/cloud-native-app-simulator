@@ -33,7 +33,19 @@
         {
           "name": "end1",
           "protocol": "http",
-          "cpu_complexity": 0.003,
+          "cpu_complexity": {
+            "execution_time": 10,
+            "methods": [
+              "fibonacci"
+            ],
+            "workers": 2,
+            "execution_mode": "parallel",
+            "cpu_affinity": [
+              0,
+              2
+            ],
+            "cpu_load": "80%"
+          },
           "memory_complexity": 0.003,
           "network_complexity": {
             "forward_requests": "asynchronous",

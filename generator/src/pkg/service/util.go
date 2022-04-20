@@ -47,7 +47,6 @@ const (
 	SvcReadinessProbeDefault = 5
 
 	EpNamePrefix               = "/end"
-	EpCPUConsumptionDefault    = 0.003
 	EpResponseSizeDefault      = 512
 	EpMemoryConsumptionDefault = 0.003
 	EpForwardRequests          = "asynchronous"
@@ -313,7 +312,6 @@ func CreateInputEndpoint() model.Endpoint {
 	var ep model.Endpoint
 
 	ep.Protocol = defaultProtocol
-	ep.CpuComplexity = EpCPUConsumptionDefault
 	ep.MemoryComplexity = EpMemoryConsumptionDefault
 	ep.NetworkComplexity.ForwardRequests = EpForwardRequests
 	ep.NetworkComplexity.ResponsePayloadSize = EpResponseSizeDefault
