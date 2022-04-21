@@ -47,11 +47,11 @@ def getForwardHeaders(request):
 def run_task(service_endpoint):
     headers = getForwardHeaders(request)
 
-    response_payload_size = service_endpoint["response_payload_size"]
+    response_payload_size = service_endpoint["network_complexity"]["response_payload_size"]
     response_payload = subprocess.run(['cat /dev/urandom | tr -dc "[:alnum:]" | head -c${1:-%s}' % response_payload_size], capture_output=True, shell=True)
     res_payload = response_payload.stdout.decode("utf-8")
 
-    if service_endpoint["forward_requests"] == "asynchronous":
+    if service_endpoint["network_complexity"]["forward_requests"] == "asynchronous":
         asyncio.set_event_loop(asyncio.new_event_loop())
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(async_tasks(service_endpoint, headers, res_payload))
@@ -68,8 +68,8 @@ async def async_tasks(service_endpoint, headers, res_payload):
     async with ClientSession() as session:
         io_tasks = []
 
-        if len(service_endpoint["called_services"]) > 0:
-            for svc in service_endpoint["called_services"]:
+        if len(service_endpoint["network_complexity"]["called_services"]) > 0:
+            for svc in service_endpoint["network_complexity"]["called_services"]:
                 io_task = asyncio.create_task(execute_io_bounded_task(session=session, target_service=svc, sync=False, forward_headers=headers))
                 io_tasks.append(io_task)
             services = await asyncio.gather(*io_tasks)
@@ -80,7 +80,7 @@ async def async_tasks(service_endpoint, headers, res_payload):
     response["statuses"] = []
     response["payload"] = res_payload
 
-    if len(service_endpoint["called_services"]) > 0:
+    if len(service_endpoint["network_complexity"]["called_services"]) > 0:
         for svc in services:
             response["services"] += svc["services"]
             response["statuses"] += svc["statuses"]
@@ -94,8 +94,8 @@ async def sync_tasks(service_endpoint, headers, res_payload):
         response["statuses"] = []
         response["payload"] = res_payload
         
-        if len(service_endpoint["called_services"]) > 0:
-            for svc in service_endpoint["called_services"]:
+        if len(service_endpoint["network_complexity"]["called_services"]) > 0:
+            for svc in service_endpoint["network_complexity"]["called_services"]:
                 res = await execute_io_bounded_task(session=session, target_service=svc, sync=True, forward_headers=headers)
                 response["services"] += res["services"]
                 response["statuses"] += res["statuses"]
