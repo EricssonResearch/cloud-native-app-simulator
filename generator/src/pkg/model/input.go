@@ -26,12 +26,11 @@ type CalledService struct {
 }
 
 type CpuComplexity struct {
-	ExecutionTime float32  `json:"execution_time"`
-	Methods       []string `json:"methods"`
-	Workers       int      `json:"workers"`
-	ExecutionMode string   `json:"execution_mode"`
-	CpuAffinity   []int    `json:"cpu_affinity"`
-	CpuLoad       string   `json:"cpu_load"`
+	ExecutionTime float32 `json:"execution_time"`
+	Method        string  `json:"method"`
+	Workers       int     `json:"workers"`
+	CpuAffinity   []int   `json:"cpu_affinity"`
+	CpuLoad       string  `json:"cpu_load"`
 }
 
 type NetworkComplexity struct {

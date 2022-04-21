@@ -15,7 +15,7 @@ limitations under the License.
 """
 
 from flask_restful import Resource, abort
-from path import SERVICE_CONFIG
+from path import SERVICE_CONFIG, SERVICE_NAME
 from restful.utils import task
 
 
@@ -31,7 +31,7 @@ class Endpoint(Resource):
         else:
             for ep in SERVICE_CONFIG['endpoints']:
                 if ep['name'] == endpoint:
-                    res = task.run_task(service_endpoint=ep)
+                    res = task.run_task(service_name=SERVICE_NAME, service_endpoint=ep)
                     return res
         not_found(endpoint)
 
@@ -42,6 +42,6 @@ class Endpoint(Resource):
         else:
             for ep in SERVICE_CONFIG['endpoints']:
                 if ep['name'] == endpoint:
-                    res = task.run_task(service_endpoint=ep)
+                    res = task.run_task(service_name=SERVICE_NAME, service_endpoint=ep)
                     return res
         not_found(endpoint)

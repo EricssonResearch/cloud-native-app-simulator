@@ -35,11 +35,8 @@
           "protocol": "http",
           "cpu_complexity": {
             "execution_time": 10,
-            "methods": [
-              "fibonacci"
-            ],
+            "method": "fibonacci",
             "workers": 2,
-            "execution_mode": "parallel",
             "cpu_affinity": [
               0,
               2

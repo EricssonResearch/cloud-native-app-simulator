@@ -7,7 +7,7 @@ metadata:
         version: cluster1
     namespace: edge-namespace
 data:
-    conf.json: '{"processes":2,"threads":2,"endpoints":[{"name":"end1","protocol":"http","cpu_complexity":0.003,"memory_complexity":0.003,"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[{"service":"service2","port":"80","endpoint":"end2","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256}]}}]}'
+    conf.json: '{"processes":2,"threads":2,"endpoints":[{"name":"end1","protocol":"http","cpu_complexity":{"execution_time":10,"method":"fibonacci","workers":2,"cpu_affinity":[0,1],"cpu_load":"100%"},"memory_complexity":0.003,"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[{"service":"service2","port":"80","endpoint":"end2","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256}]}}]}'
     service.proto: "syntax = \"proto3\";\n\n\nservice service1 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n}\n\nservice service2 {\n    \n    rpc end2 (Request) returns (Response) {}\n    \n}\n\n\nmessage Request {\n    string data = 1;\n}\n\nmessage Response {\n    string data = 1;\n}"
 ---
 apiVersion: apps/v1
@@ -46,14 +46,14 @@ spec:
                     httpGet:
                         path: /
                         port: 5000
-                    initialDelaySeconds: 5
+                    initialDelaySeconds: 1
                     periodSeconds: 1
                   resources:
                     limits:
-                        cpu: 1000m
+                        cpu: 2000m
                         memory: 1024M
                     requests:
-                        cpu: 500m
+                        cpu: 2000m
                         memory: 512M
             volumes:
                 - name: config-data-volume
