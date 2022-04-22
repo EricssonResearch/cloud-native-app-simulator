@@ -26,11 +26,18 @@ type CalledService struct {
 }
 
 type CpuComplexity struct {
-	ExecutionTime float32 `json:"execution_time"`
-	Method        string  `json:"method"`
-	Workers       int     `json:"workers"`
-	CpuAffinity   []int   `json:"cpu_affinity"`
-	CpuLoad       string  `json:"cpu_load"`
+	ExecutionTime string `json:"execution_time"`
+	Method        string `json:"method"`
+	Workers       int    `json:"workers"`
+	CpuAffinity   []int  `json:"cpu_affinity"`
+	CpuLoad       string `json:"cpu_load"`
+}
+
+type MemoryComplexity struct {
+	ExecutionTime string `json:"execution_time"`
+	Method        string `json:"method"`
+	Workers       int    `json:"workers"`
+	BytesLoad     string `json:"bytes_load"`
 }
 
 type NetworkComplexity struct {
@@ -43,7 +50,7 @@ type Endpoint struct {
 	Name              string            `json:"name"`
 	Protocol          string            `json:"protocol"`
 	CpuComplexity     CpuComplexity     `json:"cpu_complexity"`
-	MemoryComplexity  float64           `json:"memory_complexity"`
+	MemoryComplexity  MemoryComplexity  `json:"memory_complexity"`
 	NetworkComplexity NetworkComplexity `json:"network_complexity"`
 }
 

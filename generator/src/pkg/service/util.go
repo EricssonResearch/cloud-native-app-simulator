@@ -46,10 +46,15 @@ const (
 	SvcThreadsDefault        = 2
 	SvcReadinessProbeDefault = 5
 
-	EpNamePrefix               = "/end"
-	EpResponseSizeDefault      = 512
-	EpMemoryConsumptionDefault = 0.003
-	EpForwardRequests          = "asynchronous"
+	EpNamePrefix            = "/end"
+	EpNwResponseSizeDefault = 512
+
+	EpExecTimeDefault = "10s"
+	EpMethodDefault   = "all"
+	EpWorkersDefault  = 1
+	EpLoadDefault     = "100%"
+
+	EpNwForwardRequests = "asynchronous"
 
 	CsTrafficForwardRatio = 1
 	CsRequestSizeDefault  = 256
@@ -312,9 +317,19 @@ func CreateInputEndpoint() model.Endpoint {
 	var ep model.Endpoint
 
 	ep.Protocol = defaultProtocol
-	ep.MemoryComplexity = EpMemoryConsumptionDefault
-	ep.NetworkComplexity.ForwardRequests = EpForwardRequests
-	ep.NetworkComplexity.ResponsePayloadSize = EpResponseSizeDefault
+
+	ep.CpuComplexity.ExecutionTime = EpExecTimeDefault
+	ep.CpuComplexity.Method = EpMethodDefault
+	ep.CpuComplexity.Workers = EpWorkersDefault
+	ep.CpuComplexity.CpuLoad = EpLoadDefault
+
+	ep.MemoryComplexity.ExecutionTime = EpExecTimeDefault
+	ep.MemoryComplexity.Method = EpMethodDefault
+	ep.MemoryComplexity.Workers = EpWorkersDefault
+	ep.MemoryComplexity.BytesLoad = EpLoadDefault
+
+	ep.NetworkComplexity.ForwardRequests = EpNwForwardRequests
+	ep.NetworkComplexity.ResponsePayloadSize = EpNwResponseSizeDefault
 
 	return ep
 }
