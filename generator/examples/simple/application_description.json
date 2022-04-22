@@ -22,7 +22,7 @@
           "cpu": "2000m"
         },
         "requests": {
-          "memory": "512M",
+          "memory": "1024M",
           "cpu": "2000m"
         }
       },
@@ -34,7 +34,7 @@
           "name": "end1",
           "protocol": "http",
           "cpu_complexity": {
-            "execution_time": "10s",
+            "execution_time": "5s",
             "method": "fibonacci",
             "workers": 2,
             "cpu_affinity": [
@@ -44,10 +44,10 @@
             "cpu_load": "100%"
           },
           "memory_complexity": {
-            "execution_time": "10s",
+            "execution_time": "5s",
             "method": "swap",
-            "workers": 2,
-            "bytes_load": "80%"
+            "workers": 24,
+            "bytes_load": "100%"
           },
           "network_complexity": {
             "forward_requests": "asynchronous",
@@ -81,7 +81,7 @@
           "cpu": "2000m"
         },
         "requests": {
-          "memory": "512M",
+          "memory": "1024M",
           "cpu": "2000m"
         }
       },
@@ -93,7 +93,7 @@
           "name": "end2",
           "protocol": "http",
           "cpu_complexity": {
-            "execution_time": "10s",
+            "execution_time": "5s",
             "method": "fibonacci",
             "workers": 2,
             "cpu_affinity": [
@@ -103,10 +103,10 @@
             "cpu_load": "100%"
           },
           "memory_complexity": {
-            "execution_time": "10s",
+            "execution_time": "5s",
             "method": "swap",
-            "workers": 2,
-            "bytes_load": "80%"
+            "workers": 24,
+            "bytes_load": "100%"
           },
           "network_complexity": {
             "forward_requests": "asynchronous",

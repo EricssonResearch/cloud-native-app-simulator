@@ -59,8 +59,9 @@ def run_task(service_name, service_endpoint):
     if service_endpoint["cpu_complexity"]:
         cpu_response = execute_cpu_bounded_task(conf=service_endpoint["cpu_complexity"])
 
-    # TODO: Memory task
-    mem_response = {}
+    # Memory task
+    if service_endpoint["memory_complexity"]:
+        mem_response = execute_memory_bounded_task(conf=service_endpoint["memory_complexity"])
 
     # Network task
     if service_endpoint["network_complexity"]["forward_requests"] == "asynchronous":
@@ -73,6 +74,7 @@ def run_task(service_name, service_endpoint):
         nw_response = loop.run_until_complete(sync_network_task(source_svc, service_endpoint, headers, res_payload))
 
     nw_response["cpu_task"]["statuses"].append(cpu_response["status"])
+    nw_response["memory_task"]["statuses"].append(mem_response["status"])
   
     return nw_response
 
@@ -94,6 +96,8 @@ async def async_network_task(source_svc, service_endpoint, headers, res_payload)
     response["cpu_task"]["statuses"] = []
 
     response["memory_task"] = {}
+    response["memory_task"]["services"] = []
+    response["memory_task"]["statuses"] = []
 
     response["network_task"] = {}
     response["network_task"]["services"] = []
@@ -104,6 +108,9 @@ async def async_network_task(source_svc, service_endpoint, headers, res_payload)
         for svc in services:
             response["cpu_task"]["services"] += svc["cpu_task"]["services"]
             response["cpu_task"]["statuses"] += svc["cpu_task"]["statuses"]
+
+            response["memory_task"]["services"] += svc["memory_task"]["services"]
+            response["memory_task"]["statuses"] += svc["memory_task"]["statuses"]
 
             response["network_task"]["services"] += svc["network_task"]["services"]
             response["network_task"]["statuses"] += svc["network_task"]["statuses"]
@@ -119,6 +126,8 @@ async def sync_network_task(source_svc, service_endpoint, headers, res_payload):
         response["cpu_task"]["statuses"] = []
 
         response["memory_task"] = {}
+        response["memory_task"]["services"] = []
+        response["memory_task"]["statuses"] = []
 
         response["network_task"] = {}
         response["network_task"]["services"] = []
@@ -133,6 +142,9 @@ async def sync_network_task(source_svc, service_endpoint, headers, res_payload):
                 response["cpu_task"]["services"] += res["cpu_task"]["services"]
                 response["cpu_task"]["statuses"] += res["cpu_task"]["statuses"]
 
+                response["memory_task"]["services"] += svc["memory_task"]["services"]
+                response["memory_task"]["statuses"] += svc["memory_task"]["statuses"]
+
                 response["network_task"]["services"] += res["network_task"]["services"]
                 response["network_task"]["statuses"] += res["network_task"]["statuses"]
 
@@ -140,9 +152,16 @@ async def sync_network_task(source_svc, service_endpoint, headers, res_payload):
 
 
 def execute_cpu_bounded_task(conf):
-    # TODO: Implement resource stress emulation...
-    
-    res = subprocess.run(['stress-ng --class cpu --cpu %s --cpu-method %s --taskset %s --cpu-load %s --timeout %f --metrics-brief' % (conf["workers"], conf["method"], ",".join(str(cpu_id) for cpu_id in conf["cpu_affinity"]), conf["cpu_load"], conf["execution_time"])], capture_output=True, shell=True)
+    res = subprocess.run(['stress-ng --class cpu --cpu %s --cpu-method %s --taskset %s --cpu-load %s --timeout %s --metrics-brief' % (conf["workers"], conf["method"], ",".join(str(cpu_id) for cpu_id in conf["cpu_affinity"]), conf["cpu_load"], conf["execution_time"])], capture_output=True, shell=True)
+
+    response = {
+        "status": res.stderr.decode("utf-8") 
+    }
+    return response
+
+
+def execute_memory_bounded_task(conf):
+    res = subprocess.run(['stress-ng --class memory --vm %s --vm-method %s --vm-bytes %s --timeout %s --metrics-brief' % (conf["workers"], conf["method"], conf["bytes_load"], conf["execution_time"])], capture_output=True, shell=True)
 
     response = {
         "status": res.stderr.decode("utf-8") 
@@ -167,6 +186,8 @@ async def execute_io_bounded_task(session, source_service, target_service, sync,
     response["cpu_task"]["statuses"] = []
 
     response["memory_task"] = {}
+    response["memory_task"]["services"] = []
+    response["memory_task"]["statuses"] = []
 
     response["network_task"] = {}
     response["network_task"]["services"] = []
@@ -194,6 +215,10 @@ async def execute_io_bounded_task(session, source_service, target_service, sync,
                     response["cpu_task"]["services"] += res_payload["cpu_task"]["services"]
                     response["cpu_task"]['services'].append("("+source_service["service"]+"/"+source_service["endpoint"]+", "+target_service["service"]+"/"+target_service["endpoint"]+")")
                     response["cpu_task"]["statuses"] += res_payload["cpu_task"]["statuses"]
+
+                    response["memory_task"]["services"] += res_payload["memory_task"]["services"]
+                    response["memory_task"]['services'].append("("+source_service["service"]+"/"+source_service["endpoint"]+", "+target_service["service"]+"/"+target_service["endpoint"]+")")
+                    response["memory_task"]["statuses"] += res_payload["memory_task"]["statuses"]
                     
                     response["network_task"]["services"] += res_payload["network_task"]["services"]
                     response["network_task"]['services'].append("("+source_service["service"]+"/"+source_service["endpoint"]+", "+target_service["service"]+"/"+target_service["endpoint"]+")")
@@ -210,6 +235,10 @@ async def execute_io_bounded_task(session, source_service, target_service, sync,
                         response["cpu_task"]["services"] += res_payload["cpu_task"]["services"]
                         response["cpu_task"]['services'].append("("+source_service["service"]+"/"+source_service["endpoint"]+", "+target_service["service"]+"/"+target_service["endpoint"]+")")
                         response["cpu_task"]["statuses"] += res_payload["cpu_task"]["statuses"]
+
+                        response["memory_task"]["services"] += res_payload["memory_task"]["services"]
+                        response["memory_task"]['services'].append("("+source_service["service"]+"/"+source_service["endpoint"]+", "+target_service["service"]+"/"+target_service["endpoint"]+")")
+                        response["memory_task"]["statuses"] += res_payload["memory_task"]["statuses"]
 
                         response["network_task"]["services"] += res_payload["network_task"]["services"]
                         response["network_task"]['services'].append("("+source_service["service"]+"/"+source_service["endpoint"]+", "+target_service["service"]+"/"+target_service["endpoint"]+")")
