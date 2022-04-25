@@ -33,6 +33,7 @@
         {
           "name": "end1",
           "protocol": "http",
+          "execution_mode": "parallel",
           "cpu_complexity": {
             "execution_time": "5s",
             "method": "fibonacci",
@@ -92,6 +93,7 @@
         {
           "name": "end2",
           "protocol": "http",
+          "execution_mode": "sequential",
           "cpu_complexity": {
             "execution_time": "5s",
             "method": "fibonacci",

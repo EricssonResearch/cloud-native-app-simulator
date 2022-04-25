@@ -23,6 +23,7 @@ import asyncio
 import uuid
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 FORMATTED_REMOTE_URL = "http://{0}:{1}/{2}"
 
@@ -55,15 +56,84 @@ def run_task(service_name, service_endpoint):
     source_svc["service"] = service_name
     source_svc["endpoint"] = service_endpoint["name"]
 
-    # CPU task
-    if service_endpoint["cpu_complexity"]:
-        cpu_response = execute_cpu_bounded_task(conf=service_endpoint["cpu_complexity"])
+    execution_mode = service_endpoint["execution_mode"]
 
-    # Memory task
-    if service_endpoint["memory_complexity"]:
-        mem_response = execute_memory_bounded_task(conf=service_endpoint["memory_complexity"])
+    if execution_mode == "sequential":
+        # CPU task
+        if service_endpoint["cpu_complexity"]:
+            cpu_response, _ = execute_cpu_bounded_task(conf=service_endpoint["cpu_complexity"])
 
-    # Network task
+        # Memory task
+        if service_endpoint["memory_complexity"]:
+            mem_response, _ = execute_memory_bounded_task(conf=service_endpoint["memory_complexity"])
+
+        # Network task
+        if service_endpoint["network_complexity"]:
+            nw_response, _ = run_network_task(source_svc, service_endpoint, headers, res_payload)
+
+            # TODO: Change this way and create a new map
+            nw_response["cpu_task"]["statuses"].append(cpu_response["status"])
+            nw_response["memory_task"]["statuses"].append(mem_response["status"])
+
+    else: # "parallel"
+        executor = ThreadPoolExecutor(max_workers=3)
+        task_futures = []
+
+        # CPU task
+        if service_endpoint["cpu_complexity"]:
+            cpu_future = executor.submit(execute_cpu_bounded_task, service_endpoint["cpu_complexity"])
+            task_futures.append(cpu_future)
+
+        # Memory task
+        if service_endpoint["memory_complexity"]:
+            mem_future = executor.submit(execute_memory_bounded_task, service_endpoint["memory_complexity"])
+            task_futures.append(mem_future)
+
+        # Network task
+        if service_endpoint["network_complexity"]:
+            nw_future = executor.submit(run_network_task, source_svc, service_endpoint, headers, res_payload)
+            task_futures.append(nw_future)
+
+        # Wait until all threads are done with their tasks
+        for future in as_completed(task_futures):
+            response, task_type = future.result()
+            if task_type == "cpu":
+                cpu_response = response
+            elif task_type == "memory":
+                mem_response = response
+            elif task_type == "network":
+                nw_response = response
+
+        # TODO: Change this way and create a new map
+        nw_response["cpu_task"]["statuses"].append(cpu_response["status"])
+        nw_response["memory_task"]["statuses"].append(mem_response["status"])
+
+        executor.shutdown()
+  
+    return nw_response
+
+
+def execute_cpu_bounded_task(conf):
+    res = subprocess.run(['stress-ng --class cpu --cpu %s --cpu-method %s --taskset %s --cpu-load %s --timeout %s --metrics-brief' % (conf["workers"], conf["method"], ",".join(str(cpu_id) for cpu_id in conf["cpu_affinity"]), conf["cpu_load"], conf["execution_time"])], capture_output=True, shell=True)
+
+    response = {
+        "status": res.stderr.decode("utf-8") 
+    }
+
+    return response, "cpu"
+
+
+def execute_memory_bounded_task(conf):
+    res = subprocess.run(['stress-ng --class memory --vm %s --vm-method %s --vm-bytes %s --timeout %s --metrics-brief' % (conf["workers"], conf["method"], conf["bytes_load"], conf["execution_time"])], capture_output=True, shell=True)
+
+    response = {
+        "status": res.stderr.decode("utf-8") 
+    }
+
+    return response, "memory"
+
+
+def run_network_task(source_svc, service_endpoint, headers, res_payload):
     if service_endpoint["network_complexity"]["forward_requests"] == "asynchronous":
         asyncio.set_event_loop(asyncio.new_event_loop())
         loop = asyncio.get_event_loop()
@@ -73,10 +143,7 @@ def run_task(service_name, service_endpoint):
         loop = asyncio.get_event_loop()
         nw_response = loop.run_until_complete(sync_network_task(source_svc, service_endpoint, headers, res_payload))
 
-    nw_response["cpu_task"]["statuses"].append(cpu_response["status"])
-    nw_response["memory_task"]["statuses"].append(mem_response["status"])
-  
-    return nw_response
+    return nw_response, "network"
 
 
 async def async_network_task(source_svc, service_endpoint, headers, res_payload):
@@ -142,30 +209,12 @@ async def sync_network_task(source_svc, service_endpoint, headers, res_payload):
                 response["cpu_task"]["services"] += res["cpu_task"]["services"]
                 response["cpu_task"]["statuses"] += res["cpu_task"]["statuses"]
 
-                response["memory_task"]["services"] += svc["memory_task"]["services"]
-                response["memory_task"]["statuses"] += svc["memory_task"]["statuses"]
+                response["memory_task"]["services"] += res["memory_task"]["services"]
+                response["memory_task"]["statuses"] += res["memory_task"]["statuses"]
 
                 response["network_task"]["services"] += res["network_task"]["services"]
                 response["network_task"]["statuses"] += res["network_task"]["statuses"]
 
-    return response
-
-
-def execute_cpu_bounded_task(conf):
-    res = subprocess.run(['stress-ng --class cpu --cpu %s --cpu-method %s --taskset %s --cpu-load %s --timeout %s --metrics-brief' % (conf["workers"], conf["method"], ",".join(str(cpu_id) for cpu_id in conf["cpu_affinity"]), conf["cpu_load"], conf["execution_time"])], capture_output=True, shell=True)
-
-    response = {
-        "status": res.stderr.decode("utf-8") 
-    }
-    return response
-
-
-def execute_memory_bounded_task(conf):
-    res = subprocess.run(['stress-ng --class memory --vm %s --vm-method %s --vm-bytes %s --timeout %s --metrics-brief' % (conf["workers"], conf["method"], conf["bytes_load"], conf["execution_time"])], capture_output=True, shell=True)
-
-    response = {
-        "status": res.stderr.decode("utf-8") 
-    }
     return response
 
 

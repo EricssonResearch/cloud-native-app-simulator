@@ -47,6 +47,7 @@ const (
 	SvcReadinessProbeDefault = 5
 
 	EpNamePrefix            = "/end"
+	EpExecModeDefault       = "sequential"
 	EpNwResponseSizeDefault = 512
 
 	EpExecTimeDefault = "10s"
@@ -317,6 +318,8 @@ func CreateInputEndpoint() model.Endpoint {
 	var ep model.Endpoint
 
 	ep.Protocol = defaultProtocol
+
+	ep.ExecutionMode = EpExecModeDefault
 
 	ep.CpuComplexity.ExecutionTime = EpExecTimeDefault
 	ep.CpuComplexity.Method = EpMethodDefault

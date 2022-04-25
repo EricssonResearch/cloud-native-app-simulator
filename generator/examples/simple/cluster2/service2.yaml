@@ -7,7 +7,7 @@ metadata:
         version: cluster2
     namespace: edge-namespace
 data:
-    conf.json: '{"processes":2,"threads":2,"endpoints":[{"name":"end2","protocol":"http","cpu_complexity":{"execution_time":"5s","method":"fibonacci","workers":2,"cpu_affinity":[22,23],"cpu_load":"100%"},"memory_complexity":{"execution_time":"5s","method":"swap","workers":24,"bytes_load":"100%"},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[]}}]}'
+    conf.json: '{"processes":2,"threads":2,"endpoints":[{"name":"end2","protocol":"http","execution_mode":"sequential","cpu_complexity":{"execution_time":"5s","method":"fibonacci","workers":2,"cpu_affinity":[22,23],"cpu_load":"100%"},"memory_complexity":{"execution_time":"5s","method":"swap","workers":24,"bytes_load":"100%"},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[]}}]}'
     service.proto: "syntax = \"proto3\";\n\n\nservice service1 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n}\n\nservice service2 {\n    \n    rpc end2 (Request) returns (Response) {}\n    \n}\n\n\nmessage Request {\n    string data = 1;\n}\n\nmessage Response {\n    string data = 1;\n}"
 ---
 apiVersion: apps/v1

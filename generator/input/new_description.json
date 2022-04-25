@@ -33,6 +33,7 @@
         {
           "name": "end1",
           "protocol": "http",
+          "execution_mode": "sequential",
           "cpu_complexity": {
             "execution_time": "10s",
             "method": "fibonacci",
