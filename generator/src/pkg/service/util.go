@@ -50,10 +50,10 @@ const (
 	EpExecModeDefault       = "sequential"
 	EpNwResponseSizeDefault = 512
 
-	EpExecTimeDefault = "10s"
+	EpExecTimeDefault = "1s"
 	EpMethodDefault   = "all"
 	EpWorkersDefault  = 1
-	EpLoadDefault     = "100%"
+	EpLoadDefault     = "20%"
 
 	EpNwForwardRequests = "asynchronous"
 
