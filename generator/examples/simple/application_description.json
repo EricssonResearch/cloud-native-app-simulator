@@ -31,25 +31,9 @@
       "readiness_probe": 1,
       "endpoints": [
         {
-          "name": "end1",
+          "name": "endpoint1",
           "protocol": "http",
-          "execution_mode": "parallel",
-          "cpu_complexity": {
-            "execution_time": "5s",
-            "method": "fibonacci",
-            "workers": 2,
-            "cpu_affinity": [
-              0,
-              1
-            ],
-            "cpu_load": "100%"
-          },
-          "memory_complexity": {
-            "execution_time": "5s",
-            "method": "swap",
-            "workers": 24,
-            "bytes_load": "100%"
-          },
+          "execution_mode": "sequential",
           "network_complexity": {
             "forward_requests": "asynchronous",
             "response_payload_size": 512,
@@ -57,11 +41,30 @@
               {
                 "service": "service2",
                 "port": "80",
-                "endpoint": "end2",
+                "endpoint": "endpoint1",
+                "protocol": "http",
+                "traffic_forward_ratio": 1,
+                "request_payload_size": 256
+              },
+              {
+                "service": "service2",
+                "port": "80",
+                "endpoint": "endpoint2",
                 "protocol": "http",
                 "traffic_forward_ratio": 1,
                 "request_payload_size": 256
               }
+            ]
+          }
+        },
+        {
+          "name": "endpoint2",
+          "protocol": "http",
+          "execution_mode": "parallel",
+          "network_complexity": {
+            "forward_requests": "asynchronous",
+            "response_payload_size": 512,
+            "called_services": [
             ]
           }
         }
@@ -71,9 +74,9 @@
       "name": "service2",
       "clusters": [
         {
-          "cluster": "cluster2",
+          "cluster": "cluster1",
           "namespace": "edge-namespace",
-          "node": "cluster2-control-plane"
+          "node": "cluster1-control-plane"
         }
       ],
       "resources": {
@@ -91,9 +94,9 @@
       "readiness_probe": 1,
       "endpoints": [
         {
-          "name": "end2",
+          "name": "endpoint1",
           "protocol": "http",
-          "execution_mode": "sequential",
+          "execution_mode": "parallel",
           "cpu_complexity": {
             "execution_time": "5s",
             "method": "fibonacci",
@@ -110,6 +113,16 @@
             "workers": 24,
             "bytes_load": "100%"
           },
+          "network_complexity": {
+            "forward_requests": "asynchronous",
+            "response_payload_size": 512,
+            "called_services": []
+          }
+        },
+        {
+          "name": "endpoint2",
+          "protocol": "http",
+          "execution_mode": "parallel",
           "network_complexity": {
             "forward_requests": "asynchronous",
             "response_payload_size": 512,
