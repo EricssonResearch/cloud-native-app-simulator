@@ -110,7 +110,10 @@ def run_task(service_name, service_endpoint):
 
 
 def execute_cpu_bounded_task(conf):
-    res = subprocess.run(['stress-ng --class cpu --cpu %s --cpu-method %s --taskset %s --cpu-load %s --timeout %s --metrics-brief' % (conf["workers"], conf["method"], ",".join(str(cpu_id) for cpu_id in conf["cpu_affinity"]), conf["cpu_load"], conf["execution_time"])], capture_output=True, shell=True)
+    if len(conf["cpu_affinity"]) > 0:
+        res = subprocess.run(['stress-ng --class cpu --cpu %s --cpu-method %s --taskset %s --cpu-load %s --timeout %s --metrics-brief' % (conf["workers"], conf["method"], ",".join(str(cpu_id) for cpu_id in conf["cpu_affinity"]), conf["cpu_load"], conf["execution_time"])], capture_output=True, shell=True)
+    else:
+        res = subprocess.run(['stress-ng --class cpu --cpu %s --cpu-method %s --cpu-load %s --timeout %s --metrics-brief' % (conf["workers"], conf["method"], conf["cpu_load"], conf["execution_time"])], capture_output=True, shell=True)
 
     return res.stderr.decode("utf-8"), "cpu"
 

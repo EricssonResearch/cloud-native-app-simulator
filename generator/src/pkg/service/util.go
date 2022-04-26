@@ -28,9 +28,9 @@ const (
 	ImageName = "app"
 	ImageURL  = "app-demo:latest"
 
-	DefaultExtPort  = 80 //
+	DefaultExtPort  = 80
 	DefaultPort     = 5000
-	defaultProtocol = "http" //
+	defaultProtocol = "http"
 
 	Uri = "/"
 
@@ -46,7 +46,7 @@ const (
 	SvcThreadsDefault        = 2
 	SvcReadinessProbeDefault = 5
 
-	EpNamePrefix            = "/end"
+	EpNamePrefix            = "end"
 	EpExecModeDefault       = "sequential"
 	EpNwResponseSizeDefault = 512
 
@@ -324,6 +324,7 @@ func CreateInputEndpoint() model.Endpoint {
 	ep.CpuComplexity.ExecutionTime = EpExecTimeDefault
 	ep.CpuComplexity.Method = EpMethodDefault
 	ep.CpuComplexity.Workers = EpWorkersDefault
+	ep.CpuComplexity.CpuAffinity = []int{}
 	ep.CpuComplexity.CpuLoad = EpLoadDefault
 
 	ep.MemoryComplexity.ExecutionTime = EpExecTimeDefault
@@ -333,6 +334,7 @@ func CreateInputEndpoint() model.Endpoint {
 
 	ep.NetworkComplexity.ForwardRequests = EpNwForwardRequests
 	ep.NetworkComplexity.ResponsePayloadSize = EpNwResponseSizeDefault
+	ep.NetworkComplexity.CalledServices = []model.CalledService{}
 
 	return ep
 }
