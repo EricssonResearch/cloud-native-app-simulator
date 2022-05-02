@@ -12,7 +12,7 @@
       "clusters": [
         {
           "cluster": "cluster1",
-          "namespace": "edge-namespace",
+          "namespace": "default",
           "node": "cluster1-control-plane"
         }
       ],
@@ -75,7 +75,7 @@
       "clusters": [
         {
           "cluster": "cluster1",
-          "namespace": "edge-namespace",
+          "namespace": "default",
           "node": "cluster1-control-plane"
         }
       ],
@@ -98,20 +98,20 @@
           "protocol": "http",
           "execution_mode": "parallel",
           "cpu_complexity": {
-            "execution_time": "5s",
+            "execution_time": "1s",
             "method": "fibonacci",
             "workers": 2,
             "cpu_affinity": [
-              22,
-              23
+              1,
+              2
             ],
-            "cpu_load": "100%"
+            "cpu_load": "10%"
           },
           "memory_complexity": {
-            "execution_time": "5s",
+            "execution_time": "1s",
             "method": "swap",
             "workers": 24,
-            "bytes_load": "100%"
+            "bytes_load": "10%"
           },
           "network_complexity": {
             "forward_requests": "asynchronous",

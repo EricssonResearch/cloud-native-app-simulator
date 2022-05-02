@@ -50,8 +50,8 @@ type Endpoint struct {
 	Name              string            `json:"name"`
 	Protocol          string            `json:"protocol"`
 	ExecutionMode     string            `json:"execution_mode"`
-	CpuComplexity     CpuComplexity     `json:"cpu_complexity"`
-	MemoryComplexity  MemoryComplexity  `json:"memory_complexity"`
+	CpuComplexity     *CpuComplexity    `json:"cpu_complexity,omitempty"`
+	MemoryComplexity  *MemoryComplexity `json:"memory_complexity,omitempty"`
 	NetworkComplexity NetworkComplexity `json:"network_complexity"`
 }
 

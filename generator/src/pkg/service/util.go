@@ -42,9 +42,9 @@ const (
 	LimitsMemoryDefault   = "1024M"
 
 	SvcNamePrefix            = "service"
-	SvcProcessesDefault      = 2
-	SvcThreadsDefault        = 2
-	SvcReadinessProbeDefault = 5
+	SvcProcessesDefault      = 1
+	SvcThreadsDefault        = 1
+	SvcReadinessProbeDefault = 2
 
 	EpNamePrefix            = "end"
 	EpExecModeDefault       = "sequential"
@@ -53,7 +53,7 @@ const (
 	EpExecTimeDefault = "1s"
 	EpMethodDefault   = "all"
 	EpWorkersDefault  = 1
-	EpLoadDefault     = "20%"
+	EpLoadDefault     = "5%"
 
 	EpNwForwardRequests = "asynchronous"
 
