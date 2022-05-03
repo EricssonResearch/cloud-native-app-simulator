@@ -141,7 +141,7 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 		for j := 0; j < len(config.Services[i].Clusters); j++ {
 			directory := config.Services[i].Clusters[j].Cluster
 			directory_path := fmt.Sprintf(path+"/%s", directory)
-			c_id := fmt.Sprintf("%s", config.Services[i].Clusters[j].Cluster)
+			c_id := config.Services[i].Clusters[j].Cluster
 			nodeAffinity := config.Services[i].Clusters[j].Node
 			namespace := config.Services[i].Clusters[j].Namespace
 			manifestFilePath := fmt.Sprintf(directory_path+"/%s.yaml", serv)
@@ -234,7 +234,7 @@ func CreateJsonInput(userConfig model.UserConfig) string {
 					// NOTE: Always calling the first endpoint of the called service
 					calledService.Endpoint = s.EpNamePrefix + "1"
 
-					endpoint.CalledServices = append(endpoint.CalledServices, calledService)
+					endpoint.NetworkComplexity.CalledServices = append(endpoint.NetworkComplexity.CalledServices, calledService)
 				}
 			}
 

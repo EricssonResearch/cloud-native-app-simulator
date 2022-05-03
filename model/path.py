@@ -30,3 +30,4 @@ def process_configfile():
 config_data = process_configfile()
 
 SERVICE_CONFIG = config_data
+SERVICE_NAME = os.environ['SERVICE_NAME']

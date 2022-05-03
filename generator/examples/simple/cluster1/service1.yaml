@@ -4,11 +4,11 @@ metadata:
     name: config-service1
     labels:
         name: config-service1
-        version: cluster-1
+        version: cluster1
     namespace: default
 data:
-    conf.json: '{"processes":2,"threads":2,"endpoints":[{"name":"end1","protocol":"http","cpu_consumption":0.003,"network_consumption":0.002,"memory_consumption":0.003,"forward_requests":"asynchronous","called_services":[{"service":"service2","port":"80","endpoint":"end2","protocol":"http","traffic_forward_ratio":1}]}]}'
-    service.proto: "syntax = \"proto3\";\n\n\nservice service1 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n}\n\n\nmessage Request {\n    string data = 1;\n}\n\nmessage Response {\n    string data = 1;\n}"
+    conf.json: '{"processes":2,"threads":2,"endpoints":[{"name":"endpoint1","protocol":"http","execution_mode":"sequential","network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[{"service":"service2","port":"80","endpoint":"endpoint1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service2","port":"80","endpoint":"endpoint2","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256}]}},{"name":"endpoint2","protocol":"http","execution_mode":"parallel","network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[]}}]}'
+    service.proto: "syntax = \"proto3\";\n\n\nservice service1 {\n    \n    rpc endpoint1 (Request) returns (Response) {}\n    \n    rpc endpoint2 (Request) returns (Response) {}\n    \n}\n\nservice service2 {\n    \n    rpc endpoint1 (Request) returns (Response) {}\n    \n    rpc endpoint2 (Request) returns (Response) {}\n    \n}\n\n\nmessage Request {\n    string data = 1;\n}\n\nmessage Response {\n    string data = 1;\n}"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -16,20 +16,20 @@ metadata:
     name: service1
     namespace: default
     labels:
-        version: cluster-1
+        version: cluster1
 spec:
     selector:
         matchLabels:
             app: service1
-            version: cluster-1
+            version: cluster1
     replicas: 1
     template:
         metadata:
             labels:
                 app: service1
-                version: cluster-1
+                version: cluster1
         spec:
-            nodeName: node-1
+            nodeName: cluster1-control-plane
             containers:
                 - name: app
                   image: app-demo:latest
@@ -46,15 +46,15 @@ spec:
                     httpGet:
                         path: /
                         port: 5000
-                    initialDelaySeconds: 5
+                    initialDelaySeconds: 1
                     periodSeconds: 1
                   resources:
                     limits:
-                        cpu: 1000m
+                        cpu: 2000m
                         memory: 1024M
                     requests:
-                        cpu: 500m
-                        memory: 512M
+                        cpu: 2000m
+                        memory: 1024M
             volumes:
                 - name: config-data-volume
                   configMap:
@@ -66,7 +66,7 @@ metadata:
     name: service1
     namespace: default
     labels:
-        version: cluster-1
+        version: cluster1
     annotations:
         http: /
 spec:

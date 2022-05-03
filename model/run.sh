@@ -18,7 +18,7 @@ PROTOCOL=$(jq '.endpoints[0].protocol' config/conf.json -r)
 PROCESSES=$(jq '.processes' config/conf.json -r)
 
 if [ $PROTOCOL = "http" ]; then
-  $(gunicorn --chdir restful -w $PROCESSES app:app -b 0.0.0.0:5000 );
+  $(gunicorn --chdir restful -w $PROCESSES app:app -b 0.0.0.0:5000 --capture-output --log-level debug);
 elif [ $PROTOCOL = "grpc" ]; then
   $(cat config/service.proto > service.proto)
   $(python -m grpc_tools.protoc -I. --python_out=./common --grpc_python_out=./common service.proto);

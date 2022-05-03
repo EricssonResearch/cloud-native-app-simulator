@@ -14,15 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import logging
 from flask import Blueprint, jsonify, request
-import path
 from aiohttp import ClientSession
 import asyncio
-import uuid
+import subprocess
+import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import requests
 
-# TODO: So far, we only support a hard-coded namespace. For more flexible support of namespaces we will need to pass that info as part of the config map
-# TODO: So far, we only support http client
 FORMATTED_REMOTE_URL = "http://{0}:{1}/{2}"
 
 
@@ -43,105 +42,233 @@ def getForwardHeaders(request):
     return headers
 
 
-def run_task(service_endpoint):
+def run_task(service_name, service_endpoint):
     headers = getForwardHeaders(request)
 
-    if service_endpoint["forward_requests"] == "asynchronous":
+    res_payload = create_payload(service_endpoint["network_complexity"]["response_payload_size"])
+
+    source_svc = {}
+    source_svc["service"] = service_name
+    source_svc["endpoint"] = service_endpoint["name"]
+
+    response = create_response()
+
+    execution_mode = service_endpoint["execution_mode"]
+    if execution_mode == "sequential":
+        # Network task
+        if ("network_complexity" in service_endpoint) and (len(service_endpoint["network_complexity"]["called_services"]) > 0):
+            nw_response, _ = run_network_task(source_svc, service_endpoint, headers, res_payload)
+            response = concatenate_response_simple(response, nw_response)
+
+        # CPU task
+        if ("cpu_complexity" in service_endpoint) and len(service_endpoint["cpu_complexity"]["execution_time"]) > 0:
+            cpu_response, _ = execute_cpu_bounded_task(conf=service_endpoint["cpu_complexity"])
+            response["cpu_task"]["services"].append(source_svc["service"]+"/"+source_svc["endpoint"])
+            response["cpu_task"]["statuses"].append(cpu_response)
+
+        # Memory task
+        if ("memory_complexity" in service_endpoint) and len(service_endpoint["memory_complexity"]["execution_time"]) > 0:
+            mem_response, _ = execute_memory_bounded_task(conf=service_endpoint["memory_complexity"])
+            response["memory_task"]["services"].append(source_svc["service"]+"/"+source_svc["endpoint"])
+            response["memory_task"]["statuses"].append(mem_response)
+
+    else: # "parallel"
+        executor = ThreadPoolExecutor(max_workers=3)
+        task_futures = []
+
+        # Network task
+        if ("network_complexity" in service_endpoint) and (len(service_endpoint["network_complexity"]["called_services"]) > 0):
+            nw_future = executor.submit(run_network_task, source_svc, service_endpoint, headers, res_payload)
+            task_futures.append(nw_future)
+
+        # CPU task
+        if ("cpu_complexity" in service_endpoint) and len(service_endpoint["cpu_complexity"]["execution_time"]) > 0:
+            cpu_future = executor.submit(execute_cpu_bounded_task, service_endpoint["cpu_complexity"])
+            task_futures.append(cpu_future)
+
+        # Memory task
+        if ("memory_complexity" in service_endpoint) and len(service_endpoint["memory_complexity"]["execution_time"]) > 0:
+            mem_future = executor.submit(execute_memory_bounded_task, service_endpoint["memory_complexity"])
+            task_futures.append(mem_future)
+
+        # Wait until all threads are done with their tasks
+        for future in as_completed(task_futures):
+            r, task_type = future.result()
+            if task_type == "network":
+                response = concatenate_response_simple(response, r)
+            elif task_type == "cpu":
+                response["cpu_task"]["services"].append(source_svc["service"]+"/"+source_svc["endpoint"])
+                response["cpu_task"]["statuses"].append(r)
+            elif task_type == "memory":
+                response["memory_task"]["services"].append(source_svc["service"]+"/"+source_svc["endpoint"])
+                response["memory_task"]["statuses"].append(r)
+
+        executor.shutdown()
+  
+    return response
+
+
+def execute_cpu_bounded_task(conf):
+    if len(conf["cpu_affinity"]) > 0:
+        res = subprocess.run(['stress-ng --class cpu --cpu %s --cpu-method %s --taskset %s --cpu-load %s --timeout %s --metrics-brief' % (conf["workers"], conf["method"], ",".join(str(cpu_id) for cpu_id in conf["cpu_affinity"]), conf["cpu_load"], conf["execution_time"])], capture_output=True, shell=True)
+    else:
+        res = subprocess.run(['stress-ng --class cpu --cpu %s --cpu-method %s --cpu-load %s --timeout %s --metrics-brief' % (conf["workers"], conf["method"], conf["cpu_load"], conf["execution_time"])], capture_output=True, shell=True)
+
+    return res.stderr.decode("utf-8"), "cpu"
+
+
+def execute_memory_bounded_task(conf):
+    res = subprocess.run(['stress-ng --class memory --vm %s --vm-method %s --vm-bytes %s --timeout %s --metrics-brief' % (conf["workers"], conf["method"], conf["bytes_load"], conf["execution_time"])], capture_output=True, shell=True)
+
+    return res.stderr.decode("utf-8"), "memory"
+
+
+def run_network_task(source_svc, service_endpoint, headers, res_payload):
+    
+    if service_endpoint["network_complexity"]["forward_requests"] == "asynchronous":
         asyncio.set_event_loop(asyncio.new_event_loop())
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(async_tasks(service_endpoint, headers))
-        return response
+        nw_response = loop.run_until_complete(async_network_task(source_svc, service_endpoint, headers, res_payload))
     else: # "synchronous"
-        asyncio.set_event_loop(asyncio.new_event_loop())
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(sync_tasks(service_endpoint, headers))
+        nw_response = sync_network_task(source_svc, service_endpoint, headers, res_payload)
 
-        return response
+    return nw_response, "network"
 
 
-async def async_tasks(service_endpoint, headers):
+async def async_network_task(source_svc, service_endpoint, headers, res_payload):
+
     async with ClientSession() as session:
-        # TODO: CPU-bounded tasks not supported yet
+        response = create_response()
+        response["network_task"]["payload"] = res_payload
+
         io_tasks = []
 
-        if request.get_data() == bytes("", "utf-8"):
-            json_data = {}
-        else:
-            json_data = request.json
-        if len(service_endpoint["called_services"]) > 0:
-            for svc in service_endpoint["called_services"]:
-                io_task = asyncio.create_task(execute_io_bounded_task(session=session, target_service=svc,
-                                                                      json_data=json_data, forward_headers=headers))
+        if len(service_endpoint["network_complexity"]["called_services"]) > 0:
+            for target_svc in service_endpoint["network_complexity"]["called_services"]:
+                io_task = asyncio.create_task(async_execute_io_bounded_task(session=session, source_service=source_svc, target_service=target_svc, forward_headers=headers))
                 io_tasks.append(io_task)
             services = await asyncio.gather(*io_tasks)
 
-        # Concatenate json responses
-    response = {}
-    response["services"] = []
-    response["statuses"] = []
-
-    if len(service_endpoint["called_services"]) > 0:
-        for svc in services:
-            response["services"] += svc["services"]
-            response["statuses"] += svc["statuses"]
-    return response
-
-
-async def sync_tasks(service_endpoint, headers):
-    async with ClientSession() as session:
-        # TODO: CPU-bounded tasks not supported yet
-        response = {}
-        response["services"] = []
-        response["statuses"] = []
-        if request.get_data() == bytes("", "utf-8"):
-            json_data = {}
-        else:
-            json_data = request.json
-        if len(service_endpoint["called_services"]) > 0:
-            for svc in service_endpoint["called_services"]:
-                res = await execute_io_bounded_task(session=session, target_service=svc, json_data=json_data, forward_headers=headers)
-                response["services"] += res["services"]
-                response["statuses"] += res["statuses"]
+        if len(service_endpoint["network_complexity"]["called_services"]) > 0:
+            for svc in services:
+                response = concatenate_response_simple(response, svc)
 
     return response
 
 
-def execute_cpu_bounded_task(origin_service_name, target_service, headers):
-    task_id = str(uuid.uuid4())
-    task_config = {}
-    task_config["task_id"] = task_id
-    task_config["cpu_consumption"] = target_service["cpu_consumption"]
-    task_config["network_consumption"] = target_service["network_consumption"]
-    task_config["memory_consumption"] = target_service["memory_consumption"]
+def sync_network_task(source_svc, service_endpoint, headers, res_payload):
 
-    # TODO: Implement resource stress emulation...
+    response = create_response()
+    response["network_task"]["payload"] = res_payload
+    
+    if len(service_endpoint["network_complexity"]["called_services"]) > 0:
+        for target_svc in service_endpoint["network_complexity"]["called_services"]:
+            res = sync_execute_io_bounded_task(source_service=source_svc, target_service=target_svc, forward_headers=headers)
+            response = concatenate_response_simple(response, res)
 
-    response_object = {
-        "status": "CPU-bounded task executed",
-        "data": {
-            "svc_name": origin_service_name,
-            "task_id": task_config["task_id"]
-        }
-    }
-    return response_object
+    return response
 
 
-async def execute_io_bounded_task(session, target_service, json_data, forward_headers={}):
-    # TODO: Request forwarding to a service on a particular cluster is not supported yet
-    # TODO: Requests for other protocols than html are not supported yet
+async def async_execute_io_bounded_task(session, source_service, target_service, forward_headers={}):
 
     dst = FORMATTED_REMOTE_URL.format(target_service["service"], target_service["port"], target_service["endpoint"])
     forward_headers.update({'Content-type' : 'application/json'})
 
-    # TODO: traffic_forward_ratio not supported yet
-    traffic_forward_ratio = target_service["traffic_forward_ratio"]
+    response = create_response()
 
-    res = await session.post(dst, data=json_data, headers=forward_headers)
-    res_payload = await res.json()
+    json_data = {}
+    json_data["payload"] = create_payload(target_service["request_payload_size"])
+
+    forward_ratio = target_service["traffic_forward_ratio"]
+    if forward_ratio > 0:
+        async with ClientSession() as session:
+            io_tasks = []
+
+            for i in range(forward_ratio):
+                io_task = asyncio.create_task(session.post(dst, data=json_data, headers=forward_headers))
+                io_tasks.append(io_task)
+            calls = await asyncio.gather(*io_tasks)
+
+        for res in calls:
+            res_payload = await res.json()
+            response = concatenate_response(response, res_payload, source_service, target_service)
+            response["network_task"]['statuses'].append(res.status)
+
+    return response
+
+
+def sync_execute_io_bounded_task(source_service, target_service, forward_headers={}):
+
+    dst = FORMATTED_REMOTE_URL.format(target_service["service"], target_service["port"], target_service["endpoint"])
+    forward_headers.update({'Content-type' : 'application/json'})
+
+    response = create_response()
+
+    json_data = {}
+    json_data["payload"] = create_payload(target_service["request_payload_size"])
+
+    forward_ratio = target_service["traffic_forward_ratio"]       
+    if forward_ratio > 0:
+            for i in range(forward_ratio):
+                res = requests.post(dst, data=json_data, headers=forward_headers)
+                response = concatenate_response(response, res.json(), source_service, target_service)
+                response["network_task"]['statuses'].append(res.status_code)
+                
+    return response
+
+
+def create_payload(payload_size):
+
+    request_payload = subprocess.run(['cat /dev/urandom | tr -dc "[:alnum:]" | head -c${1:-%s}' % payload_size], capture_output=True, shell=True)
+    
+    return request_payload.stdout.decode("utf-8")
+
+
+def create_response():
 
     response = {}
-    response["services"] = res_payload["services"]
-    response['services'].append(str(res.url))
-    response["statuses"] = res_payload["statuses"]
-    response['statuses'].append(res.status)
+    response["cpu_task"] = {}
+    response["cpu_task"]["services"] = []
+    response["cpu_task"]["statuses"] = []
+
+    response["memory_task"] = {}
+    response["memory_task"]["services"] = []
+    response["memory_task"]["statuses"] = []
+
+    response["network_task"] = {}
+    response["network_task"]["services"] = []
+    response["network_task"]["statuses"] = []
+    response["network_task"]["payload"] = ""
+
+    return response
+
+
+def concatenate_response_simple(response, res):
+
+    response["cpu_task"]["services"] += res["cpu_task"]["services"]
+    response["cpu_task"]["statuses"] += res["cpu_task"]["statuses"]
+
+    response["memory_task"]["services"] += res["memory_task"]["services"]
+    response["memory_task"]["statuses"] += res["memory_task"]["statuses"]
+
+    response["network_task"]["services"] += res["network_task"]["services"]
+    response["network_task"]["statuses"] += res["network_task"]["statuses"]
+    response["network_task"]["payload"] += res["network_task"]["payload"]
+
+    return response
+
+
+def concatenate_response(response, res_payload, source_service, target_service):
+
+    response["cpu_task"]["services"] += res_payload["cpu_task"]["services"]
+    response["cpu_task"]["statuses"] += res_payload["cpu_task"]["statuses"]
+
+    response["memory_task"]["services"] += res_payload["memory_task"]["services"]
+    response["memory_task"]["statuses"] += res_payload["memory_task"]["statuses"]
+
+    response["network_task"]["services"] += res_payload["network_task"]["services"]
+    response["network_task"]['services'].append("("+source_service["service"]+"/"+source_service["endpoint"]+", "+target_service["service"]+"/"+target_service["endpoint"]+")")
+    response["network_task"]["statuses"] += res_payload["network_task"]["statuses"]
+    response["network_task"]["payload"] = res_payload["network_task"]["payload"]
+
     return response

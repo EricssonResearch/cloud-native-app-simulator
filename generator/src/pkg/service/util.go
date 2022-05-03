@@ -28,9 +28,9 @@ const (
 	ImageName = "app"
 	ImageURL  = "app-demo:latest"
 
-	DefaultExtPort  = 80 //
+	DefaultExtPort  = 80
 	DefaultPort     = 5000
-	defaultProtocol = "http" //
+	defaultProtocol = "http"
 
 	Uri = "/"
 
@@ -42,17 +42,23 @@ const (
 	LimitsMemoryDefault   = "1024M"
 
 	SvcNamePrefix            = "service"
-	SvcProcessesDefault      = 2
-	SvcThreadsDefault        = 2
-	SvcReadinessProbeDefault = 5
+	SvcProcessesDefault      = 1
+	SvcThreadsDefault        = 1
+	SvcReadinessProbeDefault = 2
 
-	EpNamePrefix                = "/end"
-	EpCPUConsumptionDefault     = 0.003
-	EpNetworkConsumptionDefault = 0.002
-	EpMemoryConsumptionDefault  = 0.003
-	EpForwardRequests           = "asynchronous"
+	EpNamePrefix            = "end"
+	EpExecModeDefault       = "sequential"
+	EpNwResponseSizeDefault = 512
+
+	EpExecTimeDefault = "1s"
+	EpMethodDefault   = "all"
+	EpWorkersDefault  = 1
+	EpLoadDefault     = "5%"
+
+	EpNwForwardRequests = "asynchronous"
 
 	CsTrafficForwardRatio = 1
+	CsRequestSizeDefault  = 256
 )
 
 func CreateDeployment(metadataName, selectorAppName, selectorClusterName string, numberOfReplicas int,
@@ -312,10 +318,23 @@ func CreateInputEndpoint() model.Endpoint {
 	var ep model.Endpoint
 
 	ep.Protocol = defaultProtocol
-	ep.CpuConsumption = EpCPUConsumptionDefault
-	ep.NetworkConsumption = EpNetworkConsumptionDefault
-	ep.MemoryConsumption = EpMemoryConsumptionDefault
-	ep.ForwardRequests = EpForwardRequests
+
+	ep.ExecutionMode = EpExecModeDefault
+
+	ep.CpuComplexity.ExecutionTime = EpExecTimeDefault
+	ep.CpuComplexity.Method = EpMethodDefault
+	ep.CpuComplexity.Workers = EpWorkersDefault
+	ep.CpuComplexity.CpuAffinity = []int{}
+	ep.CpuComplexity.CpuLoad = EpLoadDefault
+
+	ep.MemoryComplexity.ExecutionTime = EpExecTimeDefault
+	ep.MemoryComplexity.Method = EpMethodDefault
+	ep.MemoryComplexity.Workers = EpWorkersDefault
+	ep.MemoryComplexity.BytesLoad = EpLoadDefault
+
+	ep.NetworkComplexity.ForwardRequests = EpNwForwardRequests
+	ep.NetworkComplexity.ResponsePayloadSize = EpNwResponseSizeDefault
+	ep.NetworkComplexity.CalledServices = []model.CalledService{}
 
 	return ep
 }
@@ -327,6 +346,7 @@ func CreateInputCalledSvc() model.CalledService {
 	calledSvc.Port = strconv.Itoa(DefaultExtPort)
 	calledSvc.Protocol = defaultProtocol
 	calledSvc.TrafficForwardRatio = CsTrafficForwardRatio
+	calledSvc.RequestPayloadSize = CsRequestSizeDefault
 
 	return calledSvc
 }

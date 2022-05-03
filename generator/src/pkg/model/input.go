@@ -17,21 +17,42 @@ limitations under the License.
 package model
 
 type CalledService struct {
-	Service             string  `json:"service"`
-	Port                string  `json:"port"`
-	Endpoint            string  `json:"endpoint"`
-	Protocol            string  `json:"protocol"`
-	TrafficForwardRatio float32 `json:"traffic_forward_ratio"`
+	Service             string `json:"service"`
+	Port                string `json:"port"`
+	Endpoint            string `json:"endpoint"`
+	Protocol            string `json:"protocol"`
+	TrafficForwardRatio int    `json:"traffic_forward_ratio"`
+	RequestPayloadSize  int    `json:"request_payload_size"`
+}
+
+type CpuComplexity struct {
+	ExecutionTime string `json:"execution_time"`
+	Method        string `json:"method"`
+	Workers       int    `json:"workers"`
+	CpuAffinity   []int  `json:"cpu_affinity"`
+	CpuLoad       string `json:"cpu_load"`
+}
+
+type MemoryComplexity struct {
+	ExecutionTime string `json:"execution_time"`
+	Method        string `json:"method"`
+	Workers       int    `json:"workers"`
+	BytesLoad     string `json:"bytes_load"`
+}
+
+type NetworkComplexity struct {
+	ForwardRequests     string          `json:"forward_requests"`
+	ResponsePayloadSize int             `json:"response_payload_size"`
+	CalledServices      []CalledService `json:"called_services"`
 }
 
 type Endpoint struct {
-	Name               string          `json:"name"`
-	Protocol           string          `json:"protocol"`
-	CpuConsumption     float64         `json:"cpu_consumption"`
-	NetworkConsumption float64         `json:"network_consumption"`
-	MemoryConsumption  float64         `json:"memory_consumption"`
-	ForwardRequests    string          `json:"forward_requests"`
-	CalledServices     []CalledService `json:"called_services"`
+	Name              string            `json:"name"`
+	Protocol          string            `json:"protocol"`
+	ExecutionMode     string            `json:"execution_mode"`
+	CpuComplexity     *CpuComplexity    `json:"cpu_complexity,omitempty"`
+	MemoryComplexity  *MemoryComplexity `json:"memory_complexity,omitempty"`
+	NetworkComplexity NetworkComplexity `json:"network_complexity"`
 }
 
 type ResourceLimits struct {

@@ -20,6 +20,7 @@ RUN mkdir -p /usr/src/app
 RUN apt update
 RUN apt install -y jq \
     wget \
+    stress-ng \
     2to3
 
 WORKDIR /usr/src/app
