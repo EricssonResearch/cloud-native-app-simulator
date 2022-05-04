@@ -266,11 +266,12 @@ func CreateFileConfig() model.FileConfig {
 	return fileConfig
 }
 
-func CreateConfigMap(processes int, threads int, ep []model.Endpoint) *model.ConfigMap {
+func CreateConfigMap(processes int, threads int, logging bool, ep []model.Endpoint) *model.ConfigMap {
 
 	cm_data := &model.ConfigMap{
 		Processes: processes,
 		Threads:   threads,
+		Logging:   logging,
 		Endpoints: []model.Endpoint(ep),
 	}
 

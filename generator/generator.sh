@@ -32,15 +32,3 @@ mkdir k8s
 #generate kubernetes kubernetes manifest files
 echo "generating kubernetes manifest files"
 go run main.go generate $1 $2
-
-#applying manifest files to respective clusters
-for i in $(seq ${NUM}); do
-	if [[ -d k8s/cluster${i} ]]; then
-		echo "applying deployment manifests to cluster${i}"
-		kubectl apply --prune -f k8s/cluster${i} -l version=cluster${i} -n edge-namespace --context cluster${i}
-	else
-		kubectl delete deploy -l version=cluster${i} -n edge-namespace --context cluster${i}
-		kubectl delete svc -l version=cluster${i} -n edge-namespace --context cluster${i}
-		kubectl delete cm -l version=cluster${i} -n edge-namespace --context cluster${i}
-	fi
-done
