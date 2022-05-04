@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from aiohttp import ClientSession
 import asyncio
 import subprocess
@@ -43,6 +43,7 @@ def getForwardHeaders(request):
 
 
 def run_task(service_name, service_endpoint):
+    current_app.logger.debug("run_task function executed.")
     headers = getForwardHeaders(request)
 
     res_payload = create_payload(service_endpoint["network_complexity"]["response_payload_size"])
