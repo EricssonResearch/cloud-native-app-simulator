@@ -13,20 +13,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-kind: Service
-apiVersion: v1
-metadata:
-  name: elasticsearch
-  namespace: logging
-  labels:
-    app: elasticsearch
-spec:
-  type: NodePort
-  selector:
-    app: elasticsearch
-  ports:
-    - port: 9200
-      nodePort: 30001
-      name: rest
-    - port: 9300
-      name: inter-node
+#!/bin/bash
+
+if [ $# -eq 0 ]
+  then
+    echo "No arguments supplied. \n"
+    echo "Please provide the <public-ip> of your master node.\n"
+else
+  # Creating virtual environment
+  # Installing prerequisites
+  ELASTIC_PORT=30001
+  $(python3 -m venv venv)
+  source venv/bin/activate
+  pip3 install kubernetes
+  for d in ../k8s/*; do
+      echo "Installing Fluentd on ${d##../k8s/}"
+      $(python3 ./update-fluentd.py $1 $ELASTIC_PORT ${d##../k8s/} )
+  done
+  $(rm -r venv)
+
+
+fi

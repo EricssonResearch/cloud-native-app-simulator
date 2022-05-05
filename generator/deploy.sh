@@ -43,11 +43,10 @@ else
     echo "\t http://<node-ip>:30000"
     echo "\t or"
     echo "\t http://$NODE_IP:30000"
-
-    # Deploy the microservices to clusters
-    for d in ./k8s/*; do
-    	echo "applying deployment manifests to ${d##./k8s/}"
-    	[[ -d "$d" ]] && kubectl apply --prune -f k8s/${d##./k8s/} -l version=${d##./k8s/} --context ${d##./k8s/}
-    done
   fi
+  # Deploy the microservices to clusters
+  for d in ./k8s/*; do
+    echo "applying deployment manifests to ${d##./k8s/}"
+    [[ -d "$d" ]] && kubectl apply --prune -f k8s/${d##./k8s/} -l version=${d##./k8s/} --context ${d##./k8s/}
+  done
 fi

@@ -47,6 +47,14 @@ applying deployment manifests to cluster-1
 Simply copy the address to the browser and enjoy using Elasticsearch. (It might take around 30 seconds for Kibana to be 
 ready!)
 
+### Multicluster environment Configuration
+If you are running in a multicluster environment, you need to install `fluentd` on all clusters. To do so, you need to 
+pass the public address of master node in which elasticsearch is deployed.
+```
+cd elk/
+./fluentd_installation.sh <master-ip-address>
+```
+
 ## Working with elastic search
 After executing the above steps successfully, now It is time to work with Kibana. Browse the address mentioned 
 previously. Click on Discover in the left-hand navigation menu:
