@@ -71,7 +71,7 @@ To be able to explore the latest logs for a given pod, we should deploy them and
 running.
 
 Let's assume that our pod name is `service1-75576df8cd-zjpg7`, then from the **Discover** page, in the search bar enter 
-`kubernetes.pod_name:service1`. This filters the log data for Pods named `service`.
+`kubernetes.pod_name:service1`. This filters the log data for Pods named `service1`.
 You should then see a list of log entries for the `service1` Pod:
 ![Kibana discover service1](../images/elk/kibana-discover-service1.png)
 
