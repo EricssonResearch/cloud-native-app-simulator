@@ -17,7 +17,6 @@ package service
 
 import (
 	"application-generator/src/pkg/model"
-	"fmt"
 	"strconv"
 )
 
@@ -212,49 +211,6 @@ func CreateConfig(metadataName, metadataLabelName, metadataLabelCluster, namespa
 	configMap.Data.Service = proto
 
 	return configMap
-}
-
-func CreateGateway(hosts []string) model.GatewayInstance {
-
-	var server model.GatewayServers
-	for i, s := range hosts {
-		e := fmt.Sprintf("s%s.dev", s)
-		hosts[i] = e
-	}
-	server.Hosts = hosts
-	server.Port.Name = "http"
-	server.Port.Number = 80
-	server.Port.Protocol = "HTTP"
-
-	gateway := &model.GatewayInstance{APIVersion: "networking.istio.io/v1alpha3",
-		Kind: "Gateway", Metadata: model.Metadata{Name: "generator-gateway"},
-		Spec: model.GatewaySpec{Selector: model.GatewaySelector{Istio: "ingressgateway"}}}
-
-	gateway.Spec.Servers = append(gateway.Spec.Servers, server)
-
-	return *gateway
-}
-
-func CreateVirtualService(metadataName, hostname, gatewayHost string, port int) model.VirtualServiceInstance {
-
-	var match model.VirtualServiceMatch
-	match.URI.Exact = "/"
-
-	var route model.VirtualServiceRoute
-	route.Destination.Host = hostname
-	route.Destination.Port.Number = port
-	var http model.VirtualServiceHTTP
-	http.Match = append(http.Match, match)
-	http.Route = append(http.Route, route)
-
-	virtualService := &model.VirtualServiceInstance{
-		APIVersion: "networking.istio.io/v1alpha3", Kind: "VirtualService", Metadata: model.Metadata{Name: metadataName}}
-	virtualService.Spec.HTTP = append(virtualService.Spec.HTTP, http)
-	virtualService.Spec.Gateways = append(virtualService.Spec.Gateways, "generator-gateway")
-	virtualService.Spec.Hosts = append(virtualService.Spec.Hosts, gatewayHost)
-
-	return *virtualService
-
 }
 
 func CreateFileConfig() model.FileConfig {
