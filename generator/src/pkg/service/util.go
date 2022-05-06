@@ -50,7 +50,7 @@ const (
 	EpExecModeDefault       = "sequential"
 	EpNwResponseSizeDefault = 512
 
-	EpExecTimeDefault = "1s"
+	EpExecTimeDefault = "0.1s"
 	EpMethodDefault   = "all"
 	EpWorkersDefault  = 1
 	EpLoadDefault     = "5%"
