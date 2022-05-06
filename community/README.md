@@ -53,6 +53,7 @@ script.
 # Each of the created clusters has 3 worker nodes and one control plane by default.
 #
 
+
 cd community
 ./kind-setup-clusters.sh [number of clusters (default 2)] [config of each cluster (default kind-cluster-3-nodes.yaml)]
 ```
@@ -66,7 +67,8 @@ cd community
 ./push-image-to-clusters [number of clusters (default 2)]
 ```
 
-
+### Logging
+To be able to have logging, simply follow the instructions in [Logging](./Logging.md).
 
 
 

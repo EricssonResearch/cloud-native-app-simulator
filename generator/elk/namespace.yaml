@@ -13,22 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-#!/bin/bash
-
-DEFAULT_NUM=4
-if [ -z "$4" ]; then
-	NUM=$DEFAULT_NUM
-else
-	NUM=$4
-fi
-
-if [[ -d k8s ]]; then
-	echo "deleting previous manifest files"
-	rm -r k8s
-fi
-
-mkdir k8s
-#generate kubernetes kubernetes manifest files
-echo "generating kubernetes manifest files"
-go run main.go generate $1 $2
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: logging

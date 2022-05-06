@@ -17,11 +17,17 @@ from flask import Flask
 from flask_restful import Api
 from restful.resources.endpoint import Endpoint
 from restful.utils import task
+import logging
 
 
 app = Flask(__name__)
+gunicorn_logger = logging.getLogger('gunicorn.error')
+app.logger.handlers = gunicorn_logger.handlers
+app.logger.setLevel(gunicorn_logger.level)
+
 api = Api(app)
 api.add_resource(Endpoint, '/', '/<string:endpoint>')
+
 if __name__ == 'restful.app':
     app.run()
 

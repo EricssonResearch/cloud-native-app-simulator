@@ -54,3 +54,10 @@ For more information see [doc folder](generator/doc) and [masther thesis report]
 ## Contribution Guideline
 If you are interested in contribution, please visit the [community page](community) to learn about development environment 
 setup.
+
+
+## Need for Logging
+To be able to have logging, simply follow the instructions in [Logging](community/Logging.md).
+
+
+

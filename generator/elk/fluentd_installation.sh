@@ -13,22 +13,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 #!/bin/bash
 
-DEFAULT_NUM=4
-if [ -z "$4" ]; then
-	NUM=$DEFAULT_NUM
+if [ $# -eq 0 ]
+  then
+    echo "No arguments supplied. \n"
+    echo "Please provide the <public-ip> of your master node.\n"
 else
-	NUM=$4
-fi
+  # Creating virtual environment
+  # Installing prerequisites
+  ELASTIC_PORT=30001
+  $(python3 -m venv venv)
+  source venv/bin/activate
+  pip3 install kubernetes
+  for d in ../k8s/*; do
+      echo "Installing Fluentd on ${d##../k8s/}"
+      $(python3 ./update-fluentd.py $1 $ELASTIC_PORT ${d##../k8s/} )
+  done
+  $(rm -r venv)
 
-if [[ -d k8s ]]; then
-	echo "deleting previous manifest files"
-	rm -r k8s
-fi
 
-mkdir k8s
-#generate kubernetes kubernetes manifest files
-echo "generating kubernetes manifest files"
-go run main.go generate $1 $2
+fi

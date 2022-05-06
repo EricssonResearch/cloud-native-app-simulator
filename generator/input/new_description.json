@@ -1,7 +1,10 @@
 {
+  "settings": {
+    "logging": true
+  },
   "cluster_latencies": [
     {
-      "src" : "cluster-1",
+      "src": "cluster-1",
       "dest": "cluster-2",
       "latency": 0.002
     }

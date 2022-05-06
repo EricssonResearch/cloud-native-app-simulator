@@ -92,9 +92,14 @@ type ClusterLatency struct {
 	Latency float64 `json:"latency"`
 }
 
+type Setting struct {
+	Logging bool `json:"logging"`
+}
+
 type FileConfig struct {
 	ClusterLatencies []ClusterLatency `json:"cluster_latencies"`
 	Services         []Service        `json:"services"`
+	Settings         Setting          `json:"settings,omitempty"`
 }
 
 type UserConfig struct {

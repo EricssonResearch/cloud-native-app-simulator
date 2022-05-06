@@ -131,7 +131,8 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 			processes = s.SvcThreadsDefault
 		}
 
-		cm_data := s.CreateConfigMap(processes, threads, config.Services[i].Endpoints)
+		logging := config.Settings.Logging
+		cm_data := s.CreateConfigMap(processes, threads, logging, config.Services[i].Endpoints)
 
 		serv_json, err := json.Marshal(cm_data)
 		if err != nil {
