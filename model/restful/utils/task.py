@@ -111,15 +111,15 @@ def run_task(service_name, service_endpoint):
 
 def execute_cpu_bounded_task(conf):
     if len(conf["cpu_affinity"]) > 0:
-        res = subprocess.run(['/usr/src/app/my-stress-ng --class cpu --cpu %s --cpu-method %s --taskset %s --cpu-load %s --timeout %s --metrics-brief' % (conf["workers"], conf["method"], ",".join(str(cpu_id) for cpu_id in conf["cpu_affinity"]), conf["cpu_load"], conf["execution_time"])], capture_output=True, shell=True)
+        res = subprocess.run(['stress-ng --class cpu --cpu %s --cpu-method %s --taskset %s --cpu-load %s --timeout %s --metrics-brief' % (conf["workers"], conf["method"], ",".join(str(cpu_id) for cpu_id in conf["cpu_affinity"]), conf["cpu_load"], conf["execution_time"])], capture_output=True, shell=True)
     else:
-        res = subprocess.run(['/usr/src/app/my-stress-ng --class cpu --cpu %s --cpu-method %s --cpu-load %s --timeout %s --metrics-brief' % (conf["workers"], conf["method"], conf["cpu_load"], conf["execution_time"])], capture_output=True, shell=True)
+        res = subprocess.run(['stress-ng --class cpu --cpu %s --cpu-method %s --cpu-load %s --timeout %s --metrics-brief' % (conf["workers"], conf["method"], conf["cpu_load"], conf["execution_time"])], capture_output=True, shell=True)
 
     return res.stderr.decode("utf-8"), "cpu"
 
 
 def execute_memory_bounded_task(conf):
-    res = subprocess.run(['/usr/src/app/my-stress-ng --class memory --vm %s --vm-method %s --vm-bytes %s --timeout %s --metrics-brief' % (conf["workers"], conf["method"], conf["bytes_load"], conf["execution_time"])], capture_output=True, shell=True)
+    res = subprocess.run(['stress-ng --class memory --vm %s --vm-method %s --vm-bytes %s --timeout %s --metrics-brief' % (conf["workers"], conf["method"], conf["bytes_load"], conf["execution_time"])], capture_output=True, shell=True)
 
     return res.stderr.decode("utf-8"), "memory"
 
