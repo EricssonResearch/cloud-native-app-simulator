@@ -142,6 +142,7 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 		for j := 0; j < len(config.Services[i].Clusters); j++ {
 			directory := config.Services[i].Clusters[j].Cluster
 			annotations := config.Services[i].Clusters[j].Annotations
+			replicas := config.Services[i].Clusters[j].Replicas
 			directory_path := fmt.Sprintf(path+"/%s", directory)
 			c_id := config.Services[i].Clusters[j].Cluster
 			nodeAffinity := config.Services[i].Clusters[j].Node
@@ -159,7 +160,7 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 			configmap := s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json), proto_temp_filled)
 			appendManifest(configmap)
 
-			deployment := s.CreateDeployment(serv, serv, c_id, s.ReplicaNumber, serv, c_id, namespace,
+			deployment := s.CreateDeployment(serv, serv, c_id, replicas, serv, c_id, namespace,
 				s.DefaultPort, s.ImageName, s.ImageURL, s.VolumePath, s.VolumeName, "config-"+serv, readinessProbe,
 				resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory,
 				nodeAffinity, protocol, annotations)
@@ -203,6 +204,7 @@ func CreateJsonInput(userConfig model.UserConfig) string {
 
 			cRIndex := rand.Intn(len(userConfig.Clusters))
 			cluster.Cluster = userConfig.Clusters[cRIndex]
+			cluster.Replicas = rand.Intn(j) + 1
 
 			nRIndex := rand.Intn(len(userConfig.Namespaces))
 			cluster.Namespace = userConfig.Namespaces[nRIndex]
