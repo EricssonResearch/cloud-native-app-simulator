@@ -15,6 +15,7 @@
       "clusters": [
         {
           "cluster": "cluster-1",
+          "replicas": 1,
           "namespace": "default",
           "node": "node-1"
         }
