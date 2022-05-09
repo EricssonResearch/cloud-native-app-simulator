@@ -16,7 +16,17 @@
         {
           "cluster": "cluster-1",
           "namespace": "default",
-          "node": "node-1"
+          "node": "node-1",
+          "annotations": [
+            {
+              "name": "sidecar.istio.io/statsInclusionPrefixes",
+              "value": "cluster.outbound,cluster_manager,listener_manager,http_mixer_filter,tcp_mixer_filter,server,cluster.xds-grp,listener,connection_manager"
+            },
+            {
+              "name": "sidecar.istio.io/statsInclusionRegexps",
+              "value": "http.*"
+            }
+          ]
         }
       ],
       "resources": {

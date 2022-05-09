@@ -141,6 +141,7 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 
 		for j := 0; j < len(config.Services[i].Clusters); j++ {
 			directory := config.Services[i].Clusters[j].Cluster
+			annotations := config.Services[i].Clusters[j].Annotations
 			directory_path := fmt.Sprintf(path+"/%s", directory)
 			c_id := config.Services[i].Clusters[j].Cluster
 			nodeAffinity := config.Services[i].Clusters[j].Node
@@ -161,7 +162,7 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 			deployment := s.CreateDeployment(serv, serv, c_id, s.ReplicaNumber, serv, c_id, namespace,
 				s.DefaultPort, s.ImageName, s.ImageURL, s.VolumePath, s.VolumeName, "config-"+serv, readinessProbe,
 				resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory,
-				nodeAffinity, protocol)
+				nodeAffinity, protocol, annotations)
 			appendManifest(deployment)
 
 			service := s.CreateService(serv, serv, protocol, s.Uri, c_id, namespace, s.DefaultExtPort, s.DefaultPort)
