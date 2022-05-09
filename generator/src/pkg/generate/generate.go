@@ -203,6 +203,7 @@ func CreateJsonInput(userConfig model.UserConfig) string {
 
 			cRIndex := rand.Intn(len(userConfig.Clusters))
 			cluster.Cluster = userConfig.Clusters[cRIndex]
+			cluster.Replicas = rand.Intn(j) + 1
 
 			nRIndex := rand.Intn(len(userConfig.Namespaces))
 			cluster.Namespace = userConfig.Namespaces[nRIndex]

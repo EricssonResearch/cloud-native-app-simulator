@@ -315,21 +315,24 @@ func CreateInputCluster() model.Cluster {
 func CreateInputEndpoint() model.Endpoint {
 
 	var ep model.Endpoint
-
 	ep.Protocol = defaultProtocol
+	var cpuComplexity model.CpuComplexity
+	var memoryComplexity model.MemoryComplexity
+
+	ep.CpuComplexity = &cpuComplexity
+	ep.MemoryComplexity = &memoryComplexity
 
 	ep.ExecutionMode = EpExecModeDefault
+	cpuComplexity.ExecutionTime = EpExecTimeDefault
+	cpuComplexity.Method = EpMethodDefault
+	cpuComplexity.Workers = EpWorkersDefault
+	cpuComplexity.CpuAffinity = []int{}
+	cpuComplexity.CpuLoad = EpLoadDefault
 
-	ep.CpuComplexity.ExecutionTime = EpExecTimeDefault
-	ep.CpuComplexity.Method = EpMethodDefault
-	ep.CpuComplexity.Workers = EpWorkersDefault
-	ep.CpuComplexity.CpuAffinity = []int{}
-	ep.CpuComplexity.CpuLoad = EpLoadDefault
-
-	ep.MemoryComplexity.ExecutionTime = EpExecTimeDefault
-	ep.MemoryComplexity.Method = EpMethodDefault
-	ep.MemoryComplexity.Workers = EpWorkersDefault
-	ep.MemoryComplexity.BytesLoad = EpLoadDefault
+	memoryComplexity.ExecutionTime = EpExecTimeDefault
+	memoryComplexity.Method = EpMethodDefault
+	memoryComplexity.Workers = EpWorkersDefault
+	memoryComplexity.BytesLoad = EpLoadDefault
 
 	ep.NetworkComplexity.ForwardRequests = EpNwForwardRequests
 	ep.NetworkComplexity.ResponsePayloadSize = EpNwResponseSizeDefault
