@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: tsung
+    namespace: default
+    labels:
+        version: cluster1
+spec:
+    selector:
+        matchLabels:
+            client: tsung
+            version: cluster1
+    replicas: 1
+    template:
+        metadata:
+            labels:
+                client: tsung
+                version: cluster1
+        spec:
+            containers:
+                - name: client
+                  image: tsung:latest
+                  imagePullPolicy: Never
+                  command: ["tsung"]
+                  args: ["-f", "/usr/src/app/conf.xml", "-k","start"]
+                  volumeMounts:
+                    - mountPath: /usr/src/app/conf.xml
+                      name: config-volume
+            volumes:
+                - name: config-volume
+                  hostPath:
+                    path: /usr/src/conf.xml
+                    type: FileOrCreate
