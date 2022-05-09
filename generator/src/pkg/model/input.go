@@ -82,6 +82,7 @@ type Service struct {
 
 type Cluster struct {
 	Cluster   string `json:"cluster"`
+	Replicas  int    `json:"replicas,omitempty"`
 	Namespace string `json:"namespace"`
 	Node      string `json:"node,omitempty"`
 }

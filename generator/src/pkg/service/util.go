@@ -34,8 +34,6 @@ const (
 
 	Uri = "/"
 
-	ReplicaNumber = 1
-
 	RequestsCPUDefault    = "500m"
 	RequestsMemoryDefault = "256M"
 	LimitsCPUDefault      = "1000m"
