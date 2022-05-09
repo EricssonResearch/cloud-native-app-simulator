@@ -98,7 +98,7 @@
           "protocol": "http",
           "execution_mode": "parallel",
           "cpu_complexity": {
-            "execution_time": "1s",
+            "execution_time": "0.1s",
             "method": "fibonacci",
             "workers": 2,
             "cpu_affinity": [
@@ -108,7 +108,7 @@
             "cpu_load": "10%"
           },
           "memory_complexity": {
-            "execution_time": "1s",
+            "execution_time": "0.1s",
             "method": "swap",
             "workers": 24,
             "bytes_load": "10%"
