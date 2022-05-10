@@ -62,7 +62,7 @@ const (
 func CreateDeployment(metadataName, selectorAppName, selectorClusterName string, numberOfReplicas int,
 	templateAppLabel, templateClusterLabel, namespace string, containerPort int, containerName, containerImage,
 	mountPath string, volumeName, configMapName string, readinessProbe int, requestCPU, requestMemory, limitCPU,
-	limitMemory, nodeAffinity, protocol string) (deploymentInstance model.DeploymentInstance) {
+	limitMemory, nodeAffinity, protocol string, annotations []model.Annotation) (deploymentInstance model.DeploymentInstance) {
 
 	var deployment model.DeploymentInstance
 	var containerInstance model.ContainerInstance
@@ -112,6 +112,13 @@ func CreateDeployment(metadataName, selectorAppName, selectorClusterName string,
 	deployment.Spec.Replicas = numberOfReplicas
 	deployment.Spec.Template.Metadata.Labels.App = templateAppLabel
 	deployment.Spec.Template.Metadata.Labels.Cluster = templateClusterLabel
+	if len(annotations) > 0 {
+		deployment.Spec.Template.Metadata.Annotations = map[string]string{}
+		for i := 0; i < len(annotations); i++ {
+			deployment.Spec.Template.Metadata.Annotations[annotations[i].Name] = annotations[i].Value
+		}
+	}
+
 	deployment.Spec.Template.Spec.Containers = append(deployment.Spec.Template.Spec.Containers, containerInstance)
 	deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, volumeInstance)
 	deployment.Spec.Template.Spec.NodeName = nodeAffinity
