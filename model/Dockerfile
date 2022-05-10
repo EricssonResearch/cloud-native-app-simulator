@@ -43,8 +43,7 @@ RUN git clone https://github.com/alekodu/stress-ng.git &&\
     git checkout cloudsim &&\
     make clean &&\
     make &&\
-    mv stress-ng my-stress-ng &&\
-    cp my-stress-ng /usr/src/app &&\
+    mv stress-ng /usr/local/bin/stress-ng &&\
     cd .. &&\
     rm -R stress-ng/
 
