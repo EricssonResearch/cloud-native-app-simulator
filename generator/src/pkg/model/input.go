@@ -81,10 +81,16 @@ type Service struct {
 }
 
 type Cluster struct {
-	Cluster   string `json:"cluster"`
-	Replicas  int    `json:"replicas,omitempty"`
-	Namespace string `json:"namespace"`
-	Node      string `json:"node,omitempty"`
+	Cluster     string       `json:"cluster"`
+  Replicas    int          `json:"replicas,omitempty"`
+	Namespace   string       `json:"namespace"`
+	Node        string       `json:"node,omitempty"`
+	Annotations []Annotation `json:"annotations,omitempty"`
+}
+
+type Annotation struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }
 
 type ClusterLatency struct {

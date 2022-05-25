@@ -40,11 +40,14 @@ type DeploymentInstance struct {
 					App     string `yaml:"app"`
 					Cluster string `yaml:"version"`
 				} `yaml:"labels"`
+				Annotations map[string]string `json:"annotations,omitempty"`
 			} `yaml:"metadata"`
 			Spec specInstance `yaml:"spec"`
 		} `yaml:"template"`
 	} `yaml:"spec"`
 }
+
+type DeploymentAnnotation map[string]string
 
 type specInstance struct {
 	NodeName       string              `yaml:"nodeName,omitempty"`
