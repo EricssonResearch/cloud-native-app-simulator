@@ -25,7 +25,7 @@ const (
 	VolumePath = "/usr/src/app/config"
 
 	ImageName = "app"
-	ImageURL  = "app-demo:latest"
+	ImageURL  = "ghcr.io/ericssonresearch/cloud-native-app-simulator/app-demo:latest"
 
 	DefaultExtPort  = 80
 	DefaultPort     = 5000
@@ -83,7 +83,7 @@ func CreateDeployment(metadataName, selectorAppName, selectorClusterName string,
 	containerInstance.Ports = append(containerInstance.Ports, containerPortInstance)
 	containerInstance.Name = containerName
 	containerInstance.Image = containerImage
-	containerInstance.ImagePullPolicy = "Never"
+	containerInstance.ImagePullPolicy = "IfNotPresent"
 	containerInstance.Env = append(containerInstance.Env, envInstance)
 	if protocol == "http" {
 		containerInstance.ReadinessProbe.HttpGet.Path = "/"
@@ -143,7 +143,7 @@ func CreateWorkerDeployment(metadataName, selectorName string, numberOfReplicas 
 	containerInstance.Volumes = append(containerInstance.Volumes, containerVolume)
 	containerInstance.Name = containerName
 	containerInstance.Image = containerImage
-	containerInstance.ImagePullPolicy = "Never"
+	containerInstance.ImagePullPolicy = "IfNotPresent"
 
 	deployment.APIVersion = "apps/v1"
 	deployment.Kind = "Deployment"
