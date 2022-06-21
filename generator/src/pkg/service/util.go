@@ -48,10 +48,7 @@ const (
 	EpExecModeDefault       = "sequential"
 	EpNwResponseSizeDefault = 512
 
-	EpExecTimeDefault = "0.1s"
-	EpMethodDefault   = "all"
-	EpWorkersDefault  = 1
-	EpLoadDefault     = "5%"
+	EpExecTimeDefault = 0.001
 
 	EpNwForwardRequests = "asynchronous"
 
@@ -324,22 +321,11 @@ func CreateInputEndpoint() model.Endpoint {
 	var ep model.Endpoint
 	ep.Protocol = defaultProtocol
 	var cpuComplexity model.CpuComplexity
-	var memoryComplexity model.MemoryComplexity
 
 	ep.CpuComplexity = &cpuComplexity
-	ep.MemoryComplexity = &memoryComplexity
 
 	ep.ExecutionMode = EpExecModeDefault
 	cpuComplexity.ExecutionTime = EpExecTimeDefault
-	cpuComplexity.Method = EpMethodDefault
-	cpuComplexity.Workers = EpWorkersDefault
-	cpuComplexity.CpuAffinity = []int{}
-	cpuComplexity.CpuLoad = EpLoadDefault
-
-	memoryComplexity.ExecutionTime = EpExecTimeDefault
-	memoryComplexity.Method = EpMethodDefault
-	memoryComplexity.Workers = EpWorkersDefault
-	memoryComplexity.BytesLoad = EpLoadDefault
 
 	ep.NetworkComplexity.ForwardRequests = EpNwForwardRequests
 	ep.NetworkComplexity.ResponsePayloadSize = EpNwResponseSizeDefault
