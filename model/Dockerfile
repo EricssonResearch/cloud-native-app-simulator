@@ -23,30 +23,9 @@ RUN apt install -y jq \
     wget \
     2to3
 
-RUN apt install -y libbsd-dev \
-    libcap-dev \
-    libipsec-mb-dev \
-    libjudy-dev \
-    libkeyutils-dev \
-    libsctp-dev \
-    libatomic1 \
-    zlib1g-dev \
-    libkmod-dev \
-    libxxhash-dev \
-    git \
-    build-essential
 
 WORKDIR /usr/src/app
 
-RUN git clone https://github.com/alekodu/stress-ng.git &&\
-    cd stress-ng/ &&\
-    git checkout cloudsim &&\
-    make clean &&\
-    make &&\
-    mv stress-ng my-stress-ng &&\
-    cp my-stress-ng /usr/src/app &&\
-    cd .. &&\
-    rm -R stress-ng/
 
 ADD ./requirements.txt /usr/src/app/requirements.txt
 
