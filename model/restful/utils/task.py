@@ -18,9 +18,11 @@ from flask import Blueprint, jsonify, request, current_app
 from aiohttp import ClientSession
 import asyncio
 import subprocess
-import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
+import time
+import random
+import string
 
 FORMATTED_REMOTE_URL = "http://{0}:{1}/{2}"
 
@@ -87,10 +89,10 @@ def run_task(service_name, service_endpoint):
             cpu_future = executor.submit(execute_cpu_bounded_task, service_endpoint["cpu_complexity"])
             task_futures.append(cpu_future)
 
-        # Memory task
-        if ("memory_complexity" in service_endpoint) and len(service_endpoint["memory_complexity"]["execution_time"]) > 0:
-            mem_future = executor.submit(execute_memory_bounded_task, service_endpoint["memory_complexity"])
-            task_futures.append(mem_future)
+        # # Memory task
+        # if ("memory_complexity" in service_endpoint) and len(service_endpoint["memory_complexity"]["execution_time"]) > 0:
+        #     mem_future = executor.submit(execute_memory_bounded_task, service_endpoint["memory_complexity"])
+        #     task_futures.append(mem_future)
 
         # Wait until all threads are done with their tasks
         for future in as_completed(task_futures):
@@ -100,28 +102,31 @@ def run_task(service_name, service_endpoint):
             elif task_type == "cpu":
                 response["cpu_task"]["services"].append(source_svc["service"]+"/"+source_svc["endpoint"])
                 response["cpu_task"]["statuses"].append(r)
-            elif task_type == "memory":
-                response["memory_task"]["services"].append(source_svc["service"]+"/"+source_svc["endpoint"])
-                response["memory_task"]["statuses"].append(r)
+            # elif task_type == "memory":
+            #     response["memory_task"]["services"].append(source_svc["service"]+"/"+source_svc["endpoint"])
+            #     response["memory_task"]["statuses"].append(r)
 
         executor.shutdown()
   
     return response
 
 
-def execute_cpu_bounded_task(conf):
-    if len(conf["cpu_affinity"]) > 0:
-        res = subprocess.run(['/usr/src/app/my-stress-ng --class cpu --cpu %s --cpu-method %s --taskset %s --cpu-load %s --timeout %s --metrics-brief' % (conf["workers"], conf["method"], ",".join(str(cpu_id) for cpu_id in conf["cpu_affinity"]), conf["cpu_load"], conf["execution_time"])], capture_output=True, shell=True)
-    else:
-        res = subprocess.run(['/usr/src/app/my-stress-ng --class cpu --cpu %s --cpu-method %s --cpu-load %s --timeout %s --metrics-brief' % (conf["workers"], conf["method"], conf["cpu_load"], conf["execution_time"])], capture_output=True, shell=True)
+def cpu_load(duration):
+    start = time.clock_gettime_ns(time.CLOCK_THREAD_CPUTIME_ID)
+    until = start + duration * 1000000000
+    while time.clock_gettime_ns(time.CLOCK_THREAD_CPUTIME_ID) < until:
+        pass
 
-    return res.stderr.decode("utf-8"), "cpu"
+
+def execute_cpu_bounded_task(conf):
+    cpu_load(float(conf["execution_time"]))
+    return "execution_time: "+str(conf["execution_time"]), "cpu"
 
 
 def execute_memory_bounded_task(conf):
-    res = subprocess.run(['/usr/src/app/my-stress-ng --class memory --vm %s --vm-method %s --vm-bytes %s --timeout %s --metrics-brief' % (conf["workers"], conf["method"], conf["bytes_load"], conf["execution_time"])], capture_output=True, shell=True)
+    #res = subprocess.run(['/usr/src/app/my-stress-ng --class memory --vm %s --vm-method %s --vm-bytes %s --timeout %s --metrics-brief' % (conf["workers"], conf["method"], conf["bytes_load"], conf["execution_time"])], capture_output=True, shell=True)
 
-    return res.stderr.decode("utf-8"), "memory"
+    return "Not implemented yet", "memory"
 
 
 def run_network_task(source_svc, service_endpoint, headers, res_payload):
@@ -221,7 +226,8 @@ def sync_execute_io_bounded_task(source_service, target_service, forward_headers
 def create_payload(payload_size):
 
     request_payload = subprocess.run(['cat /dev/urandom | tr -dc "[:alnum:]" | head -c${1:-%s}' % payload_size], capture_output=True, shell=True)
-    
+    letters = string.ascii_lowercase
+    result_str = ''.join(random.choice(letters) for i in range(int(payload_size)))
     return request_payload.stdout.decode("utf-8")
 
 
