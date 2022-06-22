@@ -17,7 +17,6 @@ limitations under the License.
 from flask import Blueprint, jsonify, request, current_app
 from aiohttp import ClientSession
 import asyncio
-import subprocess
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 import time
@@ -224,11 +223,9 @@ def sync_execute_io_bounded_task(source_service, target_service, forward_headers
 
 
 def create_payload(payload_size):
-
-    request_payload = subprocess.run(['cat /dev/urandom | tr -dc "[:alnum:]" | head -c${1:-%s}' % payload_size], capture_output=True, shell=True)
     letters = string.ascii_lowercase
     result_str = ''.join(random.choice(letters) for i in range(int(payload_size)))
-    return request_payload.stdout.decode("utf-8")
+    return result_str
 
 
 def create_response():
