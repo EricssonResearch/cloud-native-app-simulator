@@ -49,20 +49,7 @@
           "protocol": "http",
           "execution_mode": "sequential",
           "cpu_complexity": {
-            "execution_time": "1s",
-            "method": "fibonacci",
-            "workers": 2,
-            "cpu_affinity": [
-              0,
-              2
-            ],
-            "cpu_load": "10%"
-          },
-          "memory_complexity": {
-            "execution_time": "1s",
-            "method": "swap",
-            "workers": 2,
-            "bytes_load": "10%"
+            "execution_time": 0.001
           },
           "network_complexity": {
             "forward_requests": "asynchronous",
