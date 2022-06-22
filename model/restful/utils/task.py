@@ -63,16 +63,16 @@ def run_task(service_name, service_endpoint):
             response = concatenate_response_simple(response, nw_response)
 
         # CPU task
-        if ("cpu_complexity" in service_endpoint) and len(service_endpoint["cpu_complexity"]["execution_time"]) > 0:
+        if ("cpu_complexity" in service_endpoint) and service_endpoint["cpu_complexity"]["execution_time"] > 0:
             cpu_response, _ = execute_cpu_bounded_task(conf=service_endpoint["cpu_complexity"])
             response["cpu_task"]["services"].append(source_svc["service"]+"/"+source_svc["endpoint"])
             response["cpu_task"]["statuses"].append(cpu_response)
 
         # Memory task
-        if ("memory_complexity" in service_endpoint) and len(service_endpoint["memory_complexity"]["execution_time"]) > 0:
-            mem_response, _ = execute_memory_bounded_task(conf=service_endpoint["memory_complexity"])
-            response["memory_task"]["services"].append(source_svc["service"]+"/"+source_svc["endpoint"])
-            response["memory_task"]["statuses"].append(mem_response)
+        # if ("memory_complexity" in service_endpoint) and len(service_endpoint["memory_complexity"]["execution_time"]) > 0:
+        #     mem_response, _ = execute_memory_bounded_task(conf=service_endpoint["memory_complexity"])
+        #     response["memory_task"]["services"].append(source_svc["service"]+"/"+source_svc["endpoint"])
+        #     response["memory_task"]["statuses"].append(mem_response)
 
     else: # "parallel"
         executor = ThreadPoolExecutor(max_workers=3)
@@ -84,7 +84,7 @@ def run_task(service_name, service_endpoint):
             task_futures.append(nw_future)
 
         # CPU task
-        if ("cpu_complexity" in service_endpoint) and len(service_endpoint["cpu_complexity"]["execution_time"]) > 0:
+        if ("cpu_complexity" in service_endpoint) and service_endpoint["cpu_complexity"]["execution_time"] > 0:
             cpu_future = executor.submit(execute_cpu_bounded_task, service_endpoint["cpu_complexity"])
             task_futures.append(cpu_future)
 
