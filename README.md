@@ -12,12 +12,12 @@ The design and evaluation of HydraGen is being published at IEEE Cloud 2023.
 > M. R. Saleh Sedghpour, A. Obeso Duque, X. Cai, B. Skubic, E. Elmroth, C. Klein and J. Tordsson, "HydraGen: A Microservice Benchmark Generator," in IEEE International Conference on Cloud Computing, vol. X, no. Y, pp. Z, Day Month 2023, doi: N.
 
 ## Want to use our work? 
-Check our documentation in our wiki pages.
+Check our documentation in our [Wiki](https://github.com/EricssonResearch/cloud-native-app-simulator/wiki) pages.
 If you use our tool, please cite our work.
 
 ## Want to contribute?
 We welcome new contributions to our project via pull requests.
-If you are interested in contribution, please check the list of open issues and visit Wiki -> Development Environment to learn about how to setup a development environment.
+If you are interested in contribution, please check the list of open issues and visit the [Development Environment](https://github.com/EricssonResearch/cloud-native-app-simulator/wiki/Development-Environment) section under our wiki pages to learn about how to setup a development environment.
 
 ## Acknowledgements
 This work was partially supported by the Wallenberg AI, Autonomous Systems and Software Program (WASP) funded by the Knut and Alice Wallenberg Foundation.
