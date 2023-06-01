@@ -17,7 +17,7 @@ If you use our tool, please cite our work.
 
 ## Want to contribute?
 We welcome new contributions to our project via pull requests.
-If you are interested in contribution, please check the list of open issues and visit the [community page](community) to learn about the development environment setup.
+If you are interested in contribution, please check the list of open issues and visit Wiki -> Development Environment to learn about how to setup a development environment.
 
 ## Acknowledgements
 This work was partially supported by the Wallenberg AI, Autonomous Systems and Software Program (WASP) funded by the Knut and Alice Wallenberg Foundation.
