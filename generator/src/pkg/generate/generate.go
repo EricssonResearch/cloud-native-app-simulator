@@ -54,12 +54,16 @@ func Parse(configFilename string) (model.FileConfig, []string) {
 	configFileByteValue, _ := ioutil.ReadAll(configFile)
 
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
 
 	loaded_config := s.CreateFileConfig()
+	err = json.Unmarshal(configFileByteValue, &loaded_config)
 
-	json.Unmarshal(configFileByteValue, &loaded_config)
+	if err != nil {
+		panic(err)
+	}
+
 	for i := 0; i < len(loaded_config.Services); i++ {
 		services = append(services, loaded_config.Services[i].Name)
 		for j := 0; j < len(loaded_config.Services[i].Clusters); j++ {
