@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -133,6 +133,15 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 		threads := config.Services[i].Threads
 		if threads == 0 {
 			processes = s.SvcThreadsDefault
+		}
+
+		for j := 0; j < len(config.Services[i].Endpoints); j++ {
+			if config.Services[i].Endpoints[j].NetworkComplexity != nil {
+				if config.Services[i].Endpoints[j].NetworkComplexity.CalledServices == nil {
+					// json.Marshal returns null for a nil slice
+					config.Services[i].Endpoints[j].NetworkComplexity.CalledServices = []model.CalledService{}
+				}
+			}
 		}
 
 		logging := config.Settings.Logging
