@@ -156,6 +156,11 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 			directory := config.Services[i].Clusters[j].Cluster
 			annotations := config.Services[i].Clusters[j].Annotations
 			replicas := config.Services[i].Clusters[j].Replicas
+
+			if replicas == 0 {
+				replicas = s.ClusterReplicasDefault
+			}
+
 			directory_path := fmt.Sprintf(path+"/%s", directory)
 			c_id := config.Services[i].Clusters[j].Cluster
 			nodeAffinity := config.Services[i].Clusters[j].Node
