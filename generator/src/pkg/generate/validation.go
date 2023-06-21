@@ -51,11 +51,11 @@ func ValidateNames(config *model.FileConfig) error {
 		serviceNames = append(serviceNames, service.Name)
 	}
 
-	serviceNameOccurences := Occurrences(serviceNames)
+	serviceNameOccurrences := Occurrences(serviceNames)
 
 	for _, service := range config.Services {
 		// Duplicate name found
-		if serviceNameOccurences[service.Name] > 1 {
+		if serviceNameOccurrences[service.Name] > 1 {
 			return fmt.Errorf("Duplicate service name '%s'", service.Name)
 		}
 
@@ -72,11 +72,11 @@ func ValidateNames(config *model.FileConfig) error {
 			endpointNames = append(endpointNames, endpoint.Name)
 		}
 
-		endpointNameOccurences := Occurrences(serviceNames)
+		endpointNameOccurrences := Occurrences(serviceNames)
 
 		for _, endpoint := range service.Endpoints {
 			// Duplicate name found
-			if endpointNameOccurences[endpoint.Name] > 1 {
+			if endpointNameOccurrences[endpoint.Name] > 1 {
 				return fmt.Errorf("Duplicate endpoint '%s' in service '%s'", endpoint.Name, service.Name)
 			}
 		}
