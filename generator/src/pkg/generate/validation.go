@@ -20,6 +20,7 @@ import (
 	"application-generator/src/pkg/model"
 	"fmt"
 
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
@@ -32,6 +33,7 @@ func Occurrences(strSlice []string) map[string]int {
 	return occurrences
 }
 
+// Validates service and endpoint names in JSON config
 func ValidateNames(config *model.FileConfig) error {
 	serviceNames := []string{}
 
@@ -82,9 +84,43 @@ func ValidateNames(config *model.FileConfig) error {
 	return nil
 }
 
+// Validates resource limits in input JSON
+func ValidateResources(config *model.FileConfig) error {
+	for _, service := range config.Services {
+		limits := []string{
+			service.Resources.Requests.Cpu,
+			service.Resources.Requests.Memory,
+			service.Resources.Limits.Cpu,
+			service.Resources.Limits.Memory,
+		}
+
+		for _, limit := range limits {
+			// If the user hasn't provided a request or limit, they will be set to their default values later
+			if limit != "" {
+				quantity, err := resource.ParseQuantity(limit)
+
+				if err != nil {
+					return fmt.Errorf("Invalid resource allocation '%s': %s", limit, err)
+				}
+
+				// TODO: Max limits
+				if quantity.Sign() != 1 {
+					return fmt.Errorf("Resource allocation '%s' too low", limit)
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 // Validates an input JSON config provided by the user
 func ValidateFileConfig(config *model.FileConfig) error {
 	if err := ValidateNames(config); err != nil {
+		return err
+	}
+
+	if err := ValidateResources(config); err != nil {
 		return err
 	}
 
