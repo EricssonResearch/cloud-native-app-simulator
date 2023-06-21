@@ -66,6 +66,10 @@ func Parse(configFilename string) (model.FileConfig, []string) {
 
 	err = ValidateFileConfig(&loaded_config)
 
+	if err != nil {
+		panic(err)
+	}
+
 	for i := 0; i < len(loaded_config.Services); i++ {
 		services = append(services, loaded_config.Services[i].Name)
 		for j := 0; j < len(loaded_config.Services[i].Clusters); j++ {
