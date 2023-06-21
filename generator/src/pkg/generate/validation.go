@@ -18,6 +18,7 @@ package generate
 
 import (
 	"application-generator/src/pkg/model"
+	"errors"
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -114,6 +115,27 @@ func ValidateResources(config *model.FileConfig) error {
 	return nil
 }
 
+// Validate that input JSON contains required parameters
+func ValidateRequiredParameters(config *model.FileConfig) error {
+	if len(config.Services) == 0 {
+		return errors.New("At least one service is required")
+	}
+
+	for _, service := range config.Services {
+		if len(service.Clusters) == 0 {
+			return fmt.Errorf("Service '%s' needs to be placed on at least one cluster", service.Name)
+		}
+
+		if len(service.Endpoints) == 0 {
+			return fmt.Errorf("At least one endpoint is required in service '%s'", service.Name)
+		}
+	}
+
+	// TODO: Check clusters, called_services, etc
+
+	return nil
+}
+
 // Validates an input JSON config provided by the user
 func ValidateFileConfig(config *model.FileConfig) error {
 	if err := ValidateNames(config); err != nil {
@@ -121,6 +143,10 @@ func ValidateFileConfig(config *model.FileConfig) error {
 	}
 
 	if err := ValidateResources(config); err != nil {
+		return err
+	}
+
+	if err := ValidateRequiredParameters(config); err != nil {
 		return err
 	}
 
