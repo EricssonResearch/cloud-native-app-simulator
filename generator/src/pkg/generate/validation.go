@@ -159,7 +159,7 @@ func ValidateRequiredParameters(config *model.FileConfig) error {
 
 	for _, service := range config.Services {
 		if len(service.Clusters) == 0 {
-			return fmt.Errorf("Service '%s' needs to be placed on at least one cluster", service.Name)
+			return fmt.Errorf("Service '%s' needs to be deployed on at least one cluster", service.Name)
 		}
 
 		if len(service.Endpoints) == 0 {
