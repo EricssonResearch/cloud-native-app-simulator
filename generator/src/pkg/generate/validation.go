@@ -224,8 +224,16 @@ func ApplyDefaults(config *model.FileConfig) {
 			service.ReadinessProbe = s.SvcReadinessProbeDefault
 		}
 
-		for j, _ := range service.Endpoints {
-			endpoint := &service.Endpoints[j]
+		for j, _ := range service.Clusters {
+			cluster := &service.Clusters[j]
+
+			if cluster.Namespace == "" {
+				cluster.Namespace = s.ClusterNamespaceDefault
+			}
+		}
+
+		for k, _ := range service.Endpoints {
+			endpoint := &service.Endpoints[k]
 
 			if endpoint.NetworkComplexity != nil && endpoint.NetworkComplexity.CalledServices == nil {
 				// json.Marshal returns null for a nil slice

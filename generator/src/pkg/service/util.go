@@ -34,6 +34,8 @@ const (
 
 	Uri = "/"
 
+	ClusterNamespaceDefault = "default"
+
 	RequestsCPUDefault    = "500m"
 	RequestsMemoryDefault = "256M"
 	LimitsCPUDefault      = "1000m"
