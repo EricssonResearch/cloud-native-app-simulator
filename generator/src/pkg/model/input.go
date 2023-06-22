@@ -36,11 +36,11 @@ type NetworkComplexity struct {
 }
 
 type Endpoint struct {
-	Name              string            `json:"name"`
-	Protocol          string            `json:"protocol"`
-	ExecutionMode     string            `json:"execution_mode"`
-	CpuComplexity     *CpuComplexity    `json:"cpu_complexity,omitempty"`
-	NetworkComplexity NetworkComplexity `json:"network_complexity"`
+	Name              string             `json:"name"`
+	Protocol          string             `json:"protocol"`
+	ExecutionMode     string             `json:"execution_mode"`
+	CpuComplexity     *CpuComplexity     `json:"cpu_complexity,omitempty"`
+	NetworkComplexity *NetworkComplexity `json:"network_complexity,omitempty"`
 }
 
 type ResourceLimits struct {

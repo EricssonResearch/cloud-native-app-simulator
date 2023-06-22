@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -54,12 +54,23 @@ func Parse(configFilename string) (model.FileConfig, []string) {
 	configFileByteValue, _ := ioutil.ReadAll(configFile)
 
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
 
 	loaded_config := s.CreateFileConfig()
+	err = json.Unmarshal(configFileByteValue, &loaded_config)
 
-	json.Unmarshal(configFileByteValue, &loaded_config)
+	if err != nil {
+		panic(err)
+	}
+	
+	ApplyDefaults(&loaded_config)
+	err = ValidateFileConfig(&loaded_config)
+
+	if err != nil {
+		panic(err)
+	}
+
 	for i := 0; i < len(loaded_config.Services); i++ {
 		services = append(services, loaded_config.Services[i].Name)
 		for j := 0; j < len(loaded_config.Services[i].Clusters); j++ {
@@ -99,37 +110,12 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 	proto_temp_filled := proto_temp_filled_byte.String()
 	for i := 0; i < len(config.Services); i++ {
 		serv := config.Services[i].Name
-		resources := s.CreateInputResources()
-		resources = config.Services[i].Resources
 		protocol := config.Services[i].Endpoints[0].Protocol
-
-		if resources.Limits.Cpu == "" {
-			resources.Limits.Cpu = s.LimitsCPUDefault
-		}
-		if resources.Limits.Memory == "" {
-			resources.Limits.Memory = s.LimitsMemoryDefault
-		}
-		if resources.Requests.Cpu == "" {
-			resources.Requests.Cpu = s.RequestsCPUDefault
-		}
-		if resources.Requests.Memory == "" {
-			resources.Requests.Memory = s.RequestsMemoryDefault
-		}
-
 		readinessProbe := config.Services[i].ReadinessProbe
-		if readinessProbe == 0 {
-			readinessProbe = s.SvcReadinessProbeDefault
-		}
 
+		resources := config.Services[i].Resources
 		processes := config.Services[i].Processes
-		if processes == 0 {
-			processes = s.SvcProcessesDefault
-		}
-
 		threads := config.Services[i].Threads
-		if threads == 0 {
-			processes = s.SvcThreadsDefault
-		}
 
 		logging := config.Settings.Logging
 		cm_data := s.CreateConfigMap(processes, threads, logging, config.Services[i].Endpoints)
@@ -143,6 +129,7 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 			directory := config.Services[i].Clusters[j].Cluster
 			annotations := config.Services[i].Clusters[j].Annotations
 			replicas := config.Services[i].Clusters[j].Replicas
+
 			directory_path := fmt.Sprintf(path+"/%s", directory)
 			c_id := config.Services[i].Clusters[j].Cluster
 			nodeAffinity := config.Services[i].Clusters[j].Node
