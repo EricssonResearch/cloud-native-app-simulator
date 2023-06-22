@@ -33,7 +33,7 @@ type DeploymentInstance struct {
 				Cluster string `yaml:"version"`
 			} `yaml:"matchLabels"`
 		} `yaml:"selector"`
-		Replicas int `yaml:"replicas"`
+		Replicas int `yaml:"replicas,omitempty"`
 		Template struct {
 			Metadata struct {
 				Labels struct {

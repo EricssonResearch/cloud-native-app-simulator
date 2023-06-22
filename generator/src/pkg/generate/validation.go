@@ -18,6 +18,8 @@ package generate
 
 import (
 	"application-generator/src/pkg/model"
+	s "application-generator/src/pkg/service"
+
 	"errors"
 	"fmt"
 
@@ -89,25 +91,22 @@ func ValidateNames(config *model.FileConfig) error {
 func ValidateResources(config *model.FileConfig) error {
 	for _, service := range config.Services {
 		limits := []string{
-			service.Resources.Requests.Cpu,
-			service.Resources.Requests.Memory,
 			service.Resources.Limits.Cpu,
 			service.Resources.Limits.Memory,
+			service.Resources.Requests.Cpu,
+			service.Resources.Requests.Memory,
 		}
 
 		for _, limit := range limits {
-			// If the user hasn't provided a request or limit, they will be set to their default values later
-			if limit != "" {
-				quantity, err := resource.ParseQuantity(limit)
+			quantity, err := resource.ParseQuantity(limit)
 
-				if err != nil {
-					return fmt.Errorf("Invalid resource allocation '%s': %s", limit, err)
-				}
+			if err != nil {
+				return fmt.Errorf("Invalid resource allocation '%s': %s", limit, err)
+			}
 
-				// TODO: Max limits
-				if quantity.Sign() != 1 {
-					return fmt.Errorf("Resource allocation '%s' too low", limit)
-				}
+			// TODO: Max limits
+			if quantity.Sign() != 1 {
+				return fmt.Errorf("Resource allocation '%s' too low", limit)
 			}
 		}
 	}
@@ -151,4 +150,44 @@ func ValidateFileConfig(config *model.FileConfig) error {
 	}
 
 	return nil
+}
+
+// Applies default values to input JSON
+func ApplyDefaults(config *model.FileConfig) {
+	for i, _ := range config.Services {
+		service := &config.Services[i]
+
+		if service.Resources.Limits.Cpu == "" {
+			service.Resources.Limits.Cpu = s.LimitsCPUDefault
+		}
+		if service.Resources.Requests.Cpu == "" {
+			service.Resources.Requests.Cpu = s.RequestsCPUDefault
+		}
+		if service.Resources.Limits.Memory == "" {
+			service.Resources.Limits.Memory = s.LimitsMemoryDefault
+		}
+		if service.Resources.Requests.Memory == "" {
+			service.Resources.Requests.Memory = s.RequestsMemoryDefault
+		}
+
+		if service.Processes <= 0 {
+			service.Processes = s.SvcProcessesDefault
+		}
+		if service.Threads <= 0 {
+			service.Threads = s.SvcThreadsDefault
+		}
+
+		if service.ReadinessProbe <= 0 {
+			service.ReadinessProbe = s.SvcReadinessProbeDefault
+		}
+
+		for j, _ := range service.Endpoints {
+			endpoint := &service.Endpoints[j]
+
+			if endpoint.NetworkComplexity != nil && endpoint.NetworkComplexity.CalledServices == nil {
+				// json.Marshal returns null for a nil slice
+				endpoint.NetworkComplexity.CalledServices = []model.CalledService{}
+			}
+		}
+	}
 }

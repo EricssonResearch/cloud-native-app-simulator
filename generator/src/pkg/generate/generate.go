@@ -63,7 +63,8 @@ func Parse(configFilename string) (model.FileConfig, []string) {
 	if err != nil {
 		panic(err)
 	}
-
+	
+	ApplyDefaults(&loaded_config)
 	err = ValidateFileConfig(&loaded_config)
 
 	if err != nil {
@@ -109,46 +110,12 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 	proto_temp_filled := proto_temp_filled_byte.String()
 	for i := 0; i < len(config.Services); i++ {
 		serv := config.Services[i].Name
-		resources := s.CreateInputResources()
-		resources = config.Services[i].Resources
 		protocol := config.Services[i].Endpoints[0].Protocol
-
-		if resources.Limits.Cpu == "" {
-			resources.Limits.Cpu = s.LimitsCPUDefault
-		}
-		if resources.Limits.Memory == "" {
-			resources.Limits.Memory = s.LimitsMemoryDefault
-		}
-		if resources.Requests.Cpu == "" {
-			resources.Requests.Cpu = s.RequestsCPUDefault
-		}
-		if resources.Requests.Memory == "" {
-			resources.Requests.Memory = s.RequestsMemoryDefault
-		}
-
 		readinessProbe := config.Services[i].ReadinessProbe
-		if readinessProbe == 0 {
-			readinessProbe = s.SvcReadinessProbeDefault
-		}
 
+		resources := config.Services[i].Resources
 		processes := config.Services[i].Processes
-		if processes == 0 {
-			processes = s.SvcProcessesDefault
-		}
-
 		threads := config.Services[i].Threads
-		if threads == 0 {
-			processes = s.SvcThreadsDefault
-		}
-
-		for j := 0; j < len(config.Services[i].Endpoints); j++ {
-			if config.Services[i].Endpoints[j].NetworkComplexity != nil {
-				if config.Services[i].Endpoints[j].NetworkComplexity.CalledServices == nil {
-					// json.Marshal returns null for a nil slice
-					config.Services[i].Endpoints[j].NetworkComplexity.CalledServices = []model.CalledService{}
-				}
-			}
-		}
 
 		logging := config.Settings.Logging
 		cm_data := s.CreateConfigMap(processes, threads, logging, config.Services[i].Endpoints)
@@ -162,10 +129,6 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 			directory := config.Services[i].Clusters[j].Cluster
 			annotations := config.Services[i].Clusters[j].Annotations
 			replicas := config.Services[i].Clusters[j].Replicas
-
-			if replicas == 0 {
-				replicas = s.ClusterReplicasDefault
-			}
 
 			directory_path := fmt.Sprintf(path+"/%s", directory)
 			c_id := config.Services[i].Clusters[j].Cluster
