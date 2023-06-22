@@ -71,6 +71,22 @@ func ValidateNames(config *model.FileConfig) error {
 				return fmt.Errorf("Endpoint '%s' has invalid name: %s", endpoint.Name, errs[0])
 			}
 
+			if endpoint.NetworkComplexity != nil {
+				for _, calledService := range endpoint.NetworkComplexity.CalledServices {
+					errs = validation.IsDNS1035Label(calledService.Service)
+
+					if len(errs) > 0 {
+						return fmt.Errorf("Call from endpoint '%s' to invalid service '%s': %s", endpoint.Name, calledService.Service, errs[0])
+					}
+
+					errs = validation.IsDNS1123Subdomain(calledService.Endpoint)
+
+					if len(errs) > 0 {
+						return fmt.Errorf("Call from endpoint '%s' to invalid endpoint '%s': %s", endpoint.Name, calledService.Endpoint, errs[0])
+					}
+				}
+			}		
+
 			endpointNames = append(endpointNames, endpoint.Name)
 		}
 
@@ -114,6 +130,27 @@ func ValidateResources(config *model.FileConfig) error {
 	return nil
 }
 
+// Validate that protocols are set in both endpoint definition and call
+func ValidateProtocols(service *model.Service, endpoint *model.Endpoint) error {
+	validProtocols := map[string]bool{"http": true, "grpc": true}
+
+	if !validProtocols[endpoint.Protocol] {
+		return fmt.Errorf("Endpoint '%s' in service '%s' has invalid protocol '%s'", 
+			endpoint.Name, service.Name, endpoint.Protocol)
+	}
+
+	if endpoint.NetworkComplexity != nil {
+		for _, calledService := range endpoint.NetworkComplexity.CalledServices {
+			if !validProtocols[calledService.Protocol] {
+				return fmt.Errorf("Call to endpoint '%s' from endpoint '%s' has invalid protocol '%s'", 
+					calledService.Endpoint, endpoint.Name, calledService.Protocol)
+			}
+		}
+	}
+	
+	return nil
+}
+
 // Validate that input JSON contains required parameters
 func ValidateRequiredParameters(config *model.FileConfig) error {
 	if len(config.Services) == 0 {
@@ -127,25 +164,31 @@ func ValidateRequiredParameters(config *model.FileConfig) error {
 
 		if len(service.Endpoints) == 0 {
 			return fmt.Errorf("At least one endpoint is required in service '%s'", service.Name)
+		} else {
+			for _, endpoint := range service.Endpoints {
+				err := ValidateProtocols(&service, &endpoint)
+
+				if err != nil {
+					return err
+				}
+			}
 		}
 	}
-
-	// TODO: Check clusters, called_services, etc
 
 	return nil
 }
 
 // Validates an input JSON config provided by the user
 func ValidateFileConfig(config *model.FileConfig) error {
+	if err := ValidateRequiredParameters(config); err != nil {
+		return err
+	}
+	
 	if err := ValidateNames(config); err != nil {
 		return err
 	}
 
 	if err := ValidateResources(config); err != nil {
-		return err
-	}
-
-	if err := ValidateRequiredParameters(config); err != nil {
 		return err
 	}
 
