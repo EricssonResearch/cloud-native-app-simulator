@@ -63,7 +63,7 @@ func Parse(configFilename string) (model.FileConfig, []string) {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	ApplyDefaults(&loaded_config)
 	err = ValidateFileConfig(&loaded_config)
 
@@ -118,6 +118,8 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 		threads := config.Services[i].Threads
 
 		logging := config.Settings.Logging
+		development := config.Settings.Development
+
 		cm_data := s.CreateConfigMap(processes, threads, logging, config.Services[i].Endpoints)
 
 		serv_json, err := json.Marshal(cm_data)
@@ -147,8 +149,16 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 			configmap := s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json), proto_temp_filled)
 			appendManifest(configmap)
 
+			imageURL := s.ImageURLProd
+			imagePolicy := s.ImagePullPolicyProd
+
+			if development {
+				imageURL = s.ImageURLDev
+				imagePolicy = s.ImagePullPolicyDev
+			}
+
 			deployment := s.CreateDeployment(serv, serv, c_id, replicas, serv, c_id, namespace,
-				s.DefaultPort, s.ImageName, s.ImageURL, s.VolumePath, s.VolumeName, "config-"+serv, readinessProbe,
+				s.DefaultPort, s.ImageName, imageURL, imagePolicy, s.VolumePath, s.VolumeName, "config-"+serv, readinessProbe,
 				resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory,
 				nodeAffinity, protocol, annotations)
 			appendManifest(deployment)
