@@ -25,8 +25,11 @@ const (
 	VolumeName = "config-data-volume"
 	VolumePath = "/usr/src/app/config"
 
-	ImageName = "app"
-	ImageURL  = "ghcr.io/ericssonresearch/cloud-native-app-simulator/app-demo:v3.0.1"
+	ImageName           = "app"
+	ImageURLProd        = "ghcr.io/ericssonresearch/cloud-native-app-simulator/app-demo:v3.0.1"
+	ImageURLDev         = "app-demo:latest"
+	ImagePullPolicyProd = "IfNotPresent"
+	ImagePullPolicyDev  = "Never"
 
 	DefaultExtPort  = 80
 	DefaultPort     = 5000
