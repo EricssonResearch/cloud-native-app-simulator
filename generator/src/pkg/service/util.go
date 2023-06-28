@@ -25,8 +25,11 @@ const (
 	VolumeName = "config-data-volume"
 	VolumePath = "/usr/src/app/config"
 
-	ImageName = "app"
-	ImageURL  = "ghcr.io/ericssonresearch/cloud-native-app-simulator/app-demo:v3.0.1"
+	ImageName           = "app"
+	ImageURLProd        = "ghcr.io/ericssonresearch/cloud-native-app-simulator/app-demo:v3.0.1"
+	ImageURLDev         = "app-demo:latest"
+	ImagePullPolicyProd = "IfNotPresent"
+	ImagePullPolicyDev  = "Never"
 
 	DefaultExtPort  = 80
 	DefaultPort     = 5000
@@ -59,7 +62,7 @@ const (
 )
 
 func CreateDeployment(metadataName, selectorAppName, selectorClusterName string, numberOfReplicas int,
-	templateAppLabel, templateClusterLabel, namespace string, containerPort int, containerName, containerImage,
+	templateAppLabel, templateClusterLabel, namespace string, containerPort int, containerName, containerImageURL, containerImagePolicy,
 	mountPath string, volumeName, configMapName string, readinessProbe int, requestCPU, requestMemory, limitCPU,
 	limitMemory, nodeAffinity, protocol string, annotations []model.Annotation) (deploymentInstance model.DeploymentInstance) {
 
@@ -82,8 +85,8 @@ func CreateDeployment(metadataName, selectorAppName, selectorClusterName string,
 	containerInstance.Volumes = append(containerInstance.Volumes, containerVolume)
 	containerInstance.Ports = append(containerInstance.Ports, containerPortInstance)
 	containerInstance.Name = containerName
-	containerInstance.Image = containerImage
-	containerInstance.ImagePullPolicy = "IfNotPresent"
+	containerInstance.Image = containerImageURL
+	containerInstance.ImagePullPolicy = containerImagePolicy
 	containerInstance.Env = append(containerInstance.Env, envInstance)
 	if protocol == "http" {
 		containerInstance.ReadinessProbe.HttpGet.Path = "/"
@@ -127,7 +130,7 @@ func CreateDeployment(metadataName, selectorAppName, selectorClusterName string,
 }
 
 func CreateWorkerDeployment(metadataName, selectorName string, numberOfReplicas int, templateLabel string,
-	containerName, containerImage, mountPath string, volumeName, configMapName string) (deploymentInstance model.DeploymentInstance) {
+	containerName, containerImageURL, containerImagePolicy, mountPath string, volumeName, configMapName string) (deploymentInstance model.DeploymentInstance) {
 
 	var deployment model.DeploymentInstance
 	var containerInstance model.ContainerInstance
@@ -142,8 +145,8 @@ func CreateWorkerDeployment(metadataName, selectorName string, numberOfReplicas 
 
 	containerInstance.Volumes = append(containerInstance.Volumes, containerVolume)
 	containerInstance.Name = containerName
-	containerInstance.Image = containerImage
-	containerInstance.ImagePullPolicy = "IfNotPresent"
+	containerInstance.Image = containerImageURL
+	containerInstance.ImagePullPolicy = containerImagePolicy
 
 	deployment.APIVersion = "apps/v1"
 	deployment.Kind = "Deployment"
