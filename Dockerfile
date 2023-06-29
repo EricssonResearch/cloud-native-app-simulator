@@ -21,7 +21,7 @@ WORKDIR /usr/src/app
 RUN apt update
 RUN apt upgrade -y
 
-COPY .. /usr/src/app
+COPY . /usr/src/app
 
 RUN go mod download
 RUN go build -o /usr/bin/app-emulator ./emulator
