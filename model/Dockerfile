@@ -14,9 +14,10 @@
 # limitations under the License.
 #
 
-FROM python:3.8.0-slim
+FROM golang:1.20
 
 RUN mkdir -p /usr/src/app
+
 RUN apt update
 RUN apt upgrade -y
 

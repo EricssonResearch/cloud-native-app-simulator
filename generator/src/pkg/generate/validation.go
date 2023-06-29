@@ -85,7 +85,7 @@ func ValidateNames(config *model.FileConfig) error {
 						return fmt.Errorf("Call from endpoint '%s' to invalid endpoint '%s': %s", endpoint.Name, calledService.Endpoint, errs[0])
 					}
 				}
-			}		
+			}
 
 			endpointNames = append(endpointNames, endpoint.Name)
 		}
@@ -135,19 +135,19 @@ func ValidateProtocols(service *model.Service, endpoint *model.Endpoint) error {
 	validProtocols := map[string]bool{"http": true, "grpc": true}
 
 	if !validProtocols[endpoint.Protocol] {
-		return fmt.Errorf("Endpoint '%s' in service '%s' has invalid protocol '%s'", 
+		return fmt.Errorf("Endpoint '%s' in service '%s' has invalid protocol '%s'",
 			endpoint.Name, service.Name, endpoint.Protocol)
 	}
 
 	if endpoint.NetworkComplexity != nil {
 		for _, calledService := range endpoint.NetworkComplexity.CalledServices {
 			if !validProtocols[calledService.Protocol] {
-				return fmt.Errorf("Call to endpoint '%s' from endpoint '%s' has invalid protocol '%s'", 
+				return fmt.Errorf("Call to endpoint '%s' from endpoint '%s' has invalid protocol '%s'",
 					calledService.Endpoint, endpoint.Name, calledService.Protocol)
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -183,7 +183,7 @@ func ValidateFileConfig(config *model.FileConfig) error {
 	if err := ValidateRequiredParameters(config); err != nil {
 		return err
 	}
-	
+
 	if err := ValidateNames(config); err != nil {
 		return err
 	}
@@ -197,7 +197,7 @@ func ValidateFileConfig(config *model.FileConfig) error {
 
 // Applies default values to input JSON
 func ApplyDefaults(config *model.FileConfig) {
-	for i, _ := range config.Services {
+	for i := range config.Services {
 		service := &config.Services[i]
 
 		if service.Resources.Limits.Cpu == "" {
@@ -224,7 +224,7 @@ func ApplyDefaults(config *model.FileConfig) {
 			service.ReadinessProbe = s.SvcReadinessProbeDefault
 		}
 
-		for j, _ := range service.Clusters {
+		for j := range service.Clusters {
 			cluster := &service.Clusters[j]
 
 			if cluster.Namespace == "" {
@@ -232,7 +232,7 @@ func ApplyDefaults(config *model.FileConfig) {
 			}
 		}
 
-		for k, _ := range service.Endpoints {
+		for k := range service.Endpoints {
 			endpoint := &service.Endpoints[k]
 
 			if endpoint.NetworkComplexity != nil && endpoint.NetworkComplexity.CalledServices == nil {

@@ -1,1 +1,4 @@
 manifests/
+input/
+!input/new_description.json
+k8s/
