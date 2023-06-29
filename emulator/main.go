@@ -1,5 +1,5 @@
 /*
-Copyright 2021 Telefonaktiebolaget LM Ericsson AB
+Copyright 2023 Telefonaktiebolaget LM Ericsson AB
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,8 +16,24 @@ limitations under the License.
 
 package main
 
-import "cloud-native-app-simulator/generator/src/cmd"
+import (
+	"fmt"
+	"net/http"
+)
+
+const httpPort = 5000
 
 func main() {
-	cmd.Execute()
+	// Placeholder, start a HTTP server at :5000
+	fmt.Println("Application emulator started at :5000")
+
+	http.HandleFunc("/", func(writer http.ResponseWriter, req *http.Request) {
+		fmt.Fprint(writer, "{\"status\": \"ok\"}")
+	})
+
+	err := http.ListenAndServe(fmt.Sprintf(":%d", httpPort), nil)
+
+	if err != nil {
+		panic(err)
+	}
 }

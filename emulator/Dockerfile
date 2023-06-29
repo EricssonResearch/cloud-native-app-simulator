@@ -16,16 +16,15 @@
 
 FROM golang:1.20
 
-RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
 
 RUN apt update
 RUN apt upgrade -y
 
-WORKDIR /usr/src/app
+COPY .. /usr/src/app
 
-ENV CONF="/usr/src/app/config/conf.json"
-
-COPY . /usr/src/app
+RUN go mod download
+RUN go build -o /usr/bin/app-emulator ./emulator
 
 EXPOSE 5000
-ENTRYPOINT ["/usr/src/app/run.sh"]
+ENTRYPOINT ["/usr/bin/app-emulator"]
