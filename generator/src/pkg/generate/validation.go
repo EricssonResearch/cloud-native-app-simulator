@@ -17,8 +17,8 @@ limitations under the License.
 package generate
 
 import (
-	"application-generator/src/pkg/model"
-	s "application-generator/src/pkg/service"
+	s "cloud-native-app-simulator/generator/src/pkg/service"
+	"cloud-native-app-simulator/model"
 
 	"errors"
 	"fmt"

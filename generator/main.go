@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "application-generator/src/cmd"
+import "cloud-native-app-simulator/generator/src/cmd"
 
 func main() {
 	cmd.Execute()
