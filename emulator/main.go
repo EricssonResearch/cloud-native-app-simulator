@@ -17,21 +17,55 @@ limitations under the License.
 package main
 
 import (
+	"cloud-native-app-simulator/model"
+
+	"encoding/json"
+	"io/ioutil"
+	"os"
+
 	"fmt"
 	"net/http"
 )
 
 const httpPort = 5000
 
+func loadConfigMap(filename string) (*model.ConfigMap, error) {
+	configFile, err := os.Open(filename)
+	configFileByteValue, _ := ioutil.ReadAll(configFile)
+
+	if err != nil {
+		return nil, err
+	}
+
+	inputConfig := &model.ConfigMap{}
+	err = json.Unmarshal(configFileByteValue, inputConfig)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return inputConfig, nil
+}
+
 func main() {
+	configFilename := os.Getenv("CONF")
+	configMap, err := loadConfigMap(configFilename)
+
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Read config:", configFilename)
+	fmt.Println("Endpoints:", len(configMap.Endpoints))
+
 	// Placeholder, start a HTTP server at :5000
 	fmt.Println("Application emulator started at :5000")
 
 	http.HandleFunc("/", func(writer http.ResponseWriter, req *http.Request) {
-		fmt.Fprint(writer, "{\"status\": \"ok\"}")
+		fmt.Fprint(writer, "{\"status\": \"ok\"}\n")
 	})
 
-	err := http.ListenAndServe(fmt.Sprintf(":%d", httpPort), nil)
+	err = http.ListenAndServe(fmt.Sprintf(":%d", httpPort), nil)
 
 	if err != nil {
 		panic(err)

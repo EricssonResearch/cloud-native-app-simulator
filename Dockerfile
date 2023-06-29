@@ -26,5 +26,7 @@ COPY . /usr/src/app
 RUN go mod download
 RUN go build -o /usr/bin/app-emulator ./emulator
 
+ENV CONF=/usr/src/app/config/conf.json
+
 EXPOSE 5000
 ENTRYPOINT ["/usr/bin/app-emulator"]
