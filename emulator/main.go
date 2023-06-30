@@ -17,50 +17,23 @@ limitations under the License.
 package main
 
 import (
-	"cloud-native-app-simulator/emulator/src/restful"
+	"cloud-native-app-simulator/emulator/src/util"
 	"cloud-native-app-simulator/model"
 
-	"fmt"
-	"io"
-	"os"
-	"runtime"
-	"sync"
+	"cloud-native-app-simulator/emulator/src/restful"
 
-	"encoding/json"
+	"fmt"
+	"sync"
 )
 
-func loadConfigMap(filename string) (*model.ConfigMap, error) {
-	configFile, err := os.Open(filename)
-	configFileByteValue, _ := io.ReadAll(configFile)
-
-	if err != nil {
-		return nil, err
-	}
-
-	inputConfig := &model.ConfigMap{}
-	err = json.Unmarshal(configFileByteValue, inputConfig)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return inputConfig, nil
-}
-
 func main() {
-	configFilename := os.Getenv("CONF")
-	configMap, err := loadConfigMap(configFilename)
-
+	configMap, err := util.LoadConfigMap()
 	if err != nil {
 		panic(err)
 	}
 
-	runtime.GOMAXPROCS(configMap.Processes)
-
-	processes := fmt.Sprintf("%d processes", configMap.Processes)
-	if configMap.Processes == 1 {
-		processes = fmt.Sprintf("%d process", configMap.Processes)
-	}
+	processes := util.SetMaxProcesses(configMap)
+	fmt.Printf("Application emulator started at :5000, %s\n\n", processes)
 
 	wg := sync.WaitGroup{}
 
@@ -69,11 +42,7 @@ func main() {
 	go restful.HTTP(httpEndpoints, &wg)
 	wg.Add(1)
 
-	fmt.Println("Application emulator started at :5000,", processes)
-	fmt.Println()
-
 	fmt.Println("Endpoints:")
-
 	for _, endpoint := range configMap.Endpoints {
 		// Only HTTP is supported right now
 		if endpoint.Protocol == "http" {

@@ -18,56 +18,49 @@ package restful
 
 import (
 	"cloud-native-app-simulator/model"
-	"encoding/json"
-	"strings"
 
 	"fmt"
+	"strings"
 	"sync"
 
+	"encoding/json"
 	"net/http"
 )
 
-const httpPort = 5000
+const httpAddress = ":5000"
 
 type restResponse struct {
 	Status   string `json:"status"`
 	Endpoint string `json:"endpoint,omitempty"`
 }
 
+// Send a response of type application/json
+func writeJSONResponse(status int, response any, writer http.ResponseWriter) {
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(status)
+
+	encoder := json.NewEncoder(writer)
+	encoder.Encode(response)
+}
+
 func rootHandler(writer http.ResponseWriter, request *http.Request) {
 	if request.URL.Path == "/" {
-		writer.Header().Set("Content-Type", "application/json")
-		writer.WriteHeader(http.StatusOK)
-
-		encoder := json.NewEncoder(writer)
-		response := &restResponse{Status: "ok"}
-
-		encoder.Encode(response)
+		writeJSONResponse(http.StatusOK, &restResponse{Status: "ok"}, writer)
 	} else {
 		notFoundHandler(writer, request)
 	}
 }
 
 func notFoundHandler(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusNotFound)
-
 	endpoint := strings.TrimPrefix(request.URL.Path, "/")
+	response := &restResponse{Status: "not-found", Endpoint: endpoint}
 
-	encoder := json.NewEncoder(writer)
-	response := &restResponse{Status: "not found", Endpoint: endpoint}
-
-	encoder.Encode(response)
+	writeJSONResponse(http.StatusNotFound, response, writer)
 }
 
 func endpointHandler(writer http.ResponseWriter, request *http.Request, endpoint *model.Endpoint) {
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
-
-	encoder := json.NewEncoder(writer)
 	response := &restResponse{Status: "ok", Endpoint: endpoint.Name}
-
-	encoder.Encode(response)
+	writeJSONResponse(http.StatusOK, response, writer)
 }
 
 // Launch a HTTP server to serve one or more endpoints
@@ -83,9 +76,7 @@ func HTTP(endpointChannel chan model.Endpoint, wg *sync.WaitGroup) {
 		})
 	}
 
-	address := fmt.Sprintf(":%d", httpPort)
-	err := http.ListenAndServe(address, mux)
-
+	err := http.ListenAndServe(httpAddress, mux)
 	if err != nil && err != http.ErrServerClosed {
 		panic(err)
 	}
