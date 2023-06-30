@@ -19,20 +19,19 @@ package main
 import (
 	"cloud-native-app-simulator/emulator/src/restful"
 	"cloud-native-app-simulator/model"
-	"sync"
-
-	"runtime"
-
-	"encoding/json"
-	"io/ioutil"
-	"os"
 
 	"fmt"
+	"io"
+	"os"
+	"runtime"
+	"sync"
+
+	"encoding/json"
 )
 
 func loadConfigMap(filename string) (*model.ConfigMap, error) {
 	configFile, err := os.Open(filename)
-	configFileByteValue, _ := ioutil.ReadAll(configFile)
+	configFileByteValue, _ := io.ReadAll(configFile)
 
 	if err != nil {
 		return nil, err
@@ -63,11 +62,11 @@ func main() {
 		processes = fmt.Sprintf("%d process", configMap.Processes)
 	}
 
-	serverWaitGroup := sync.WaitGroup{}
-	httpEndpointChannel := make(chan model.Endpoint)
+	wg := sync.WaitGroup{}
 
-	go restful.HTTP(httpEndpointChannel, &serverWaitGroup)
-	serverWaitGroup.Add(1)
+	httpEndpoints := make(chan model.Endpoint)
+	go restful.HTTP(httpEndpoints, &wg)
+	wg.Add(1)
 
 	fmt.Println("Application emulator started at :5000,", processes)
 	fmt.Println()
@@ -78,12 +77,12 @@ func main() {
 		// Only HTTP is supported right now
 		if endpoint.Protocol == "http" {
 			fmt.Println("*", endpoint.Protocol, endpoint.Name)
-			httpEndpointChannel <- endpoint
+			httpEndpoints <- endpoint
 		} else {
 			fmt.Println("x", endpoint.Protocol, endpoint.Name)
 		}
 	}
 
-	close(httpEndpointChannel)
-	serverWaitGroup.Wait()
+	close(httpEndpoints)
+	wg.Wait()
 }

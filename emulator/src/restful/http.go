@@ -18,27 +18,46 @@ package restful
 
 import (
 	"cloud-native-app-simulator/model"
+	"encoding/json"
+
 	"fmt"
-	"net/http"
 	"sync"
+
+	"net/http"
 )
 
 const httpPort = 5000
 
+type restResponse struct {
+	Status   string `json:"status"`
+	Endpoint string `json:"endpoint,omitempty"`
+}
+
+func rootHandler(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
+
+	encoder := json.NewEncoder(writer)
+	response := &restResponse{Status: "ok"}
+
+	encoder.Encode(response)
+}
+
 // Launches a HTTP server to serve one or more endpoints
-func HTTP(endpointChannel chan model.Endpoint, waitGroup *sync.WaitGroup) {
-	defer waitGroup.Done()
+func HTTP(endpointChannel chan model.Endpoint, wg *sync.WaitGroup) {
+	defer wg.Done()
 
 	endpoints := []model.Endpoint{}
 	for endpoint := range endpointChannel {
 		endpoints = append(endpoints, endpoint)
 	}
 
-	http.HandleFunc("/", func(writer http.ResponseWriter, req *http.Request) {
-		fmt.Fprint(writer, "{\"status\": \"ok\"}\n")
-	})
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", rootHandler)
 
-	err := http.ListenAndServe(fmt.Sprintf(":%d", httpPort), nil)
+	address := fmt.Sprintf(":%d", httpPort)
+	err := http.ListenAndServe(address, mux)
+
 	if err != nil && err != http.ErrServerClosed {
 		panic(err)
 	}
