@@ -19,6 +19,7 @@ package restful
 import (
 	"cloud-native-app-simulator/model"
 	"encoding/json"
+	"strings"
 
 	"fmt"
 	"sync"
@@ -31,16 +32,6 @@ const httpPort = 5000
 type restResponse struct {
 	Status   string `json:"status"`
 	Endpoint string `json:"endpoint,omitempty"`
-}
-
-func notFoundHandler(writer http.ResponseWriter, request *http.Request) {
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusNotFound)
-
-	encoder := json.NewEncoder(writer)
-	response := &restResponse{Status: "not found", Endpoint: request.URL.Path}
-
-	encoder.Encode(response)
 }
 
 func rootHandler(writer http.ResponseWriter, request *http.Request) {
@@ -57,17 +48,40 @@ func rootHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// Launches a HTTP server to serve one or more endpoints
+func notFoundHandler(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusNotFound)
+
+	endpoint := strings.TrimPrefix(request.URL.Path, "/")
+
+	encoder := json.NewEncoder(writer)
+	response := &restResponse{Status: "not found", Endpoint: endpoint}
+
+	encoder.Encode(response)
+}
+
+func endpointHandler(writer http.ResponseWriter, request *http.Request, endpoint *model.Endpoint) {
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
+
+	encoder := json.NewEncoder(writer)
+	response := &restResponse{Status: "ok", Endpoint: endpoint.Name}
+
+	encoder.Encode(response)
+}
+
+// Launch a HTTP server to serve one or more endpoints
 func HTTP(endpointChannel chan model.Endpoint, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	endpoints := []model.Endpoint{}
-	for endpoint := range endpointChannel {
-		endpoints = append(endpoints, endpoint)
-	}
-
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", rootHandler)
+
+	for endpoint := range endpointChannel {
+		mux.HandleFunc(fmt.Sprintf("/%s", endpoint.Name), func(w http.ResponseWriter, r *http.Request) {
+			endpointHandler(w, r, &endpoint)
+		})
+	}
 
 	address := fmt.Sprintf(":%d", httpPort)
 	err := http.ListenAndServe(address, mux)
