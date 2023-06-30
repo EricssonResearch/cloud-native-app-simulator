@@ -17,7 +17,10 @@ limitations under the License.
 package main
 
 import (
+	"cloud-native-app-simulator/emulator/src/restful"
 	"cloud-native-app-simulator/model"
+	"sync"
+
 	"runtime"
 
 	"encoding/json"
@@ -25,7 +28,6 @@ import (
 	"os"
 
 	"fmt"
-	"net/http"
 )
 
 func loadConfigMap(filename string) (*model.ConfigMap, error) {
@@ -46,8 +48,6 @@ func loadConfigMap(filename string) (*model.ConfigMap, error) {
 	return inputConfig, nil
 }
 
-const httpPort = 5000
-
 func main() {
 	configFilename := os.Getenv("CONF")
 	configMap, err := loadConfigMap(configFilename)
@@ -63,23 +63,27 @@ func main() {
 		processes = fmt.Sprintf("%d process", configMap.Processes)
 	}
 
-	fmt.Println("Application emulator started at :5000")
-	fmt.Println(processes)
+	serverWaitGroup := sync.WaitGroup{}
+	httpEndpointChannel := make(chan model.Endpoint)
+
+	go restful.HTTP(httpEndpointChannel, &serverWaitGroup)
+	serverWaitGroup.Add(1)
+
+	fmt.Println("Application emulator started at :5000,", processes)
+	fmt.Println()
+
 	fmt.Println("Endpoints:")
 
 	for _, endpoint := range configMap.Endpoints {
-		fmt.Println(endpoint.Protocol, endpoint.Name)
+		// Only HTTP is supported right now
+		if endpoint.Protocol == "http" {
+			fmt.Println("*", endpoint.Protocol, endpoint.Name)
+			httpEndpointChannel <- endpoint
+		} else {
+			fmt.Println("x", endpoint.Protocol, endpoint.Name)
+		}
 	}
 
-	// Placeholder, start a HTTP server at :5000
-
-	http.HandleFunc("/", func(writer http.ResponseWriter, req *http.Request) {
-		fmt.Fprint(writer, "{\"status\": \"ok\"}\n")
-	})
-
-	err = http.ListenAndServe(fmt.Sprintf(":%d", httpPort), nil)
-
-	if err != nil {
-		panic(err)
-	}
+	close(httpEndpointChannel)
+	serverWaitGroup.Wait()
 }
