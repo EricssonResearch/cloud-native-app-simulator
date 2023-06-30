@@ -18,6 +18,7 @@ package main
 
 import (
 	"cloud-native-app-simulator/model"
+	"runtime"
 
 	"encoding/json"
 	"io/ioutil"
@@ -26,8 +27,6 @@ import (
 	"fmt"
 	"net/http"
 )
-
-const httpPort = 5000
 
 func loadConfigMap(filename string) (*model.ConfigMap, error) {
 	configFile, err := os.Open(filename)
@@ -47,6 +46,8 @@ func loadConfigMap(filename string) (*model.ConfigMap, error) {
 	return inputConfig, nil
 }
 
+const httpPort = 5000
+
 func main() {
 	configFilename := os.Getenv("CONF")
 	configMap, err := loadConfigMap(configFilename)
@@ -55,11 +56,22 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println("Read config:", configFilename)
-	fmt.Println("Endpoints:", len(configMap.Endpoints))
+	runtime.GOMAXPROCS(configMap.Processes)
+
+	processes := fmt.Sprintf("%d processes", configMap.Processes)
+	if configMap.Processes == 1 {
+		processes = fmt.Sprintf("%d process", configMap.Processes)
+	}
+
+	fmt.Println("Application emulator started at :5000")
+	fmt.Println(processes)
+	fmt.Println("Endpoints:")
+
+	for _, endpoint := range configMap.Endpoints {
+		fmt.Println(endpoint.Protocol, endpoint.Name)
+	}
 
 	// Placeholder, start a HTTP server at :5000
-	fmt.Println("Application emulator started at :5000")
 
 	http.HandleFunc("/", func(writer http.ResponseWriter, req *http.Request) {
 		fmt.Fprint(writer, "{\"status\": \"ok\"}\n")
