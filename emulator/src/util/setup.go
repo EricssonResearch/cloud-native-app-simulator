@@ -27,6 +27,24 @@ import (
 	"encoding/json"
 )
 
+// For local development, will be removed later
+func DefaultConfigMap() *model.ConfigMap {
+	return &model.ConfigMap{
+		Processes: 4,
+		Threads:   4,
+		Logging:   false,
+		Endpoints: []model.Endpoint{
+			{
+				Name:              "test-endpoint",
+				Protocol:          "http",
+				ExecutionMode:     "sequential",
+				CpuComplexity:     nil,
+				NetworkComplexity: nil,
+			},
+		},
+	}
+}
+
 // Load the config map from the CONF environment variable
 func LoadConfigMap() (*model.ConfigMap, error) {
 	configFilename := os.Getenv("CONF")

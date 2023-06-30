@@ -29,7 +29,8 @@ import (
 func main() {
 	configMap, err := util.LoadConfigMap()
 	if err != nil {
-		panic(err)
+		fmt.Println("Using default config map")
+		configMap = util.DefaultConfigMap()
 	}
 
 	processes := util.SetMaxProcesses(configMap)
