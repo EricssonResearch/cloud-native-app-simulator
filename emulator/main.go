@@ -64,6 +64,7 @@ func main() {
 
 	wg := sync.WaitGroup{}
 
+	// TODO: Check if protocol is HTTP
 	httpEndpoints := make(chan model.Endpoint)
 	go restful.HTTP(httpEndpoints, &wg)
 	wg.Add(1)

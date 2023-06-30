@@ -33,14 +33,28 @@ type restResponse struct {
 	Endpoint string `json:"endpoint,omitempty"`
 }
 
-func rootHandler(writer http.ResponseWriter, request *http.Request) {
+func notFoundHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
+	writer.WriteHeader(http.StatusNotFound)
 
 	encoder := json.NewEncoder(writer)
-	response := &restResponse{Status: "ok"}
+	response := &restResponse{Status: "not found", Endpoint: request.URL.Path}
 
 	encoder.Encode(response)
+}
+
+func rootHandler(writer http.ResponseWriter, request *http.Request) {
+	if request.URL.Path == "/" {
+		writer.Header().Set("Content-Type", "application/json")
+		writer.WriteHeader(http.StatusOK)
+
+		encoder := json.NewEncoder(writer)
+		response := &restResponse{Status: "ok"}
+
+		encoder.Encode(response)
+	} else {
+		notFoundHandler(writer, request)
+	}
 }
 
 // Launches a HTTP server to serve one or more endpoints
