@@ -14,27 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package stressors
+package util
 
-import (
-	"cloud-native-app-simulator/emulator/src/util"
-	"cloud-native-app-simulator/model"
+import "golang.org/x/sys/unix"
 
-	"runtime"
-)
+// Get the amount of time in nanoseconds the process has spent using the CPU since startup
+func ProcessCPUTime() int64 {
+	time := unix.Timespec{}
+	unix.ClockGettime(unix.CLOCK_PROCESS_CPUTIME_ID, &time)
 
-// Stress the CPU by running a busy loop, if the endpoint has a defined CPU complexity
-func CPU(cpuComplexity *model.CpuComplexity) {
-	// TODO: This needs to be tested more
-	if executionTime := cpuComplexity.ExecutionTime; executionTime > 0 {
-		runtime.LockOSThread()
+	return time.Nano()
+}
 
-		start := util.ThreadCPUTime()
-		target := start + int64(executionTime)*1000000000
+// Get the amount of time in nanoseconds the calling thread has spent using the CPU since startup
+func ThreadCPUTime() int64 {
+	time := unix.Timespec{}
+	unix.ClockGettime(unix.CLOCK_THREAD_CPUTIME_ID, &time)
 
-		for util.ThreadCPUTime() < target {
-		}
-
-		runtime.UnlockOSThread()
-	}
+	return time.Nano()
 }
