@@ -23,12 +23,6 @@ import (
 	"time"
 )
 
-type EndpointTrace struct {
-	Endpoint *model.Endpoint
-	Time     time.Time
-	CPUTime  int64
-}
-
 var loggingEnabled = false
 
 func SetLoggingEnabled(enabled bool) string {
@@ -39,6 +33,12 @@ func SetLoggingEnabled(enabled bool) string {
 	} else {
 		return "logging disabled"
 	}
+}
+
+type EndpointTrace struct {
+	Endpoint *model.Endpoint
+	Time     time.Time
+	CPUTime  int64
 }
 
 // Call at start of endpoint call to trace execution time
@@ -62,7 +62,7 @@ func TraceEndpointEnd(trace *EndpointTrace) {
 		responseTime := time.Now().Sub(trace.Time).Seconds()
 		cpuTime := float64(ProcessCPUTime()-trace.CPUTime) / 1000000000.0
 
-		log.Printf("%s %s: responseTime=%fs cpuTime=%fs",
-			trace.Endpoint.Protocol, trace.Endpoint.Name, responseTime, cpuTime)
+		log.Printf("%s %s: %s responseTime=%fs cpuTime=%fs",
+			trace.Endpoint.Protocol, trace.Endpoint.Name, trace.Endpoint.ExecutionMode, responseTime, cpuTime)
 	}
 }

@@ -73,9 +73,10 @@ func (handler *endpointHandler) ServeHTTP(writer http.ResponseWriter, request *h
 	trace := util.TraceEndpointStart(handler.endpoint)
 	response := &RestResponse{Status: "ok", Endpoint: handler.endpoint.Name}
 
-	// TODO: Async (goroutines)
-	if handler.endpoint.CpuComplexity != nil {
-		stressors.CPU(handler.endpoint.CpuComplexity)
+	if handler.endpoint.ExecutionMode == "parallel" {
+		stressors.ExecParallel(handler.endpoint)
+	} else {
+		stressors.Exec(handler.endpoint)
 	}
 
 	writeJSONResponse(http.StatusOK, response, writer)

@@ -30,14 +30,14 @@ import (
 // For local development, will be removed later
 func DefaultConfigMap() *model.ConfigMap {
 	return &model.ConfigMap{
-		Processes: 4,
-		Threads:   4,
+		Processes: 8,
+		Threads:   8,
 		Logging:   true,
 		Endpoints: []model.Endpoint{
 			{
 				Name:          "test-endpoint",
 				Protocol:      "http",
-				ExecutionMode: "sequential",
+				ExecutionMode: "parallel",
 				CpuComplexity: &model.CpuComplexity{
 					ExecutionTime: 2,
 				},
