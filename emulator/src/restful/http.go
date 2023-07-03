@@ -29,7 +29,7 @@ import (
 
 const httpAddress = ":5000"
 
-type restResponse struct {
+type RestResponse struct {
 	Status       string `json:"status"`
 	ErrorMessage string `json:"message,omitempty"`
 	Endpoint     string `json:"endpoint,omitempty"`
@@ -46,7 +46,7 @@ func writeJSONResponse(status int, response any, writer http.ResponseWriter) {
 
 func rootHandler(writer http.ResponseWriter, request *http.Request) {
 	if request.URL.Path == "/" {
-		writeJSONResponse(http.StatusOK, &restResponse{Status: "ok"}, writer)
+		writeJSONResponse(http.StatusOK, &RestResponse{Status: "ok"}, writer)
 	} else {
 		notFoundHandler(writer, request)
 	}
@@ -54,7 +54,7 @@ func rootHandler(writer http.ResponseWriter, request *http.Request) {
 
 func notFoundHandler(writer http.ResponseWriter, request *http.Request) {
 	endpoint := strings.TrimPrefix(request.URL.Path, "/")
-	response := &restResponse{
+	response := &RestResponse{
 		Status:       "error",
 		ErrorMessage: fmt.Sprintf("Endpoint %s doesn't exist", endpoint),
 		Endpoint:     endpoint,
@@ -68,7 +68,10 @@ type endpointHandler struct {
 }
 
 func (handler *endpointHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	response := &restResponse{Status: "ok", Endpoint: handler.endpoint.Name}
+	response := &RestResponse{Status: "ok", Endpoint: handler.endpoint.Name}
+
+	// TODO: Async (goroutines)
+
 	writeJSONResponse(http.StatusOK, response, writer)
 }
 
