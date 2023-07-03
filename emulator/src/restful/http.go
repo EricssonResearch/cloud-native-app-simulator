@@ -30,8 +30,9 @@ import (
 const httpAddress = ":5000"
 
 type restResponse struct {
-	Status   string `json:"status"`
-	Endpoint string `json:"endpoint,omitempty"`
+	Status       string `json:"status"`
+	ErrorMessage string `json:"message,omitempty"`
+	Endpoint     string `json:"endpoint,omitempty"`
 }
 
 // Send a response of type application/json
@@ -53,7 +54,11 @@ func rootHandler(writer http.ResponseWriter, request *http.Request) {
 
 func notFoundHandler(writer http.ResponseWriter, request *http.Request) {
 	endpoint := strings.TrimPrefix(request.URL.Path, "/")
-	response := &restResponse{Status: "not-found", Endpoint: endpoint}
+	response := &restResponse{
+		Status:       "error",
+		ErrorMessage: fmt.Sprintf("Endpoint %s doesn't exist", endpoint),
+		Endpoint:     endpoint,
+	}
 
 	writeJSONResponse(http.StatusNotFound, response, writer)
 }
