@@ -70,7 +70,7 @@ type endpointHandler struct {
 }
 
 func (handler *endpointHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	trace := util.TraceEndpointStart(handler.endpoint)
+	trace := util.TraceEndpointCall(handler.endpoint)
 	response := &RestResponse{Status: "ok", Endpoint: handler.endpoint.Name}
 
 	if handler.endpoint.ExecutionMode == "parallel" {
@@ -80,7 +80,7 @@ func (handler *endpointHandler) ServeHTTP(writer http.ResponseWriter, request *h
 	}
 
 	writeJSONResponse(http.StatusOK, response, writer)
-	util.TraceEndpointEnd(trace)
+	util.PrintEndpointTrace(trace)
 }
 
 // Launch a HTTP server to serve one or more endpoints

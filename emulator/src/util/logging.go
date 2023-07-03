@@ -23,17 +23,9 @@ import (
 	"time"
 )
 
-var loggingEnabled = false
-
-func SetLoggingEnabled(enabled bool) string {
-	loggingEnabled = enabled
-
-	if loggingEnabled {
-		return "logging enabled"
-	} else {
-		return "logging disabled"
-	}
-}
+// TODO: Move these
+var ServiceName = ""
+var LoggingEnabled = false
 
 type EndpointTrace struct {
 	Endpoint *model.Endpoint
@@ -42,8 +34,8 @@ type EndpointTrace struct {
 }
 
 // Call at start of endpoint call to trace execution time
-func TraceEndpointStart(endpoint *model.Endpoint) *EndpointTrace {
-	if loggingEnabled {
+func TraceEndpointCall(endpoint *model.Endpoint) *EndpointTrace {
+	if LoggingEnabled {
 		trace := &EndpointTrace{
 			Endpoint: endpoint,
 			Time:     time.Now(),
@@ -57,12 +49,12 @@ func TraceEndpointStart(endpoint *model.Endpoint) *EndpointTrace {
 }
 
 // Call at end of endpoint call to print stats to stdout
-func TraceEndpointEnd(trace *EndpointTrace) {
+func PrintEndpointTrace(trace *EndpointTrace) {
 	if trace != nil {
 		responseTime := time.Now().Sub(trace.Time).Seconds()
 		cpuTime := float64(ProcessCPUTime()-trace.CPUTime) / 1000000000.0
 
-		log.Printf("%s %s: %s responseTime=%fs cpuTime=%fs",
-			trace.Endpoint.Protocol, trace.Endpoint.Name, trace.Endpoint.ExecutionMode, responseTime, cpuTime)
+		log.Printf("%s %s/%s: %s responseTime=%fs cpuTime=%fs",
+			trace.Endpoint.Protocol, ServiceName, trace.Endpoint.Name, trace.Endpoint.ExecutionMode, responseTime, cpuTime)
 	}
 }

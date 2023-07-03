@@ -19,10 +19,8 @@ package util
 import (
 	"cloud-native-app-simulator/model"
 
-	"fmt"
 	"io"
 	"os"
-	"runtime"
 
 	"encoding/json"
 )
@@ -65,15 +63,4 @@ func LoadConfigMap() (*model.ConfigMap, error) {
 	}
 
 	return inputConfig, nil
-}
-
-// Configure the Go runtime to use the number of processes specified in the config map
-func SetMaxProcesses(processes int) string {
-	runtime.GOMAXPROCS(processes)
-
-	if processes == 1 {
-		return "1 process"
-	} else {
-		return fmt.Sprintf("%d processes", processes)
-	}
 }

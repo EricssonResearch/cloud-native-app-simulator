@@ -22,6 +22,8 @@ import (
 	"cloud-native-app-simulator/model"
 
 	"log"
+	"os"
+	"runtime"
 	"sync"
 )
 
@@ -31,9 +33,13 @@ func main() {
 		configMap = util.DefaultConfigMap()
 	}
 
-	logging := util.SetLoggingEnabled(configMap.Logging)
-	processes := util.SetMaxProcesses(configMap.Processes)
-	log.Printf("Application emulator started at :5000, %s, %s", logging, processes)
+	runtime.GOMAXPROCS(configMap.Processes)
+	util.LoggingEnabled = configMap.Logging
+	util.ServiceName = os.Getenv("SERVICE_NAME")
+
+	// Get the process count from Go to make sure settings were applied
+	processes := runtime.GOMAXPROCS(0)
+	log.Printf("Application emulator started at *:5000, logging: %t, processes: %d", util.LoggingEnabled, processes)
 
 	wg := sync.WaitGroup{}
 
