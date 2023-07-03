@@ -17,6 +17,7 @@ limitations under the License.
 package restful
 
 import (
+	"cloud-native-app-simulator/emulator/src/stressors"
 	"cloud-native-app-simulator/model"
 
 	"fmt"
@@ -71,6 +72,9 @@ func (handler *endpointHandler) ServeHTTP(writer http.ResponseWriter, request *h
 	response := &RestResponse{Status: "ok", Endpoint: handler.endpoint.Name}
 
 	// TODO: Async (goroutines)
+	if handler.endpoint.CpuComplexity != nil {
+		stressors.CPU(handler.endpoint.CpuComplexity)
+	}
 
 	writeJSONResponse(http.StatusOK, response, writer)
 }
