@@ -18,6 +18,7 @@ package restful
 
 import (
 	"cloud-native-app-simulator/emulator/src/stressors"
+	"cloud-native-app-simulator/emulator/src/util"
 	"cloud-native-app-simulator/model"
 
 	"fmt"
@@ -69,6 +70,7 @@ type endpointHandler struct {
 }
 
 func (handler *endpointHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	trace := util.TraceEndpointStart(handler.endpoint)
 	response := &RestResponse{Status: "ok", Endpoint: handler.endpoint.Name}
 
 	// TODO: Async (goroutines)
@@ -77,6 +79,7 @@ func (handler *endpointHandler) ServeHTTP(writer http.ResponseWriter, request *h
 	}
 
 	writeJSONResponse(http.StatusOK, response, writer)
+	util.TraceEndpointEnd(trace)
 }
 
 // Launch a HTTP server to serve one or more endpoints

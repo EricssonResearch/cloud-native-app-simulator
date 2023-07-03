@@ -17,24 +17,23 @@ limitations under the License.
 package main
 
 import (
+	"cloud-native-app-simulator/emulator/src/restful"
 	"cloud-native-app-simulator/emulator/src/util"
 	"cloud-native-app-simulator/model"
 
-	"cloud-native-app-simulator/emulator/src/restful"
-
-	"fmt"
+	"log"
 	"sync"
 )
 
 func main() {
 	configMap, err := util.LoadConfigMap()
 	if err != nil {
-		fmt.Println("Using default config map")
 		configMap = util.DefaultConfigMap()
 	}
 
-	processes := util.SetMaxProcesses(configMap)
-	fmt.Printf("Application emulator started at :5000, %s\n\n", processes)
+	logging := util.SetLoggingEnabled(configMap.Logging)
+	processes := util.SetMaxProcesses(configMap.Processes)
+	log.Printf("Application emulator started at :5000, %s, %s", logging, processes)
 
 	wg := sync.WaitGroup{}
 
@@ -43,14 +42,10 @@ func main() {
 	go restful.HTTP(httpEndpoints, &wg)
 	wg.Add(1)
 
-	fmt.Println("Endpoints:")
 	for _, endpoint := range configMap.Endpoints {
 		// Only HTTP is supported right now
 		if endpoint.Protocol == "http" {
-			fmt.Println("*", endpoint.Protocol, endpoint.Name)
 			httpEndpoints <- endpoint
-		} else {
-			fmt.Println("x", endpoint.Protocol, endpoint.Name)
 		}
 	}
 

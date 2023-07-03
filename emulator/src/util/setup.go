@@ -32,13 +32,15 @@ func DefaultConfigMap() *model.ConfigMap {
 	return &model.ConfigMap{
 		Processes: 4,
 		Threads:   4,
-		Logging:   false,
+		Logging:   true,
 		Endpoints: []model.Endpoint{
 			{
-				Name:              "test-endpoint",
-				Protocol:          "http",
-				ExecutionMode:     "sequential",
-				CpuComplexity:     nil,
+				Name:          "test-endpoint",
+				Protocol:      "http",
+				ExecutionMode: "sequential",
+				CpuComplexity: &model.CpuComplexity{
+					ExecutionTime: 2,
+				},
 				NetworkComplexity: nil,
 			},
 		},
@@ -66,12 +68,12 @@ func LoadConfigMap() (*model.ConfigMap, error) {
 }
 
 // Configure the Go runtime to use the number of processes specified in the config map
-func SetMaxProcesses(configMap *model.ConfigMap) string {
-	runtime.GOMAXPROCS(configMap.Processes)
+func SetMaxProcesses(processes int) string {
+	runtime.GOMAXPROCS(processes)
 
-	if configMap.Processes == 1 {
+	if processes == 1 {
 		return "1 process"
 	} else {
-		return fmt.Sprintf("%d processes", configMap.Processes)
+		return fmt.Sprintf("%d processes", processes)
 	}
 }
