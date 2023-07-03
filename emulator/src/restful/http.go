@@ -63,8 +63,12 @@ func notFoundHandler(writer http.ResponseWriter, request *http.Request) {
 	writeJSONResponse(http.StatusNotFound, response, writer)
 }
 
-func endpointHandler(writer http.ResponseWriter, request *http.Request, endpoint *model.Endpoint) {
-	response := &restResponse{Status: "ok", Endpoint: endpoint.Name}
+type endpointHandler struct {
+	endpoint *model.Endpoint
+}
+
+func (handler *endpointHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	response := &restResponse{Status: "ok", Endpoint: handler.endpoint.Name}
 	writeJSONResponse(http.StatusOK, response, writer)
 }
 
@@ -76,9 +80,7 @@ func HTTP(endpointChannel chan model.Endpoint, wg *sync.WaitGroup) {
 	mux.HandleFunc("/", rootHandler)
 
 	for endpoint := range endpointChannel {
-		mux.HandleFunc(fmt.Sprintf("/%s", endpoint.Name), func(w http.ResponseWriter, r *http.Request) {
-			endpointHandler(w, r, &endpoint)
-		})
+		mux.Handle(fmt.Sprintf("/%s", endpoint.Name), &endpointHandler{endpoint: &endpoint})
 	}
 
 	err := http.ListenAndServe(httpAddress, mux)
