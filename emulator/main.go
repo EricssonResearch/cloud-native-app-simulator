@@ -17,10 +17,10 @@ limitations under the License.
 package main
 
 import (
-	"cloud-native-app-simulator/emulator/src/util"
-	"cloud-native-app-simulator/model"
+	model "application-model"
 
-	"cloud-native-app-simulator/emulator/src/restful"
+	"application-emulator/src/restful"
+	"application-emulator/src/util"
 
 	"fmt"
 	"sync"

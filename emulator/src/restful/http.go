@@ -17,7 +17,7 @@ limitations under the License.
 package restful
 
 import (
-	"cloud-native-app-simulator/model"
+	model "application-model"
 
 	"fmt"
 	"strings"

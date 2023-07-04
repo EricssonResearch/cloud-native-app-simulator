@@ -1,4 +1,4 @@
-module cloud-native-app-simulator
+module application-generator
 
 go 1.20
 

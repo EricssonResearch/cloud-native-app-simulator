@@ -17,8 +17,7 @@ limitations under the License.
 package service
 
 import (
-	"cloud-native-app-simulator/model"
-
+	model "application-model"
 	"strconv"
 )
 
