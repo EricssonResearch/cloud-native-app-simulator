@@ -25,7 +25,7 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:  "application-generator",
-	Long: "Generates Kubernetes and Istio manifest files for given topology",
+	Long: "Generates Kubernetes manifest files for given topology",
 }
 
 func Execute() {
