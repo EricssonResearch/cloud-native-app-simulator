@@ -25,28 +25,42 @@ import (
 )
 
 // Executes all stressors defined in the endpoint sequentially
-func Exec(endpoint *model.Endpoint) *CPUTaskResponse {
+func Exec(endpoint *model.Endpoint) (*CPUTaskResponse, *NetworkTaskResponse) {
 	var cpuTaskResponse *CPUTaskResponse
+	var networkTaskResponse *NetworkTaskResponse
+
+	service := fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)
 
 	if endpoint.CpuComplexity != nil {
 		CPU(endpoint.CpuComplexity)
 
-		service := fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)
 		// TODO: More information could be provided here
 		executionTime := fmt.Sprintf("execution_time: %f", endpoint.CpuComplexity.ExecutionTime)
-
 		cpuTaskResponse = &CPUTaskResponse{
 			Services: []string{service},
 			Statuses: []string{executionTime},
 		}
 	}
 
-	return cpuTaskResponse
+	if endpoint.NetworkComplexity != nil {
+		payload := Network(endpoint.NetworkComplexity)
+
+		networkTaskResponse = &NetworkTaskResponse{
+			Services: []string{service},
+			Statuses: []string{},
+			Payload:  payload,
+		}
+	}
+
+	return cpuTaskResponse, networkTaskResponse
 }
 
 // Executes all stressors defined in the endpoint in parallel using goroutines
-func ExecParallel(endpoint *model.Endpoint) *CPUTaskResponse {
+func ExecParallel(endpoint *model.Endpoint) (*CPUTaskResponse, *NetworkTaskResponse) {
 	var cpuTaskResponse *CPUTaskResponse
+	var networkTaskResponse *NetworkTaskResponse
+
+	service := fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)
 	wg := sync.WaitGroup{}
 
 	if endpoint.CpuComplexity != nil {
@@ -56,9 +70,7 @@ func ExecParallel(endpoint *model.Endpoint) *CPUTaskResponse {
 			defer wg.Done()
 			CPU(endpoint.CpuComplexity)
 
-			service := fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)
 			executionTime := fmt.Sprintf("execution_time: %f", endpoint.CpuComplexity.ExecutionTime)
-
 			cpuTaskResponse = &CPUTaskResponse{
 				Services: []string{service},
 				Statuses: []string{executionTime},
@@ -66,6 +78,21 @@ func ExecParallel(endpoint *model.Endpoint) *CPUTaskResponse {
 		}()
 	}
 
+	if endpoint.NetworkComplexity != nil {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+			payload := Network(endpoint.NetworkComplexity)
+
+			networkTaskResponse = &NetworkTaskResponse{
+				Services: []string{service},
+				Statuses: []string{},
+				Payload:  payload,
+			}
+		}()
+	}
+
 	wg.Wait()
-	return cpuTaskResponse
+	return cpuTaskResponse, networkTaskResponse
 }
