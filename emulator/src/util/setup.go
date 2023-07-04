@@ -17,7 +17,7 @@ limitations under the License.
 package util
 
 import (
-	"cloud-native-app-simulator/model"
+	model "application-model"
 
 	"io"
 	"os"

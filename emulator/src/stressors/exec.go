@@ -17,7 +17,7 @@ limitations under the License.
 package stressors
 
 import (
-	"cloud-native-app-simulator/model"
+	model "application-model"
 	"sync"
 )
 

@@ -17,8 +17,8 @@ limitations under the License.
 package cmd
 
 import (
-	"cloud-native-app-simulator/generator/src/pkg/generate"
-	"cloud-native-app-simulator/model"
+	"application-generator/src/pkg/generate"
+	model "application-model"
 
 	"bufio"
 	"fmt"

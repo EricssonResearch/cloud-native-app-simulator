@@ -17,9 +17,9 @@ limitations under the License.
 package restful
 
 import (
-	"cloud-native-app-simulator/emulator/src/stressors"
-	"cloud-native-app-simulator/emulator/src/util"
-	"cloud-native-app-simulator/model"
+	"application-emulator/src/stressors"
+	"application-emulator/src/util"
+	model "application-model"
 
 	"fmt"
 	"strings"

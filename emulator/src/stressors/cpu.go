@@ -17,8 +17,8 @@ limitations under the License.
 package stressors
 
 import (
-	"cloud-native-app-simulator/emulator/src/util"
-	"cloud-native-app-simulator/model"
+	"application-emulator/src/util"
+	model "application-model"
 
 	"runtime"
 )
