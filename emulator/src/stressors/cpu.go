@@ -23,6 +23,11 @@ import (
 	"runtime"
 )
 
+type CPUTaskResponse struct {
+	Services []string `json:"services"`
+	Statuses []string `json:"statuses"`
+}
+
 // Stress the CPU by running a busy loop, if the endpoint has a defined CPU complexity
 func CPU(cpuComplexity *model.CpuComplexity) {
 	// TODO: This needs to be tested more

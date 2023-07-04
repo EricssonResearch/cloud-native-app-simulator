@@ -17,28 +17,55 @@ limitations under the License.
 package stressors
 
 import (
+	"application-emulator/src/util"
 	model "application-model"
+
+	"fmt"
 	"sync"
 )
 
 // Executes all stressors defined in the endpoint sequentially
-func Exec(endpoint *model.Endpoint) {
+func Exec(endpoint *model.Endpoint) *CPUTaskResponse {
+	var cpuTaskResponse *CPUTaskResponse
+
 	if endpoint.CpuComplexity != nil {
 		CPU(endpoint.CpuComplexity)
+
+		service := fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)
+		// TODO: More information could be provided here
+		executionTime := fmt.Sprintf("execution_time: %f", endpoint.CpuComplexity.ExecutionTime)
+
+		cpuTaskResponse = &CPUTaskResponse{
+			Services: []string{service},
+			Statuses: []string{executionTime},
+		}
 	}
+
+	return cpuTaskResponse
 }
 
 // Executes all stressors defined in the endpoint in parallel using goroutines
-func ExecParallel(endpoint *model.Endpoint) {
+func ExecParallel(endpoint *model.Endpoint) *CPUTaskResponse {
+	var cpuTaskResponse *CPUTaskResponse
 	wg := sync.WaitGroup{}
 
 	if endpoint.CpuComplexity != nil {
 		wg.Add(1)
+
 		go func() {
 			defer wg.Done()
 			CPU(endpoint.CpuComplexity)
+
+			service := fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)
+			executionTime := fmt.Sprintf("execution_time: %f", endpoint.CpuComplexity.ExecutionTime)
+
+			cpuTaskResponse = &CPUTaskResponse{
+				Services: []string{service},
+				Statuses: []string{executionTime},
+			}
 		}()
 	}
 
 	wg.Wait()
+	return cpuTaskResponse
 }
