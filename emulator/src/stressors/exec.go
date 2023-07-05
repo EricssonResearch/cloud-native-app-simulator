@@ -30,13 +30,12 @@ type Stressor interface {
 	// TODO: Combine responses from network complexity
 }
 
-var stressors = map[string]Stressor{
-	"stress_cpu":     &CPUTask{},
-	"stress_network": &NetworkTask{},
-}
-
 // Executes all stressors defined in the endpoint sequentially
-func ExecSequential(endpoint *model.Endpoint) map[string]any {
+func ExecSequential(request any, endpoint *model.Endpoint) map[string]any {
+	stressors := map[string]Stressor{
+		"stress_cpu":     &CPUTask{},
+		"stress_network": &NetworkTask{Request: request},
+	}
 	responses := make(map[string]any)
 
 	for name, stressor := range stressors {
@@ -57,7 +56,11 @@ func execStressor(name string, stressor Stressor, endpoint *model.Endpoint, resp
 }
 
 // Executes all stressors defined in the endpoint in parallel using goroutines
-func ExecParallel(endpoint *model.Endpoint) map[string]any {
+func ExecParallel(request any, endpoint *model.Endpoint) map[string]any {
+	stressors := map[string]Stressor{
+		"stress_cpu":     &CPUTask{},
+		"stress_network": &NetworkTask{Request: request},
+	}
 	responses := make(map[string]any)
 	mutex := sync.Mutex{}
 	wg := sync.WaitGroup{}

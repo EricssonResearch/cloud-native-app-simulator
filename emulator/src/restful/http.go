@@ -77,9 +77,9 @@ func (handler *endpointHandler) ServeHTTP(writer http.ResponseWriter, request *h
 	response := &RestResponse{Status: "ok", Endpoint: handler.endpoint.Name}
 
 	if handler.endpoint.ExecutionMode == "parallel" {
-		response.Tasks = stressors.ExecParallel(handler.endpoint)
+		response.Tasks = stressors.ExecParallel(request, handler.endpoint)
 	} else {
-		response.Tasks = stressors.ExecSequential(handler.endpoint)
+		response.Tasks = stressors.ExecSequential(request, handler.endpoint)
 	}
 
 	writeJSONResponse(http.StatusOK, response, writer)

@@ -25,7 +25,9 @@ import (
 	"strings"
 )
 
-type NetworkTask struct{}
+type NetworkTask struct {
+	Request any
+}
 type NetworkTaskResponse struct {
 	Services []string `json:"services"`
 	Statuses []string `json:"statuses"`
