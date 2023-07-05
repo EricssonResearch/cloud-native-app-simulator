@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"application-emulator/src/restful"
+	"application-emulator/src/server"
 	"application-emulator/src/util"
 	model "application-model"
 
@@ -45,7 +45,7 @@ func main() {
 
 	// TODO: Check if protocol is HTTP
 	httpEndpoints := make(chan model.Endpoint)
-	go restful.HTTP(httpEndpoints, &wg)
+	go server.HTTP(httpEndpoints, &wg)
 	wg.Add(1)
 
 	for _, endpoint := range configMap.Endpoints {

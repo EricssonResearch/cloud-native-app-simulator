@@ -14,9 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package restful
+package client
 
 import (
+	model "application-model"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -29,7 +30,7 @@ type requestData struct {
 }
 
 // Sends a HTTP POST request to the specified endpoint
-func POST(service, endpoint string, port int, payload string, headers map[string]string) (int, *RestResponse, error) {
+func POST(service, endpoint string, port int, payload string, headers map[string]string) (int, *model.RESTResponse, error) {
 	url := fmt.Sprintf("http://%s:%d/%s", service, port, endpoint)
 	postData, _ := json.Marshal(requestData{Payload: payload})
 	request, _ := http.NewRequest(http.MethodPost, url, bytes.NewReader(postData))
@@ -51,7 +52,7 @@ func POST(service, endpoint string, port int, payload string, headers map[string
 		return 0, nil, err
 	}
 
-	endpointResponse := &RestResponse{}
+	endpointResponse := &model.RESTResponse{}
 	err = json.Unmarshal(data, endpointResponse)
 	if err != nil {
 		return 0, nil, err

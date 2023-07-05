@@ -22,17 +22,11 @@ import (
 
 	"fmt"
 	"math/rand"
-	"net/http"
 	"strings"
 )
 
 type NetworkTask struct {
 	Request any
-}
-type NetworkTaskResponse struct {
-	Services []string `json:"services"`
-	Statuses []string `json:"statuses"`
-	Payload  string   `json:"payload"`
 }
 
 // Characters in response payload
@@ -63,20 +57,8 @@ func (n *NetworkTask) ExecAllowed(endpoint *model.Endpoint) bool {
 func (n *NetworkTask) ExecTask(endpoint *model.Endpoint) any {
 	stressParams := endpoint.NetworkComplexity
 
-	// If this is a HTTP request, we should propagate the headers specified in incomingHeaders
-	httpRequest, ok := n.Request.(*http.Request)
-	forwardHeaders := make(http.Header)
-
-	if ok {
-		for _, key := range incomingHeaders {
-			if value := httpRequest.Header.Get(key); value != "" {
-				forwardHeaders.Set(key, value)
-			}
-		}
-	}
-
 	responsePayload := RandomPayload(stressParams.ResponsePayloadSize)
-	return NetworkTaskResponse{
+	return model.NetworkTaskResponse{
 		Services: []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
 		// TODO: Call other endpoints
 		Statuses: []string{""},

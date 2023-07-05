@@ -25,10 +25,6 @@ import (
 )
 
 type CPUTask struct{}
-type CPUTaskResponse struct {
-	Services []string `json:"services"`
-	Statuses []string `json:"statuses"`
-}
 
 func (c *CPUTask) ExecAllowed(endpoint *model.Endpoint) bool {
 	return endpoint.CpuComplexity != nil
@@ -51,7 +47,7 @@ func (c *CPUTask) ExecTask(endpoint *model.Endpoint) any {
 		runtime.UnlockOSThread()
 	}
 
-	return CPUTaskResponse{
+	return model.CPUTaskResponse{
 		Services: []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
 		Statuses: []string{fmt.Sprintf("execution_time: %f", stressParams.ExecutionTime)},
 	}

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package restful
+package server
 
 import (
 	"application-emulator/src/stressors"
@@ -31,14 +31,6 @@ import (
 
 const httpAddress = ":5000"
 
-type RestResponse struct {
-	Status       string `json:"status"`
-	ErrorMessage string `json:"message,omitempty"`
-	Endpoint     string `json:"endpoint,omitempty"`
-
-	Tasks map[string]any `json:"tasks,omitempty"`
-}
-
 // Send a response of type application/json
 func writeJSONResponse(status int, response any, writer http.ResponseWriter) {
 	writer.Header().Set("Content-Type", "application/json")
@@ -51,7 +43,7 @@ func writeJSONResponse(status int, response any, writer http.ResponseWriter) {
 
 func rootHandler(writer http.ResponseWriter, request *http.Request) {
 	if request.URL.Path == "/" {
-		writeJSONResponse(http.StatusOK, &RestResponse{Status: "ok"}, writer)
+		writeJSONResponse(http.StatusOK, &model.RESTResponse{Status: "ok"}, writer)
 	} else {
 		notFoundHandler(writer, request)
 	}
@@ -59,7 +51,7 @@ func rootHandler(writer http.ResponseWriter, request *http.Request) {
 
 func notFoundHandler(writer http.ResponseWriter, request *http.Request) {
 	endpoint := strings.TrimPrefix(request.URL.Path, "/")
-	response := &RestResponse{
+	response := &model.RESTResponse{
 		Status:       "error",
 		ErrorMessage: fmt.Sprintf("Endpoint %s doesn't exist", endpoint),
 		Endpoint:     endpoint,
@@ -74,7 +66,7 @@ type endpointHandler struct {
 
 func (handler endpointHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	trace := util.TraceEndpointCall(handler.endpoint)
-	response := &RestResponse{Status: "ok", Endpoint: handler.endpoint.Name}
+	response := &model.RESTResponse{Status: "ok", Endpoint: handler.endpoint.Name}
 
 	if handler.endpoint.ExecutionMode == "parallel" {
 		response.Tasks = stressors.ExecParallel(request, handler.endpoint)
