@@ -45,6 +45,7 @@ func writeJSONResponse(status int, response any, writer http.ResponseWriter) {
 	writer.WriteHeader(status)
 
 	encoder := json.NewEncoder(writer)
+	encoder.SetIndent("", "    ")
 	encoder.Encode(response)
 }
 
