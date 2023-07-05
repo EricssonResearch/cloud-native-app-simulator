@@ -18,7 +18,7 @@ package model
 
 type CalledService struct {
 	Service             string `json:"service"`
-	Port                string `json:"port"`
+	Port                int    `json:"port"`
 	Endpoint            string `json:"endpoint"`
 	Protocol            string `json:"protocol"`
 	TrafficForwardRatio int    `json:"traffic_forward_ratio"`

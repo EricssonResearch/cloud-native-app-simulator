@@ -303,7 +303,7 @@ func CreateInputCalledSvc() model.CalledService {
 
 	var calledSvc model.CalledService
 
-	calledSvc.Port = strconv.Itoa(DefaultExtPort)
+	calledSvc.Port = DefaultExtPort
 	calledSvc.Protocol = defaultProtocol
 	calledSvc.TrafficForwardRatio = CsTrafficForwardRatio
 	calledSvc.RequestPayloadSize = CsRequestSizeDefault
