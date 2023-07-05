@@ -17,11 +17,15 @@ limitations under the License.
 package stressors
 
 import (
+	"application-emulator/src/util"
 	model "application-model"
+
+	"fmt"
 	"math/rand"
 	"strings"
 )
 
+type NetworkTask struct{}
 type NetworkTaskResponse struct {
 	Services []string `json:"services"`
 	Statuses []string `json:"statuses"`
@@ -30,17 +34,25 @@ type NetworkTaskResponse struct {
 
 const characters = "abcdefghijklmnopqrstuvwxyz"
 
-// Stress the network by returning a user-defined payload and calling other endpoints
-func Network(networkComplexity *model.NetworkComplexity) string {
-	builder := strings.Builder{}
-	builder.Grow(networkComplexity.ResponsePayloadSize)
+func (n *NetworkTask) ShouldExec(endpoint *model.Endpoint) bool {
+	return endpoint.NetworkComplexity != nil
+}
 
-	for i := 0; i < networkComplexity.ResponsePayloadSize; i++ {
+// Stress the network by returning a user-defined payload and calling other endpoints
+func (n *NetworkTask) ExecTask(endpoint *model.Endpoint) any {
+	payloadSize := endpoint.NetworkComplexity.ResponsePayloadSize
+
+	builder := strings.Builder{}
+	builder.Grow(payloadSize)
+
+	for i := 0; i < payloadSize; i++ {
 		builder.WriteByte(characters[rand.Int()%len(characters)])
 	}
 
-	// TODO: Call other endpoints
-
-	return builder.String()
-
+	return NetworkTaskResponse{
+		Services: []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
+		// TODO: Call other endpoints
+		Statuses: []string{""},
+		Payload:  builder.String(),
+	}
 }

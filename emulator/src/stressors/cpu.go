@@ -20,26 +20,39 @@ import (
 	"application-emulator/src/util"
 	model "application-model"
 
+	"fmt"
 	"runtime"
 )
 
+type CPUTask struct{}
 type CPUTaskResponse struct {
 	Services []string `json:"services"`
 	Statuses []string `json:"statuses"`
 }
 
+func (c *CPUTask) ShouldExec(endpoint *model.Endpoint) bool {
+	return endpoint.CpuComplexity != nil
+}
+
 // Stress the CPU by running a busy loop, if the endpoint has a defined CPU complexity
-func CPU(cpuComplexity *model.CpuComplexity) {
+func (c *CPUTask) ExecTask(endpoint *model.Endpoint) any {
+	stressParams := endpoint.CpuComplexity
+
 	// TODO: This needs to be tested more
-	if executionTime := cpuComplexity.ExecutionTime; executionTime > 0 {
+	if stressParams.ExecutionTime > 0 {
 		runtime.LockOSThread()
 
 		start := util.ThreadCPUTime()
-		target := start + int64(executionTime)*1000000000
+		target := start + int64(stressParams.ExecutionTime)*1000000000
 
 		for util.ThreadCPUTime() < target {
 		}
 
 		runtime.UnlockOSThread()
+	}
+
+	return CPUTaskResponse{
+		Services: []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
+		Statuses: []string{fmt.Sprintf("execution_time: %f", stressParams.ExecutionTime)},
 	}
 }

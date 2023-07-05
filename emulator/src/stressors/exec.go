@@ -17,82 +17,58 @@ limitations under the License.
 package stressors
 
 import (
-	"application-emulator/src/util"
 	model "application-model"
-
-	"fmt"
 	"sync"
 )
 
+// Interface for a stressor used to simulate the workload of a microservice
+type Stressor interface {
+	// If the stressor should execute according to the parameters provided by the user
+	ShouldExec(endpoint *model.Endpoint) bool
+	// Executes the workload according to user parameters
+	ExecTask(endpoint *model.Endpoint) any
+	// TODO: Combine responses from network complexity
+}
+
+var stressors = map[string]Stressor{
+	"stress_cpu":     &CPUTask{},
+	"stress_network": &NetworkTask{},
+}
+
 // Executes all stressors defined in the endpoint sequentially
-func Exec(endpoint *model.Endpoint) (*CPUTaskResponse, *NetworkTaskResponse) {
-	var cpuTaskResponse *CPUTaskResponse
-	var networkTaskResponse *NetworkTaskResponse
+func ExecSequential(endpoint *model.Endpoint) map[string]any {
+	responses := make(map[string]any)
 
-	service := fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)
-
-	if endpoint.CpuComplexity != nil {
-		CPU(endpoint.CpuComplexity)
-
-		// TODO: More information could be provided here
-		executionTime := fmt.Sprintf("execution_time: %f", endpoint.CpuComplexity.ExecutionTime)
-		cpuTaskResponse = &CPUTaskResponse{
-			Services: []string{service},
-			Statuses: []string{executionTime},
+	for name, stressor := range stressors {
+		if stressor.ShouldExec(endpoint) {
+			responses[name] = stressor.ExecTask(endpoint)
 		}
 	}
 
-	if endpoint.NetworkComplexity != nil {
-		payload := Network(endpoint.NetworkComplexity)
+	return responses
+}
 
-		networkTaskResponse = &NetworkTaskResponse{
-			Services: []string{service},
-			Statuses: []string{},
-			Payload:  payload,
-		}
-	}
-
-	return cpuTaskResponse, networkTaskResponse
+func execStressor(name string, stressor Stressor, endpoint *model.Endpoint, responses map[string]any, wg *sync.WaitGroup, mutex *sync.Mutex) {
+	defer wg.Done()
+	response := stressor.ExecTask(endpoint)
+	mutex.Lock()
+	responses[name] = response
+	mutex.Unlock()
 }
 
 // Executes all stressors defined in the endpoint in parallel using goroutines
-func ExecParallel(endpoint *model.Endpoint) (*CPUTaskResponse, *NetworkTaskResponse) {
-	var cpuTaskResponse *CPUTaskResponse
-	var networkTaskResponse *NetworkTaskResponse
-
-	service := fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)
+func ExecParallel(endpoint *model.Endpoint) map[string]any {
+	responses := make(map[string]any)
+	mutex := sync.Mutex{}
 	wg := sync.WaitGroup{}
 
-	if endpoint.CpuComplexity != nil {
-		wg.Add(1)
-
-		go func() {
-			defer wg.Done()
-			CPU(endpoint.CpuComplexity)
-
-			executionTime := fmt.Sprintf("execution_time: %f", endpoint.CpuComplexity.ExecutionTime)
-			cpuTaskResponse = &CPUTaskResponse{
-				Services: []string{service},
-				Statuses: []string{executionTime},
-			}
-		}()
-	}
-
-	if endpoint.NetworkComplexity != nil {
-		wg.Add(1)
-
-		go func() {
-			defer wg.Done()
-			payload := Network(endpoint.NetworkComplexity)
-
-			networkTaskResponse = &NetworkTaskResponse{
-				Services: []string{service},
-				Statuses: []string{},
-				Payload:  payload,
-			}
-		}()
+	for name, stressor := range stressors {
+		if stressor.ShouldExec(endpoint) {
+			wg.Add(1)
+			go execStressor(name, stressor, endpoint, responses, &wg, &mutex)
+		}
 	}
 
 	wg.Wait()
-	return cpuTaskResponse, networkTaskResponse
+	return responses
 }

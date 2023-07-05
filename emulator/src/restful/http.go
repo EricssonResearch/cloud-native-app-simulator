@@ -36,7 +36,7 @@ type RestResponse struct {
 	ErrorMessage string `json:"message,omitempty"`
 	Endpoint     string `json:"endpoint,omitempty"`
 
-	CPUTask *stressors.CPUTaskResponse `json:"cpu_task,omitempty"`
+	Tasks map[string]any `json:"tasks,omitempty"`
 }
 
 // Send a response of type application/json
@@ -76,9 +76,9 @@ func (handler *endpointHandler) ServeHTTP(writer http.ResponseWriter, request *h
 	response := &RestResponse{Status: "ok", Endpoint: handler.endpoint.Name}
 
 	if handler.endpoint.ExecutionMode == "parallel" {
-		response.CPUTask, _ = stressors.ExecParallel(handler.endpoint)
+		response.Tasks = stressors.ExecParallel(handler.endpoint)
 	} else {
-		response.CPUTask, _ = stressors.Exec(handler.endpoint)
+		response.Tasks = stressors.ExecSequential(handler.endpoint)
 	}
 
 	writeJSONResponse(http.StatusOK, response, writer)
