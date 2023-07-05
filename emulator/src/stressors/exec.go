@@ -24,7 +24,7 @@ import (
 // Interface for a stressor used to simulate the workload of a microservice
 type Stressor interface {
 	// If the stressor should execute according to the parameters provided by the user
-	ShouldExec(endpoint *model.Endpoint) bool
+	ExecAllowed(endpoint *model.Endpoint) bool
 	// Executes the workload according to user parameters
 	ExecTask(endpoint *model.Endpoint) any
 	// TODO: Combine responses from network complexity
@@ -39,7 +39,7 @@ func ExecSequential(request any, endpoint *model.Endpoint) map[string]any {
 	responses := make(map[string]any)
 
 	for name, stressor := range stressors {
-		if stressor.ShouldExec(endpoint) {
+		if stressor.ExecAllowed(endpoint) {
 			responses[name] = stressor.ExecTask(endpoint)
 		}
 	}
@@ -66,7 +66,7 @@ func ExecParallel(request any, endpoint *model.Endpoint) map[string]any {
 	wg := sync.WaitGroup{}
 
 	for name, stressor := range stressors {
-		if stressor.ShouldExec(endpoint) {
+		if stressor.ExecAllowed(endpoint) {
 			wg.Add(1)
 			go execStressor(name, stressor, endpoint, responses, &wg, &mutex)
 		}

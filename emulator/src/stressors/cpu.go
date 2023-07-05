@@ -30,7 +30,7 @@ type CPUTaskResponse struct {
 	Statuses []string `json:"statuses"`
 }
 
-func (c *CPUTask) ShouldExec(endpoint *model.Endpoint) bool {
+func (c *CPUTask) ExecAllowed(endpoint *model.Endpoint) bool {
 	return endpoint.CpuComplexity != nil
 }
 

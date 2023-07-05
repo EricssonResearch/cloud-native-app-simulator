@@ -22,6 +22,7 @@ import (
 
 	"fmt"
 	"math/rand"
+	"net/http"
 	"strings"
 )
 
@@ -34,14 +35,32 @@ type NetworkTaskResponse struct {
 	Payload  string   `json:"payload"`
 }
 
+// Characters in response payload
 const characters = "abcdefghijklmnopqrstuvwxyz"
 
-func (n *NetworkTask) ShouldExec(endpoint *model.Endpoint) bool {
+// Headers to propagate from inbound to outbound
+var incomingHeaders = []string{
+	"user-agent", "end-user", "x-request-id", "x-b3-traceid", "x-b3-spanid", "x-b3-parentspanid", "x-b3-sampled", "x-b3-flags",
+}
+
+func (n *NetworkTask) ExecAllowed(endpoint *model.Endpoint) bool {
 	return endpoint.NetworkComplexity != nil
 }
 
 // Stress the network by returning a user-defined payload and calling other endpoints
 func (n *NetworkTask) ExecTask(endpoint *model.Endpoint) any {
+	// If this is a HTTP request, we should propagate the headers specified in incomingHeaders
+	httpRequest, ok := n.Request.(*http.Request)
+	forwardHeaders := make(http.Header)
+
+	if ok {
+		for _, key := range incomingHeaders {
+			if value := httpRequest.Header.Get(key); value != "" {
+				forwardHeaders.Set(key, value)
+			}
+		}
+	}
+
 	payloadSize := endpoint.NetworkComplexity.ResponsePayloadSize
 
 	builder := strings.Builder{}
