@@ -43,12 +43,26 @@ var incomingHeaders = []string{
 	"user-agent", "end-user", "x-request-id", "x-b3-traceid", "x-b3-spanid", "x-b3-parentspanid", "x-b3-sampled", "x-b3-flags",
 }
 
+// Generates a random payload of size n
+func RandomPayload(n int) string {
+	builder := strings.Builder{}
+	builder.Grow(n)
+
+	for i := 0; i < n; i++ {
+		builder.WriteByte(characters[rand.Int()%len(characters)])
+	}
+
+	return builder.String()
+}
+
 func (n *NetworkTask) ExecAllowed(endpoint *model.Endpoint) bool {
 	return endpoint.NetworkComplexity != nil
 }
 
 // Stress the network by returning a user-defined payload and calling other endpoints
 func (n *NetworkTask) ExecTask(endpoint *model.Endpoint) any {
+	stressParams := endpoint.NetworkComplexity
+
 	// If this is a HTTP request, we should propagate the headers specified in incomingHeaders
 	httpRequest, ok := n.Request.(*http.Request)
 	forwardHeaders := make(http.Header)
@@ -61,19 +75,11 @@ func (n *NetworkTask) ExecTask(endpoint *model.Endpoint) any {
 		}
 	}
 
-	payloadSize := endpoint.NetworkComplexity.ResponsePayloadSize
-
-	builder := strings.Builder{}
-	builder.Grow(payloadSize)
-
-	for i := 0; i < payloadSize; i++ {
-		builder.WriteByte(characters[rand.Int()%len(characters)])
-	}
-
+	responsePayload := RandomPayload(stressParams.ResponsePayloadSize)
 	return NetworkTaskResponse{
 		Services: []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
 		// TODO: Call other endpoints
 		Statuses: []string{""},
-		Payload:  builder.String(),
+		Payload:  responsePayload,
 	}
 }

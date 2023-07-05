@@ -35,11 +35,13 @@ func DefaultConfigMap() *model.ConfigMap {
 			{
 				Name:          "test-endpoint",
 				Protocol:      "http",
-				ExecutionMode: "parallel",
+				ExecutionMode: "sequential",
 				CpuComplexity: &model.CpuComplexity{
-					ExecutionTime: 2,
+					ExecutionTime: 0,
 				},
-				NetworkComplexity: nil,
+				NetworkComplexity: &model.NetworkComplexity{
+					ResponsePayloadSize: 128,
+				},
 			},
 		},
 	}
