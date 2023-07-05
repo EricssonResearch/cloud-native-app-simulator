@@ -52,7 +52,7 @@ type EndpointCall struct {
 // Forward requests to all services sequentially and return REST or gRPC responses
 func ForwardSequential(request any, payload string, services []model.CalledService) []EndpointCall {
 	forwardHeaders := ExtractHeaders(request)
-	responses := []EndpointCall{}
+	responses := make([]EndpointCall, 0, len(services))
 
 	for _, service := range services {
 		// TODO: gRPC
