@@ -16,7 +16,11 @@ limitations under the License.
 
 package util
 
-import "golang.org/x/sys/unix"
+import (
+	"fmt"
+
+	"golang.org/x/sys/unix"
+)
 
 // Get the amount of time in nanoseconds the process has spent using the CPU since startup
 func ProcessCPUTime() int64 {
@@ -32,4 +36,13 @@ func ThreadCPUTime() int64 {
 	unix.ClockGettime(unix.CLOCK_THREAD_CPUTIME_ID, &time)
 
 	return time.Nano()
+}
+
+// Format time as seconds or milliseconds
+func FormatTime(t float64) string {
+	if t >= 1 {
+		return fmt.Sprintf("%.3fs", t)
+	} else {
+		return fmt.Sprintf("%.3fms", t*1000.0)
+	}
 }

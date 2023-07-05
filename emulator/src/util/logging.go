@@ -52,8 +52,9 @@ func PrintEndpointTrace(trace *EndpointTrace) {
 	if trace != nil {
 		responseTime := time.Now().Sub(trace.Time).Seconds()
 		cpuTime := float64(ProcessCPUTime()-trace.CPUTime) / 1000000000.0
+		responseTimeFmt, cpuTimeFmt := FormatTime(responseTime), FormatTime(cpuTime)
 
-		log.Printf("%s %s/%s: %s responseTime=%fs cpuTime=%fs",
-			trace.Endpoint.Protocol, ServiceName, trace.Endpoint.Name, trace.Endpoint.ExecutionMode, responseTime, cpuTime)
+		log.Printf("%s %s/%s: %s responseTime=%s cpuTime=%s",
+			trace.Endpoint.Protocol, ServiceName, trace.Endpoint.Name, trace.Endpoint.ExecutionMode, responseTimeFmt, cpuTimeFmt)
 	}
 }

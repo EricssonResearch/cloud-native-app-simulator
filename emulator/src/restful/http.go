@@ -72,7 +72,7 @@ type endpointHandler struct {
 	endpoint *model.Endpoint
 }
 
-func (handler *endpointHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+func (handler endpointHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	trace := util.TraceEndpointCall(handler.endpoint)
 	response := &RestResponse{Status: "ok", Endpoint: handler.endpoint.Name}
 
@@ -94,7 +94,7 @@ func HTTP(endpointChannel chan model.Endpoint, wg *sync.WaitGroup) {
 	mux.HandleFunc("/", rootHandler)
 
 	for endpoint := range endpointChannel {
-		mux.Handle(fmt.Sprintf("/%s", endpoint.Name), &endpointHandler{endpoint: &endpoint})
+		mux.Handle(fmt.Sprintf("/%s", endpoint.Name), endpointHandler{endpoint: &endpoint})
 	}
 
 	err := http.ListenAndServe(httpAddress, mux)
