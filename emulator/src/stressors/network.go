@@ -51,12 +51,24 @@ func (n *NetworkTask) ExecAllowed(endpoint *model.Endpoint) bool {
 // Stress the network by returning a user-defined payload and calling other endpoints
 func (n *NetworkTask) ExecTask(endpoint *model.Endpoint) any {
 	stressParams := endpoint.NetworkComplexity
-
 	responsePayload := RandomPayload(stressParams.ResponsePayloadSize)
+	calls := []EndpointCall{}
+
+	if stressParams.ForwardRequests == "asynchronous" {
+		calls = ForwardParallel(n.Request, stressParams.CalledServices)
+	} else if stressParams.ForwardRequests == "synchronous" {
+		calls = ForwardSequential(n.Request, stressParams.CalledServices)
+	}
+
+	statuses := make([]string, 0, len(calls))
+	for _, call := range calls {
+		statuses = append(statuses, call.Status)
+	}
+
+	// TODO: Merge task responses
 	return model.NetworkTaskResponse{
 		Services: []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
-		// TODO: Call other endpoints
-		Statuses: []string{""},
+		Statuses: statuses,
 		Payload:  responsePayload,
 	}
 }

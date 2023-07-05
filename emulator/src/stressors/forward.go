@@ -50,14 +50,15 @@ type EndpointCall struct {
 }
 
 // Forward requests to all services sequentially and return REST or gRPC responses
-func ForwardSequential(request any, payload string, services []model.CalledService) []EndpointCall {
+func ForwardSequential(request any, services []model.CalledService) []EndpointCall {
 	forwardHeaders := ExtractHeaders(request)
 	responses := make([]EndpointCall, 0, len(services))
 
 	for _, service := range services {
 		// TODO: gRPC
 		if service.Protocol == "http" {
-			status, response, err := client.POST(service.Service, service.Endpoint, service.Port, payload, forwardHeaders)
+			status, response, err :=
+				client.POST(service.Service, service.Endpoint, service.Port, RandomPayload(service.RequestPayloadSize), forwardHeaders)
 
 			if err != nil {
 				// TODO: Should not panic here
