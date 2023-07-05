@@ -32,11 +32,6 @@ type NetworkTask struct {
 // Characters in response payload
 const characters = "abcdefghijklmnopqrstuvwxyz"
 
-// Headers to propagate from inbound to outbound
-var incomingHeaders = []string{
-	"user-agent", "end-user", "x-request-id", "x-b3-traceid", "x-b3-spanid", "x-b3-parentspanid", "x-b3-sampled", "x-b3-flags",
-}
-
 // Generates a random payload of size n
 func RandomPayload(n int) string {
 	builder := strings.Builder{}

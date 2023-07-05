@@ -30,28 +30,35 @@ type requestData struct {
 }
 
 // Sends a HTTP POST request to the specified endpoint
-func POST(service, endpoint string, port int, payload string, headers map[string]string) (int, *model.RESTResponse, error) {
+func POST(service, endpoint string, port int, payload string, headers http.Header) (int, *model.RESTResponse, error) {
 	url := fmt.Sprintf("http://%s:%d/%s", service, port, endpoint)
 	postData, _ := json.Marshal(requestData{Payload: payload})
 	request, _ := http.NewRequest(http.MethodPost, url, bytes.NewReader(postData))
 
-	headers["Content-Type"] = "application/json"
-	// Forward any headers set by the user
-	for key, value := range headers {
-		request.Header.Set(key, value)
+	// Override the content type
+	headers.Set("Content-Type", "application/json")
+	// Forward any other headers set by the user
+	for key, values := range headers {
+		for _, value := range values {
+			request.Header.Add(key, value)
+		}
 	}
 
+	// Send the request
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return 0, nil, err
 	}
 
+	// Read all bytes
 	defer response.Body.Close()
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
 		return 0, nil, err
 	}
 
+	// Unmarshal into a model.RESTResponse
+	// Since only services and not arbitrary addresses can be called, this should always succeed
 	endpointResponse := &model.RESTResponse{}
 	err = json.Unmarshal(data, endpointResponse)
 	if err != nil {
