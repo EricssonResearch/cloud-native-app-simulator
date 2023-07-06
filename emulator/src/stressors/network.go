@@ -51,9 +51,8 @@ func (n *NetworkTask) ExecAllowed(endpoint *model.Endpoint) bool {
 // Stress the network by returning a user-defined payload and calling other endpoints
 func (n *NetworkTask) ExecTask(endpoint *model.Endpoint) any {
 	stressParams := endpoint.NetworkComplexity
-	responsePayload := RandomPayload(stressParams.ResponsePayloadSize)
-	calls := []EndpointCall{}
 
+	var calls []EndpointResponse
 	if stressParams.ForwardRequests == "asynchronous" {
 		calls = ForwardParallel(n.Request, stressParams.CalledServices)
 	} else if stressParams.ForwardRequests == "synchronous" {
@@ -65,10 +64,25 @@ func (n *NetworkTask) ExecTask(endpoint *model.Endpoint) any {
 		statuses = append(statuses, call.Status)
 	}
 
-	// TODO: Merge task responses
-	return model.NetworkTaskResponse{
-		Services: []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
-		Statuses: statuses,
-		Payload:  responsePayload,
+	responses := make([]any, 0, len(calls))
+	for _, call := range calls {
+		responses = append(responses, call.Response)
 	}
+
+	return &model.NetworkTaskResponse{
+		Services:          []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
+		Statuses:          statuses,
+		Payload:           RandomPayload(stressParams.ResponsePayloadSize),
+		EndpointResponses: responses,
+	}
+}
+
+func (n *NetworkTask) CombineResponses(s any, e any) {
+	selfResponse := s.(*model.NetworkTaskResponse)
+	endpointResponse := e.(*model.NetworkTaskResponse)
+
+	selfResponse.Services = append(endpointResponse.Services, selfResponse.Services...)
+	selfResponse.Statuses = append(endpointResponse.Statuses, selfResponse.Statuses...)
+
+	// Don't combine the payload
 }

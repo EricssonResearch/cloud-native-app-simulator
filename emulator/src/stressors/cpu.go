@@ -47,8 +47,16 @@ func (c *CPUTask) ExecTask(endpoint *model.Endpoint) any {
 		runtime.UnlockOSThread()
 	}
 
-	return model.CPUTaskResponse{
+	return &model.CPUTaskResponse{
 		Services: []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
 		Statuses: []string{fmt.Sprintf("execution_time: %f", stressParams.ExecutionTime)},
 	}
+}
+
+func (c *CPUTask) CombineResponses(s any, e any) {
+	selfResponse := s.(*model.CPUTaskResponse)
+	endpointResponse := e.(*model.CPUTaskResponse)
+
+	selfResponse.Services = append(endpointResponse.Services, selfResponse.Services...)
+	selfResponse.Statuses = append(endpointResponse.Statuses, selfResponse.Statuses...)
 }

@@ -44,15 +44,15 @@ func ExtractHeaders(request any) http.Header {
 	return forwardHeaders
 }
 
-type EndpointCall struct {
+type EndpointResponse struct {
 	Status   string
 	Response any
 }
 
 // Forward requests to all services sequentially and return REST or gRPC responses
-func ForwardSequential(request any, services []model.CalledService) []EndpointCall {
+func ForwardSequential(request any, services []model.CalledService) []EndpointResponse {
 	forwardHeaders := ExtractHeaders(request)
-	responses := make([]EndpointCall, 0, len(services))
+	responses := make([]EndpointResponse, 0, len(services))
 
 	for _, service := range services {
 		// TODO: gRPC
@@ -65,7 +65,7 @@ func ForwardSequential(request any, services []model.CalledService) []EndpointCa
 				panic(err)
 			}
 
-			responses = append(responses, EndpointCall{
+			responses = append(responses, EndpointResponse{
 				Status:   http.StatusText(status),
 				Response: response,
 			})
@@ -76,7 +76,7 @@ func ForwardSequential(request any, services []model.CalledService) []EndpointCa
 }
 
 // Forward requests to all services in parallel using goroutines and return REST or gRPC responses
-func ForwardParallel(request any, services []model.CalledService) []EndpointCall {
+func ForwardParallel(request any, services []model.CalledService) []EndpointResponse {
 	// TODO
-	return []EndpointCall{}
+	return []EndpointResponse{}
 }

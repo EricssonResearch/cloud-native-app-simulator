@@ -34,7 +34,8 @@ type CPUTaskResponse struct {
 }
 
 type NetworkTaskResponse struct {
-	Services []string `json:"services"`
-	Statuses []string `json:"statuses"`
-	Payload  string   `json:"payload"`
+	Services          []string `json:"services"`
+	Statuses          []string `json:"statuses"`
+	Payload           string   `json:"payload"`
+	EndpointResponses []any    `json:"responses,omitempty"`
 }

@@ -27,14 +27,43 @@ type Stressor interface {
 	ExecAllowed(endpoint *model.Endpoint) bool
 	// Executes the workload according to user parameters
 	ExecTask(endpoint *model.Endpoint) any
-	// TODO: Combine responses from network complexity
+	// Combine REST and gRPC responses from endpoint calls
+	CombineResponses(selfResponse any, endpointResponse any)
+}
+
+// Recursively scan the result from the network stressor for endpoint responses to combine
+func combineNetworkTaskResponses(allResponses map[string]any, stressors map[string]Stressor) {
+	if networkTaskResponse, ok := allResponses["stress_network"]; ok {
+		networkTaskResponse := networkTaskResponse.(*model.NetworkTaskResponse)
+
+		for _, endpointResponse := range networkTaskResponse.EndpointResponses {
+			if restResponse, ok := endpointResponse.(*model.RESTResponse); ok {
+				combineNetworkTaskResponses(restResponse.Tasks, stressors)
+
+				for name, stressor := range stressors {
+					selfResponse, selfOk := allResponses[name]
+					endpointResponse, endpointOk := restResponse.Tasks[name]
+
+					// If both our response and the response from the endpoint contains this stressor, combine the result
+					if selfOk && endpointOk {
+						stressor.CombineResponses(selfResponse, endpointResponse)
+					}
+				}
+			}
+		}
+
+		// Should not be included in response JSON
+		networkTaskResponse.EndpointResponses = nil
+	}
 }
 
 // Executes all stressors defined in the endpoint sequentially
 func ExecSequential(request any, endpoint *model.Endpoint) map[string]any {
+	cpuTask := &CPUTask{}
+	networkTask := &NetworkTask{Request: request}
 	stressors := map[string]Stressor{
-		"stress_cpu":     &CPUTask{},
-		"stress_network": &NetworkTask{Request: request},
+		"stress_cpu":     cpuTask,
+		"stress_network": networkTask,
 	}
 	responses := make(map[string]any)
 
@@ -44,6 +73,7 @@ func ExecSequential(request any, endpoint *model.Endpoint) map[string]any {
 		}
 	}
 
+	combineNetworkTaskResponses(responses, stressors)
 	return responses
 }
 
@@ -57,11 +87,14 @@ func execStressor(name string, stressor Stressor, endpoint *model.Endpoint, resp
 
 // Executes all stressors defined in the endpoint in parallel using goroutines
 func ExecParallel(request any, endpoint *model.Endpoint) map[string]any {
+	cpuTask := &CPUTask{}
+	networkTask := &NetworkTask{Request: request}
 	stressors := map[string]Stressor{
-		"stress_cpu":     &CPUTask{},
-		"stress_network": &NetworkTask{Request: request},
+		"stress_cpu":     cpuTask,
+		"stress_network": networkTask,
 	}
 	responses := make(map[string]any)
+
 	mutex := sync.Mutex{}
 	wg := sync.WaitGroup{}
 
@@ -73,5 +106,8 @@ func ExecParallel(request any, endpoint *model.Endpoint) map[string]any {
 	}
 
 	wg.Wait()
+	// Execute this sequentially since concurrent map access is not allowed
+	combineNetworkTaskResponses(responses, stressors)
+
 	return responses
 }
