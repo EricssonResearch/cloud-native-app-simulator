@@ -32,6 +32,11 @@ type requestData struct {
 // Sends a HTTP POST request to the specified endpoint
 func POST(service, endpoint string, port int, payload string, headers http.Header) (int, *model.RESTResponse, error) {
 	url := fmt.Sprintf("http://%s:%d/%s", service, port, endpoint)
+	// Omit the port if zero
+	if port == 0 {
+		url = fmt.Sprintf("http://%s/%s", service, endpoint)
+	}
+
 	postData, _ := json.Marshal(requestData{Payload: payload})
 	request, _ := http.NewRequest(http.MethodPost, url, bytes.NewReader(postData))
 
