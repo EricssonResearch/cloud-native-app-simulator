@@ -27,10 +27,12 @@ import (
 
 // Sends a HTTP POST request to the specified endpoint
 func POST(service, endpoint string, port int, payload string, headers http.Header) (int, *model.RESTResponse, error) {
-	url := fmt.Sprintf("http://%s:%d/%s", service, port, endpoint)
+	var url string
 	// Omit the port if zero
 	if port == 0 {
 		url = fmt.Sprintf("http://%s/%s", service, endpoint)
+	} else {
+		url = fmt.Sprintf("http://%s:%d/%s", service, port, endpoint)
 	}
 
 	postData, _ := json.Marshal(model.RESTRequest{Payload: payload})

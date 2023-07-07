@@ -29,7 +29,6 @@ import (
 func DefaultConfigMap() *model.ConfigMap {
 	return &model.ConfigMap{
 		Processes: 8,
-		Threads:   8,
 		Logging:   true,
 		Endpoints: []model.Endpoint{
 			{

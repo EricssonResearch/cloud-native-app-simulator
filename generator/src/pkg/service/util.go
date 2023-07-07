@@ -234,7 +234,6 @@ func CreateConfigMap(processes int, threads int, logging bool, ep []model.Endpoi
 
 	cm_data := &model.ConfigMap{
 		Processes: processes,
-		Threads:   threads,
 		Logging:   logging,
 		Endpoints: []model.Endpoint(ep),
 	}
