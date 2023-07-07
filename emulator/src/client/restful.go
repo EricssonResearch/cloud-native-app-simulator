@@ -25,10 +25,6 @@ import (
 	"net/http"
 )
 
-type requestData struct {
-	Payload string
-}
-
 // Sends a HTTP POST request to the specified endpoint
 func POST(service, endpoint string, port int, payload string, headers http.Header) (int, *model.RESTResponse, error) {
 	url := fmt.Sprintf("http://%s:%d/%s", service, port, endpoint)
@@ -37,7 +33,7 @@ func POST(service, endpoint string, port int, payload string, headers http.Heade
 		url = fmt.Sprintf("http://%s/%s", service, endpoint)
 	}
 
-	postData, _ := json.Marshal(requestData{Payload: payload})
+	postData, _ := json.Marshal(model.RESTRequest{Payload: payload})
 	request, _ := http.NewRequest(http.MethodPost, url, bytes.NewReader(postData))
 
 	// Override the content type
@@ -62,8 +58,7 @@ func POST(service, endpoint string, port int, payload string, headers http.Heade
 		return 0, nil, err
 	}
 
-	// Unmarshal into a model.RESTResponse
-	// Since only services and not arbitrary addresses can be called, this should always succeed
+	// Assume that we receieve a valid model.RESTResponse
 	endpointResponse := &model.RESTResponse{}
 	err = json.Unmarshal(data, endpointResponse)
 	if err != nil {

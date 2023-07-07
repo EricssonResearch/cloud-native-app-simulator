@@ -26,12 +26,29 @@ import (
 
 type CPUTask struct{}
 
+// Combines the CPU task response in taskResponses with cpuTaskResponse
+func ConcatenateCPUResponses(taskResponses *MutexTaskResponses, cpuTaskResponse *model.CPUTaskResponse) {
+	taskResponses.Mutex.Lock()
+	defer taskResponses.Mutex.Unlock()
+
+	if cpuTaskResponse == nil {
+		return
+	}
+
+	if taskResponses.CPUTask != nil {
+		taskResponses.CPUTask.Services = append(cpuTaskResponse.Services, taskResponses.CPUTask.Services...)
+		taskResponses.CPUTask.Statuses = append(cpuTaskResponse.Statuses, taskResponses.CPUTask.Statuses...)
+	} else {
+		taskResponses.CPUTask = cpuTaskResponse
+	}
+}
+
 func (c *CPUTask) ExecAllowed(endpoint *model.Endpoint) bool {
 	return endpoint.CpuComplexity != nil
 }
 
 // Stress the CPU by running a busy loop, if the endpoint has a defined CPU complexity
-func (c *CPUTask) ExecTask(endpoint *model.Endpoint) any {
+func (c *CPUTask) ExecTask(endpoint *model.Endpoint, responses *MutexTaskResponses) {
 	stressParams := endpoint.CpuComplexity
 
 	// TODO: This needs to be tested more
@@ -47,16 +64,8 @@ func (c *CPUTask) ExecTask(endpoint *model.Endpoint) any {
 		runtime.UnlockOSThread()
 	}
 
-	return &model.CPUTaskResponse{
+	ConcatenateCPUResponses(responses, &model.CPUTaskResponse{
 		Services: []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
 		Statuses: []string{fmt.Sprintf("execution_time: %f", stressParams.ExecutionTime)},
-	}
-}
-
-func (c *CPUTask) CombineResponses(s any, e any) {
-	selfResponse := s.(*model.CPUTaskResponse)
-	endpointResponse := e.(*model.CPUTaskResponse)
-
-	selfResponse.Services = append(endpointResponse.Services, selfResponse.Services...)
-	selfResponse.Statuses = append(endpointResponse.Statuses, selfResponse.Statuses...)
+	})
 }

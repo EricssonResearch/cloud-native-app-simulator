@@ -44,12 +44,45 @@ func RandomPayload(n int) string {
 	return builder.String()
 }
 
+// Combines the task responses in taskResponses with networkTaskResponse and endpointResponses
+func ConcatenateNetworkResponses(taskResponses *MutexTaskResponses, networkTaskResponse *model.NetworkTaskResponse, endpointResponses []EndpointResponse) {
+	taskResponses.Mutex.Lock()
+	defer taskResponses.Mutex.Unlock()
+
+	if networkTaskResponse == nil {
+		return
+	}
+
+	// The network task response from the endpoint should be merged first
+	for _, r := range endpointResponses {
+		taskResponses.NetworkTask.Services = append([]string{r.Service}, taskResponses.NetworkTask.Services...)
+		taskResponses.NetworkTask.Statuses = append([]string{r.Status}, taskResponses.NetworkTask.Statuses...)
+
+		if rr := r.RESTResponse; rr != nil {
+			taskResponses.Mutex.Unlock()
+			ConcatenateCPUResponses(taskResponses, rr.Tasks.CPUTask)
+			ConcatenateNetworkResponses(taskResponses, rr.Tasks.NetworkTask, nil)
+			taskResponses.Mutex.Lock()
+		}
+	}
+
+	// Now, merge the current network task
+	if taskResponses.NetworkTask != nil {
+		taskResponses.NetworkTask.Services = append(networkTaskResponse.Services, taskResponses.NetworkTask.Services...)
+		taskResponses.NetworkTask.Statuses = append(networkTaskResponse.Statuses, taskResponses.NetworkTask.Statuses...)
+		// Don't combine the payload
+		taskResponses.NetworkTask.Payload = networkTaskResponse.Payload
+	} else {
+		taskResponses.NetworkTask = networkTaskResponse
+	}
+}
+
 func (n *NetworkTask) ExecAllowed(endpoint *model.Endpoint) bool {
 	return endpoint.NetworkComplexity != nil
 }
 
 // Stress the network by returning a user-defined payload and calling other endpoints
-func (n *NetworkTask) ExecTask(endpoint *model.Endpoint) any {
+func (n *NetworkTask) ExecTask(endpoint *model.Endpoint, responses *MutexTaskResponses) {
 	stressParams := endpoint.NetworkComplexity
 
 	var calls []EndpointResponse
@@ -59,30 +92,18 @@ func (n *NetworkTask) ExecTask(endpoint *model.Endpoint) any {
 		calls = ForwardSequential(n.Request, stressParams.CalledServices)
 	}
 
-	statuses := make([]string, 0, len(calls))
-	for _, call := range calls {
-		statuses = append(statuses, call.Status)
+	services := make([]string, len(calls)+1)
+	services = append(services, fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name))
+	statuses := make([]string, len(calls))
+
+	for _, endpoint := range calls {
+		services = append(services, endpoint.Service)
+		statuses = append(statuses, endpoint.Status)
 	}
 
-	responses := make([]any, 0, len(calls))
-	for _, call := range calls {
-		responses = append(responses, call.Response)
-	}
-
-	return &model.NetworkTaskResponse{
-		Services:          []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
-		Statuses:          statuses,
-		Payload:           RandomPayload(stressParams.ResponsePayloadSize),
-		EndpointResponses: responses,
-	}
-}
-
-func (n *NetworkTask) CombineResponses(s any, e any) {
-	selfResponse := s.(*model.NetworkTaskResponse)
-	endpointResponse := e.(*model.NetworkTaskResponse)
-
-	selfResponse.Services = append(endpointResponse.Services, selfResponse.Services...)
-	selfResponse.Statuses = append(endpointResponse.Statuses, selfResponse.Statuses...)
-
-	// Don't combine the payload
+	ConcatenateNetworkResponses(responses, &model.NetworkTaskResponse{
+		Services: services,
+		Statuses: statuses,
+		Payload:  RandomPayload(stressParams.ResponsePayloadSize),
+	}, calls)
 }

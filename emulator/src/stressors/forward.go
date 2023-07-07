@@ -19,6 +19,7 @@ package stressors
 import (
 	"application-emulator/src/client"
 	model "application-model"
+	"fmt"
 	"net/http"
 )
 
@@ -45,8 +46,11 @@ func ExtractHeaders(request any) http.Header {
 }
 
 type EndpointResponse struct {
-	Status   string
-	Response any
+	Service string
+	Status  string
+
+	RESTResponse *model.RESTResponse
+	GRPCResponse *model.GRPCResponse
 }
 
 // Forward requests to all services sequentially and return REST or gRPC responses
@@ -66,8 +70,9 @@ func ForwardSequential(request any, services []model.CalledService) []EndpointRe
 			}
 
 			responses = append(responses, EndpointResponse{
-				Status:   http.StatusText(status),
-				Response: response,
+				Service:      fmt.Sprintf("%s/%s", service.Service, service.Endpoint),
+				Status:       http.StatusText(status),
+				RESTResponse: response,
 			})
 		}
 	}

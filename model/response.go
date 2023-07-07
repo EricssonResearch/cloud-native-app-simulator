@@ -16,26 +16,34 @@ limitations under the License.
 
 package model
 
-type RESTResponse struct {
-	Status       string `json:"status"`
-	ErrorMessage string `json:"message,omitempty"`
-	Endpoint     string `json:"endpoint,omitempty"`
-
-	Tasks map[string]any `json:"tasks,omitempty"`
-}
-
-type GRPCResponse struct {
-	// TODO
-}
-
 type CPUTaskResponse struct {
 	Services []string `json:"services"`
 	Statuses []string `json:"statuses"`
 }
 
 type NetworkTaskResponse struct {
-	Services          []string `json:"services"`
-	Statuses          []string `json:"statuses"`
-	Payload           string   `json:"payload"`
-	EndpointResponses []any    `json:"responses,omitempty"`
+	Services []string `json:"services"`
+	Statuses []string `json:"statuses"`
+	Payload  string   `json:"payload"`
+}
+
+type TaskResponses struct {
+	CPUTask     *CPUTaskResponse     `json:"cpu_task,omitempty"`
+	NetworkTask *NetworkTaskResponse `json:"network_task,omitempty"`
+}
+
+type RESTRequest struct {
+	Payload string `json:"payload,omitempty"`
+}
+
+type RESTResponse struct {
+	Status       string `json:"status"`
+	ErrorMessage string `json:"message,omitempty"`
+	Endpoint     string `json:"endpoint,omitempty"`
+
+	Tasks TaskResponses `json:"tasks"`
+}
+
+type GRPCResponse struct {
+	// TODO
 }
