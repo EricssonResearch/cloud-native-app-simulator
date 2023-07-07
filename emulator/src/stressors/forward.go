@@ -21,6 +21,7 @@ import (
 	model "application-model"
 	"fmt"
 	"net/http"
+	"sync"
 )
 
 // Headers to propagate from inbound to outbound
@@ -51,36 +52,60 @@ type EndpointResponse struct {
 	GRPCResponse *model.GRPCResponse
 }
 
+func httpRequest(service model.CalledService, forwardHeaders http.Header) EndpointResponse {
+	status, response, err :=
+		client.POST(service.Service, service.Endpoint, service.Port, RandomPayload(service.RequestPayloadSize), forwardHeaders)
+
+	if err != nil {
+		return EndpointResponse{
+			Status: err.Error(),
+		}
+	} else {
+		return EndpointResponse{
+			// TODO: Should also return RESTResponse.Status?
+			Status:       fmt.Sprintf("%d %s", status, http.StatusText(status)),
+			RESTResponse: response,
+		}
+	}
+}
+
 // Forward requests to all services sequentially and return REST or gRPC responses
 func ForwardSequential(request any, services []model.CalledService) []EndpointResponse {
 	forwardHeaders := ExtractHeaders(request)
-	responses := make([]EndpointResponse, 0, len(services))
+	responses := make([]EndpointResponse, len(services), len(services))
 
-	for _, service := range services {
+	for i, service := range services {
 		// TODO: gRPC
 		if service.Protocol == "http" {
-			status, response, err :=
-				client.POST(service.Service, service.Endpoint, service.Port, RandomPayload(service.RequestPayloadSize), forwardHeaders)
-
-			if err != nil {
-				responses = append(responses, EndpointResponse{
-					Status: err.Error(),
-				})
-			} else {
-				responses = append(responses, EndpointResponse{
-					// TODO: Should also return RESTResponse.Status?
-					Status:       fmt.Sprintf("%d %s", status, http.StatusText(status)),
-					RESTResponse: response,
-				})
-			}
+			response := httpRequest(service, forwardHeaders)
+			responses[i] = response
 		}
 	}
 
 	return responses
 }
 
+func parallelHTTPRequest(responses []EndpointResponse, i int, service model.CalledService, forwardHeaders http.Header, wg *sync.WaitGroup) {
+	defer wg.Done()
+	response := httpRequest(service, forwardHeaders)
+	// No mutex needed since every response has its own index
+	responses[i] = response
+}
+
 // Forward requests to all services in parallel using goroutines and return REST or gRPC responses
 func ForwardParallel(request any, services []model.CalledService) []EndpointResponse {
-	// TODO
-	return []EndpointResponse{}
+	forwardHeaders := ExtractHeaders(request)
+	responses := make([]EndpointResponse, len(services), len(services))
+	wg := sync.WaitGroup{}
+
+	for i, service := range services {
+		// TODO: gRPC
+		if service.Protocol == "http" {
+			wg.Add(1)
+			go parallelHTTPRequest(responses, i, service, forwardHeaders, &wg)
+		}
+	}
+
+	wg.Wait()
+	return responses
 }
