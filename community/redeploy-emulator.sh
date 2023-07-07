@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2021 Ericsson AB
+# Copyright 2023 Ericsson AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,14 +15,17 @@
 # limitations under the License.
 #
 
-DEFAULT_NUM=2
-if [ -z "$1" ]; then
-	NUM=$DEFAULT_NUM
-else
-	NUM=$1
-fi
+# Assume this file is located in a git repository
+cd "$(git rev-parse --show-toplevel)"
 
-# Push the image to the all clusters
-for i in $(seq ${NUM}); do
-  kind load docker-image app-demo --name=cluster-${i}
+echo "Rebuilding emulator image"
+docker build -t app-demo .
+./community/push-image-to-clusters.sh
+echo ""
+
+echo "Restarting all deployments in namespace default"
+for d in $(kubectl get -n default -o name deployments)
+do
+	echo "* $d"
+	kubectl rollout restart "$d"
 done

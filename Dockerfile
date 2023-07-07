@@ -1,6 +1,5 @@
-#!/bin/bash
 #
-# Copyright 2021 Ericsson AB
+# Copyright 2023 Ericsson AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,14 +14,19 @@
 # limitations under the License.
 #
 
-DEFAULT_NUM=2
-if [ -z "$1" ]; then
-	NUM=$DEFAULT_NUM
-else
-	NUM=$1
-fi
+FROM golang:1.20
 
-# Push the image to the all clusters
-for i in $(seq ${NUM}); do
-  kind load docker-image app-demo --name=cluster-${i}
-done
+WORKDIR /usr/src/app
+
+RUN apt update
+RUN apt upgrade -y
+
+COPY . /usr/src/app
+
+RUN go mod download
+RUN go build -o /usr/bin/app-emulator ./emulator
+
+ENV CONF=/usr/src/app/config/conf.json
+
+EXPOSE 5000
+ENTRYPOINT ["/usr/bin/app-emulator"]

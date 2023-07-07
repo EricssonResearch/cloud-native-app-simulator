@@ -13,15 +13,17 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package generate
 
 import (
-	"application-generator/src/pkg/model"
 	s "application-generator/src/pkg/service"
+	model "application-model"
+
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"os"
 	"strconv"
@@ -51,7 +53,7 @@ func Unique(strSlice []string) []string {
 // Parse microservice config file, and return a config struct
 func Parse(configFilename string) (model.FileConfig, []string) {
 	configFile, err := os.Open(configFilename)
-	configFileByteValue, _ := ioutil.ReadAll(configFile)
+	configFileByteValue, _ := io.ReadAll(configFile)
 
 	if err != nil {
 		panic(err)
@@ -167,7 +169,7 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 			appendManifest(service)
 
 			yamlDocString := strings.Join(manifests, "---\n")
-			err := ioutil.WriteFile(manifestFilePath, []byte(yamlDocString), 0644)
+			err := os.WriteFile(manifestFilePath, []byte(yamlDocString), 0644)
 			if err != nil {
 				fmt.Print(err)
 				return
@@ -250,7 +252,7 @@ func CreateJsonInput(userConfig model.UserConfig) string {
 		panic(err)
 	}
 
-	err = ioutil.WriteFile(path, input_json, 0644)
+	err = os.WriteFile(path, input_json, 0644)
 	if err != nil {
 		fmt.Print(err)
 	}
