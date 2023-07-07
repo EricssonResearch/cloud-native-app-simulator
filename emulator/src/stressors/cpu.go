@@ -36,8 +36,8 @@ func ConcatenateCPUResponses(taskResponses *MutexTaskResponses, cpuTaskResponse 
 	}
 
 	if taskResponses.CPUTask != nil {
-		taskResponses.CPUTask.Services = append(cpuTaskResponse.Services, taskResponses.CPUTask.Services...)
-		taskResponses.CPUTask.Statuses = append(cpuTaskResponse.Statuses, taskResponses.CPUTask.Statuses...)
+		taskResponses.CPUTask.Services = append(taskResponses.CPUTask.Services, cpuTaskResponse.Services...)
+		taskResponses.CPUTask.Statuses = append(taskResponses.CPUTask.Statuses, cpuTaskResponse.Statuses...)
 	} else {
 		taskResponses.CPUTask = cpuTaskResponse
 	}

@@ -54,16 +54,16 @@ func ConcatenateNetworkResponses(taskResponses *MutexTaskResponses, networkTaskR
 	}
 
 	if taskResponses.NetworkTask != nil {
-		taskResponses.NetworkTask.Services = append(networkTaskResponse.Services, taskResponses.NetworkTask.Services...)
-		taskResponses.NetworkTask.Statuses = append(networkTaskResponse.Statuses, taskResponses.NetworkTask.Statuses...)
+		taskResponses.NetworkTask.Services = append(taskResponses.NetworkTask.Services, networkTaskResponse.Services...)
+		taskResponses.NetworkTask.Statuses = append(taskResponses.NetworkTask.Statuses, networkTaskResponse.Statuses...)
 		// Don't replace the payload
 	} else {
 		taskResponses.NetworkTask = networkTaskResponse
 	}
 
 	for _, r := range endpointResponses {
-		taskResponses.NetworkTask.Services = append([]string{r.Service}, taskResponses.NetworkTask.Services...)
-		taskResponses.NetworkTask.Statuses = append([]string{r.Status}, taskResponses.NetworkTask.Statuses...)
+		taskResponses.NetworkTask.Services = append(taskResponses.NetworkTask.Services, r.Service)
+		taskResponses.NetworkTask.Statuses = append(taskResponses.NetworkTask.Statuses, r.Status)
 
 		if rr := r.RESTResponse; rr != nil {
 			taskResponses.Mutex.Unlock()
@@ -89,18 +89,9 @@ func (n *NetworkTask) ExecTask(endpoint *model.Endpoint, responses *MutexTaskRes
 		calls = ForwardSequential(n.Request, stressParams.CalledServices)
 	}
 
-	services := make([]string, len(calls)+1)
-	services = append(services, fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name))
-	statuses := make([]string, len(calls))
-
-	for _, endpoint := range calls {
-		services = append(services, endpoint.Service)
-		statuses = append(statuses, endpoint.Status)
-	}
-
 	ConcatenateNetworkResponses(responses, &model.NetworkTaskResponse{
-		Services: services,
-		Statuses: statuses,
+		Services: []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
+		Statuses: []string{},
 		Payload:  RandomPayload(stressParams.ResponsePayloadSize),
 	}, calls)
 }
