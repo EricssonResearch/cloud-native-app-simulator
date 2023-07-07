@@ -37,7 +37,6 @@ func writeJSONResponse(status int, response any, writer http.ResponseWriter) {
 	writer.WriteHeader(status)
 
 	encoder := json.NewEncoder(writer)
-	encoder.SetIndent("", "    ")
 	encoder.Encode(response)
 }
 
@@ -69,9 +68,9 @@ func (handler endpointHandler) ServeHTTP(writer http.ResponseWriter, request *ht
 	response := &model.RESTResponse{Status: "ok", Endpoint: handler.endpoint.Name}
 
 	if handler.endpoint.ExecutionMode == "parallel" {
-		response.Tasks = stressors.ExecParallel(request, handler.endpoint)
+		response.TaskResponses = stressors.ExecParallel(request, handler.endpoint)
 	} else {
-		response.Tasks = stressors.ExecSequential(request, handler.endpoint)
+		response.TaskResponses = stressors.ExecSequential(request, handler.endpoint)
 	}
 
 	writeJSONResponse(http.StatusOK, response, writer)

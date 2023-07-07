@@ -41,7 +41,7 @@ type RESTResponse struct {
 	ErrorMessage string `json:"message,omitempty"`
 	Endpoint     string `json:"endpoint,omitempty"`
 
-	Tasks TaskResponses `json:"tasks"`
+	TaskResponses
 }
 
 type GRPCResponse struct {

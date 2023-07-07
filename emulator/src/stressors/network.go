@@ -66,8 +66,8 @@ func ConcatenateNetworkResponses(taskResponses *MutexTaskResponses, networkTaskR
 
 		if rr := r.RESTResponse; rr != nil {
 			taskResponses.Mutex.Unlock()
-			ConcatenateCPUResponses(taskResponses, rr.Tasks.CPUTask)
-			ConcatenateNetworkResponses(taskResponses, rr.Tasks.NetworkTask, nil)
+			ConcatenateCPUResponses(taskResponses, rr.CPUTask)
+			ConcatenateNetworkResponses(taskResponses, rr.NetworkTask, nil)
 			taskResponses.Mutex.Lock()
 		}
 	}
