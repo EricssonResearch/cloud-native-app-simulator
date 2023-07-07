@@ -46,9 +46,7 @@ func ExtractHeaders(request any) http.Header {
 }
 
 type EndpointResponse struct {
-	Service string
-	Status  string
-
+	Status       string
 	RESTResponse *model.RESTResponse
 	GRPCResponse *model.GRPCResponse
 }
@@ -61,20 +59,17 @@ func ForwardSequential(request any, services []model.CalledService) []EndpointRe
 	for _, service := range services {
 		// TODO: gRPC
 		if service.Protocol == "http" {
-			serviceName := fmt.Sprintf("%s/%s", service.Service, service.Endpoint)
 			status, response, err :=
 				client.POST(service.Service, service.Endpoint, service.Port, RandomPayload(service.RequestPayloadSize), forwardHeaders)
 
 			if err != nil {
 				responses = append(responses, EndpointResponse{
-					Service: serviceName,
-					Status:  err.Error(),
+					Status: err.Error(),
 				})
 			} else {
 				responses = append(responses, EndpointResponse{
 					// TODO: Should also return RESTResponse.Status?
-					Service:      serviceName,
-					Status:       fmt.Sprint(status, http.StatusText(status)),
+					Status:       fmt.Sprintf("%d %s", status, http.StatusText(status)),
 					RESTResponse: response,
 				})
 			}

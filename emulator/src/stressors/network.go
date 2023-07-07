@@ -62,7 +62,6 @@ func ConcatenateNetworkResponses(taskResponses *MutexTaskResponses, networkTaskR
 	}
 
 	for _, r := range endpointResponses {
-		taskResponses.NetworkTask.Services = append(taskResponses.NetworkTask.Services, r.Service)
 		taskResponses.NetworkTask.Statuses = append(taskResponses.NetworkTask.Statuses, r.Status)
 
 		if rr := r.RESTResponse; rr != nil {
