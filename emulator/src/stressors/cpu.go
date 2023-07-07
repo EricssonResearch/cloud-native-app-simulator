@@ -91,4 +91,6 @@ func (c *CPUTask) ExecTask(endpoint *model.Endpoint, responses *MutexTaskRespons
 		Services: []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
 		Statuses: []string{fmt.Sprintf("execution_time: %f", stressParams.ExecutionTime)},
 	})
+
+	util.LogCPUTask(endpoint)
 }

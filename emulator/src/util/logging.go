@@ -48,13 +48,33 @@ func TraceEndpointCall(endpoint *model.Endpoint) *EndpointTrace {
 }
 
 // Call at end of endpoint call to print stats to stdout
-func PrintEndpointTrace(trace *EndpointTrace) {
+func LogEndpointCall(trace *EndpointTrace) {
 	if trace != nil {
 		responseTime := time.Now().Sub(trace.Time).Seconds()
 		cpuTime := float64(ProcessCPUTime()-trace.CPUTime) / 1000000000.0
 		responseTimeFmt, cpuTimeFmt := FormatTime(responseTime), FormatTime(cpuTime)
 
-		log.Printf("%s %s/%s: %s responseTime=%s cpuTime=%s",
-			trace.Endpoint.Protocol, ServiceName, trace.Endpoint.Name, trace.Endpoint.ExecutionMode, responseTimeFmt, cpuTimeFmt)
+		log.Printf("%s/%s: %s %s responseTime=%s cpuTime=%s",
+			ServiceName, trace.Endpoint.Name, trace.Endpoint.Protocol, trace.Endpoint.ExecutionMode, responseTimeFmt, cpuTimeFmt)
 	}
+}
+
+// Call at end of CPU task to print params to stdout
+func LogCPUTask(endpoint *model.Endpoint) {
+	if LoggingEnabled {
+		executionTime := FormatTime(float64(endpoint.CpuComplexity.ExecutionTime))
+		threads := endpoint.CpuComplexity.Threads
+
+		if threads < 1 {
+			threads = 1
+		}
+
+		log.Printf("%s/%s: CPU task executionTime=%s threads=%d lockThreads=%t",
+			ServiceName, endpoint.Name, executionTime, threads, endpoint.CpuComplexity.LockThreads)
+	}
+}
+
+// Call at end of network task to print params to stdout
+func LogNetworkTask(endpoint *model.Endpoint) {
+	//TODO
 }

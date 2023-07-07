@@ -93,4 +93,6 @@ func (n *NetworkTask) ExecTask(endpoint *model.Endpoint, responses *MutexTaskRes
 		Statuses: []string{},
 		Payload:  RandomPayload(stressParams.ResponsePayloadSize),
 	}, calls)
+
+	util.LogNetworkTask(endpoint)
 }
