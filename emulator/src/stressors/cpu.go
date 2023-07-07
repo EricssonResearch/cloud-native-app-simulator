@@ -22,6 +22,7 @@ import (
 
 	"fmt"
 	"runtime"
+	"sync"
 )
 
 type CPUTask struct{}
@@ -47,21 +48,43 @@ func (c *CPUTask) ExecAllowed(endpoint *model.Endpoint) bool {
 	return endpoint.CpuComplexity != nil
 }
 
-// Stress the CPU by running a busy loop, if the endpoint has a defined CPU complexity
-func (c *CPUTask) ExecTask(endpoint *model.Endpoint, responses *MutexTaskResponses) {
-	stressParams := endpoint.CpuComplexity
-
+func StressCPU(executionTime float32, lockThread bool) {
 	// TODO: This needs to be tested more
-	if stressParams.ExecutionTime > 0 {
-		runtime.LockOSThread()
+	if executionTime > 0 {
+		if lockThread {
+			runtime.LockOSThread()
+		}
 
 		start := util.ThreadCPUTime()
-		target := start + int64(stressParams.ExecutionTime)*1000000000
+		target := start + int64(executionTime)*1000000000
 
 		for util.ThreadCPUTime() < target {
 		}
 
-		runtime.UnlockOSThread()
+		if lockThread {
+			runtime.UnlockOSThread()
+		}
+	}
+}
+
+// Stress the CPU by running a busy loop, if the endpoint has a defined CPU complexity
+func (c *CPUTask) ExecTask(endpoint *model.Endpoint, responses *MutexTaskResponses) {
+	stressParams := endpoint.CpuComplexity
+
+	if stressParams.Threads > 1 {
+		wg := sync.WaitGroup{}
+		wg.Add(stressParams.Threads)
+
+		for i := 0; i < stressParams.Threads; i++ {
+			go func() {
+				defer wg.Done()
+				StressCPU(stressParams.ExecutionTime, stressParams.LockThreads)
+			}()
+		}
+
+		wg.Wait()
+	} else {
+		StressCPU(stressParams.ExecutionTime, stressParams.LockThreads)
 	}
 
 	ConcatenateCPUResponses(responses, &model.CPUTaskResponse{
