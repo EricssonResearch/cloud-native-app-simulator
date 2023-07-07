@@ -53,7 +53,14 @@ func ConcatenateNetworkResponses(taskResponses *MutexTaskResponses, networkTaskR
 		return
 	}
 
-	// The network task response from the endpoint should be merged first
+	if taskResponses.NetworkTask != nil {
+		taskResponses.NetworkTask.Services = append(networkTaskResponse.Services, taskResponses.NetworkTask.Services...)
+		taskResponses.NetworkTask.Statuses = append(networkTaskResponse.Statuses, taskResponses.NetworkTask.Statuses...)
+		// Don't replace the payload
+	} else {
+		taskResponses.NetworkTask = networkTaskResponse
+	}
+
 	for _, r := range endpointResponses {
 		taskResponses.NetworkTask.Services = append([]string{r.Service}, taskResponses.NetworkTask.Services...)
 		taskResponses.NetworkTask.Statuses = append([]string{r.Status}, taskResponses.NetworkTask.Statuses...)
@@ -64,16 +71,6 @@ func ConcatenateNetworkResponses(taskResponses *MutexTaskResponses, networkTaskR
 			ConcatenateNetworkResponses(taskResponses, rr.Tasks.NetworkTask, nil)
 			taskResponses.Mutex.Lock()
 		}
-	}
-
-	// Now, merge the current network task
-	if taskResponses.NetworkTask != nil {
-		taskResponses.NetworkTask.Services = append(networkTaskResponse.Services, taskResponses.NetworkTask.Services...)
-		taskResponses.NetworkTask.Statuses = append(networkTaskResponse.Statuses, taskResponses.NetworkTask.Statuses...)
-		// Don't combine the payload
-		taskResponses.NetworkTask.Payload = networkTaskResponse.Payload
-	} else {
-		taskResponses.NetworkTask = networkTaskResponse
 	}
 }
 
