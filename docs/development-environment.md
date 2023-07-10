@@ -25,8 +25,7 @@ To use docker to build required images you will need:
 
 Now we need to build the docker image and push it to the kind clusters.
 
-```
-cd model/
+```bash
 docker build -t app-demo .
 ```
 
