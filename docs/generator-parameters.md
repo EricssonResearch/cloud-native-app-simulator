@@ -15,7 +15,7 @@ At least one cluster and endpoint is required. Other sections are optional and w
 #### Optional attributes
 
 * **resources**: Resource allocation requests and limits.
-* **processes**: The maximum number of processes the service is allowed to use (`GOMAXPROCS`). Default: 1
+* **processes**: The maximum number of processes the service is allowed to use (`GOMAXPROCS`). If this is set to 0, the Go runtime will choose the number of processes to use. Default: 0
 * **readiness_probe**: The initial delay before readiness probe is initiated. Default: 1 second
 
 #### Format
