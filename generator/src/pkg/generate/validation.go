@@ -228,5 +228,13 @@ func ApplyDefaults(config *model.FileConfig) {
 				cluster.Namespace = s.ClusterNamespaceDefault
 			}
 		}
+
+		for k := range service.Endpoints {
+			endpoint := &service.Endpoints[k]
+
+			if endpoint.CpuComplexity != nil && endpoint.CpuComplexity.Threads < 1 {
+				endpoint.CpuComplexity.Threads = 1
+			}
+		}
 	}
 }
