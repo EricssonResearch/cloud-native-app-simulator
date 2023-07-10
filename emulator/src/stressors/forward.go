@@ -46,22 +46,16 @@ func ExtractHeaders(request any) http.Header {
 	return forwardHeaders
 }
 
-type EndpointResponse struct {
-	Status       string
-	RESTResponse *model.RESTResponse
-	GRPCResponse *model.GRPCResponse
-}
-
-func httpRequest(service model.CalledService, forwardHeaders http.Header) EndpointResponse {
+func httpRequest(service model.CalledService, forwardHeaders http.Header) model.EndpointResponse {
 	status, response, err :=
 		client.POST(service.Service, service.Endpoint, service.Port, RandomPayload(service.RequestPayloadSize), forwardHeaders)
 
 	if err != nil {
-		return EndpointResponse{
+		return model.EndpointResponse{
 			Status: err.Error(),
 		}
 	} else {
-		return EndpointResponse{
+		return model.EndpointResponse{
 			// TODO: Should also return RESTResponse.Status?
 			Status:       fmt.Sprintf("%d %s", status, http.StatusText(status)),
 			RESTResponse: response,
@@ -70,9 +64,9 @@ func httpRequest(service model.CalledService, forwardHeaders http.Header) Endpoi
 }
 
 // Forward requests to all services sequentially and return REST or gRPC responses
-func ForwardSequential(request any, services []model.CalledService) []EndpointResponse {
+func ForwardSequential(request any, services []model.CalledService) []model.EndpointResponse {
 	forwardHeaders := ExtractHeaders(request)
-	responses := make([]EndpointResponse, len(services), len(services))
+	responses := make([]model.EndpointResponse, len(services), len(services))
 
 	for i, service := range services {
 		// TODO: gRPC
@@ -85,7 +79,7 @@ func ForwardSequential(request any, services []model.CalledService) []EndpointRe
 	return responses
 }
 
-func parallelHTTPRequest(responses []EndpointResponse, i int, service model.CalledService, forwardHeaders http.Header, wg *sync.WaitGroup) {
+func parallelHTTPRequest(responses []model.EndpointResponse, i int, service model.CalledService, forwardHeaders http.Header, wg *sync.WaitGroup) {
 	defer wg.Done()
 	response := httpRequest(service, forwardHeaders)
 	// No mutex needed since every response has its own index
@@ -93,9 +87,9 @@ func parallelHTTPRequest(responses []EndpointResponse, i int, service model.Call
 }
 
 // Forward requests to all services in parallel using goroutines and return REST or gRPC responses
-func ForwardParallel(request any, services []model.CalledService) []EndpointResponse {
+func ForwardParallel(request any, services []model.CalledService) []model.EndpointResponse {
 	forwardHeaders := ExtractHeaders(request)
-	responses := make([]EndpointResponse, len(services), len(services))
+	responses := make([]model.EndpointResponse, len(services), len(services))
 	wg := sync.WaitGroup{}
 
 	for i, service := range services {

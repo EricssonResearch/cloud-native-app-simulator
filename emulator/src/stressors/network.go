@@ -45,7 +45,7 @@ func RandomPayload(n int) string {
 }
 
 // Combines the task responses in taskResponses with networkTaskResponse and endpointResponses
-func ConcatenateNetworkResponses(taskResponses *MutexTaskResponses, networkTaskResponse *model.NetworkTaskResponse, endpointResponses []EndpointResponse) {
+func ConcatenateNetworkResponses(taskResponses *MutexTaskResponses, networkTaskResponse *model.NetworkTaskResponse, endpointResponses []model.EndpointResponse) {
 	taskResponses.Mutex.Lock()
 	defer taskResponses.Mutex.Unlock()
 
@@ -81,7 +81,7 @@ func (n *NetworkTask) ExecAllowed(endpoint *model.Endpoint) bool {
 func (n *NetworkTask) ExecTask(endpoint *model.Endpoint, responses *MutexTaskResponses) {
 	stressParams := endpoint.NetworkComplexity
 
-	var calls []EndpointResponse
+	var calls []model.EndpointResponse
 	if stressParams.ForwardRequests == "asynchronous" {
 		calls = ForwardParallel(n.Request, stressParams.CalledServices)
 	} else if stressParams.ForwardRequests == "synchronous" {
@@ -94,5 +94,5 @@ func (n *NetworkTask) ExecTask(endpoint *model.Endpoint, responses *MutexTaskRes
 		Payload:  RandomPayload(stressParams.ResponsePayloadSize),
 	}, calls)
 
-	util.LogNetworkTask(endpoint)
+	util.LogNetworkTask(endpoint, calls)
 }

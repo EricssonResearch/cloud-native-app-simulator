@@ -47,3 +47,9 @@ type RESTResponse struct {
 type GRPCResponse struct {
 	// TODO
 }
+
+type EndpointResponse struct {
+	Status       string
+	RESTResponse *RESTResponse
+	GRPCResponse *GRPCResponse
+}

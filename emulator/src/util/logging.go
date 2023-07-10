@@ -18,6 +18,7 @@ package util
 
 import (
 	model "application-model"
+	"fmt"
 	"log"
 	"time"
 )
@@ -75,6 +76,19 @@ func LogCPUTask(endpoint *model.Endpoint) {
 }
 
 // Call at end of network task to print params to stdout
-func LogNetworkTask(endpoint *model.Endpoint) {
-	//TODO
+func LogNetworkTask(endpoint *model.Endpoint, responses []model.EndpointResponse) {
+	if LoggingEnabled {
+		executionMode := endpoint.NetworkComplexity.ForwardRequests
+		payloadSize := endpoint.NetworkComplexity.ResponsePayloadSize
+		calledServices := len(endpoint.NetworkComplexity.CalledServices)
+
+		statuses := make([]string, 0, len(responses))
+		for _, response := range responses {
+			statuses = append(statuses, response.Status)
+		}
+		formattedStatuses := fmt.Sprint(statuses)
+
+		log.Printf("%s/%s: Network task %s payloadSize=%d calledServices=%d statuses=%s",
+			ServiceName, endpoint.Name, executionMode, payloadSize, calledServices, formattedStatuses)
+	}
 }
