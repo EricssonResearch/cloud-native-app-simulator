@@ -53,22 +53,24 @@ func Unique(strSlice []string) []string {
 // Parse microservice config file, and return a config struct
 func Parse(configFilename string) (model.FileConfig, []string) {
 	configFile, err := os.Open(configFilename)
-	configFileByteValue, _ := io.ReadAll(configFile)
-
 	if err != nil {
 		panic(err)
 	}
 
+	configFileByteValue, _ := io.ReadAll(configFile)
 	loaded_config := s.CreateFileConfig()
-	err = json.Unmarshal(configFileByteValue, &loaded_config)
 
+	decoder := json.NewDecoder(bytes.NewReader(configFileByteValue))
+	// Panic if input contains unknown fields
+	decoder.DisallowUnknownFields()
+
+	err = decoder.Decode(&loaded_config)
 	if err != nil {
 		panic(err)
 	}
 
 	ApplyDefaults(&loaded_config)
 	err = ValidateFileConfig(&loaded_config)
-
 	if err != nil {
 		panic(err)
 	}
