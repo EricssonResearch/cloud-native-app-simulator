@@ -46,7 +46,6 @@ const (
 
 	SvcNamePrefix            = "service"
 	SvcProcessesDefault      = 1
-	SvcThreadsDefault        = 1
 	SvcReadinessProbeDefault = 2
 
 	EpNamePrefix            = "end"
@@ -230,7 +229,7 @@ func CreateFileConfig() model.FileConfig {
 	return fileConfig
 }
 
-func CreateConfigMap(processes int, threads int, logging bool, ep []model.Endpoint) *model.ConfigMap {
+func CreateConfigMap(processes int, logging bool, ep []model.Endpoint) *model.ConfigMap {
 
 	cm_data := &model.ConfigMap{
 		Processes: processes,
@@ -264,7 +263,6 @@ func CreateInputService() model.Service {
 	var service model.Service
 
 	service.Processes = SvcProcessesDefault
-	service.Threads = SvcThreadsDefault
 	service.ReadinessProbe = SvcReadinessProbeDefault
 
 	return service

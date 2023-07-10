@@ -117,12 +117,11 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 
 		resources := config.Services[i].Resources
 		processes := config.Services[i].Processes
-		threads := config.Services[i].Threads
 
 		logging := config.Settings.Logging
 		development := config.Settings.Development
 
-		cm_data := s.CreateConfigMap(processes, threads, logging, config.Services[i].Endpoints)
+		cm_data := s.CreateConfigMap(processes, logging, config.Services[i].Endpoints)
 
 		serv_json, err := json.Marshal(cm_data)
 		if err != nil {
@@ -215,7 +214,6 @@ func CreateJsonInput(userConfig model.UserConfig) string {
 		service.Resources = resources
 
 		service.Processes = s.SvcProcessesDefault
-		service.Threads = s.SvcThreadsDefault
 		service.ReadinessProbe = s.SvcReadinessProbeDefault
 
 		// Randomly generating service endpoints

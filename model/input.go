@@ -65,7 +65,6 @@ type Service struct {
 	Clusters       []Cluster  `json:"clusters"`
 	Resources      Resources  `json:"resources"`
 	Processes      int        `json:"processes"`
-	Threads        int        `json:"threads"`
 	ReadinessProbe int        `json:"readiness_probe"`
 	Endpoints      []Endpoint `json:"endpoints"`
 }

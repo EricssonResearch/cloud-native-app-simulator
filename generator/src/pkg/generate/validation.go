@@ -216,9 +216,6 @@ func ApplyDefaults(config *model.FileConfig) {
 		if service.Processes <= 0 {
 			service.Processes = s.SvcProcessesDefault
 		}
-		if service.Threads <= 0 {
-			service.Threads = s.SvcThreadsDefault
-		}
 
 		if service.ReadinessProbe <= 0 {
 			service.ReadinessProbe = s.SvcReadinessProbeDefault
