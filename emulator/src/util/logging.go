@@ -80,7 +80,9 @@ func LogNetworkTask(endpoint *model.Endpoint, responses []model.EndpointResponse
 
 		statuses := make([]string, 0, len(responses))
 		for _, response := range responses {
-			statuses = append(statuses, response.Status)
+			if response.RESTResponse != nil {
+				statuses = append(statuses, fmt.Sprintf("http/%s:%s", response.RESTResponse.Endpoint, response.Status))
+			}
 		}
 		formattedStatuses := fmt.Sprint(statuses)
 
