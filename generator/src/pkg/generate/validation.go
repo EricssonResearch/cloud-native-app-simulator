@@ -215,8 +215,15 @@ func ApplyDefaults(config *model.FileConfig) {
 
 		for k := range service.Endpoints {
 			endpoint := &service.Endpoints[k]
+
+			if endpoint.ExecutionMode == "" {
+				endpoint.ExecutionMode = "sequential"
+			}
 			if endpoint.CpuComplexity != nil && endpoint.CpuComplexity.Threads < 1 {
 				endpoint.CpuComplexity.Threads = 1
+			}
+			if endpoint.NetworkComplexity != nil && endpoint.NetworkComplexity.ForwardRequests == "" {
+				endpoint.NetworkComplexity.ForwardRequests = "synchronous"
 			}
 		}
 	}
