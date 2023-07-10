@@ -228,14 +228,5 @@ func ApplyDefaults(config *model.FileConfig) {
 				cluster.Namespace = s.ClusterNamespaceDefault
 			}
 		}
-
-		for k := range service.Endpoints {
-			endpoint := &service.Endpoints[k]
-
-			if endpoint.NetworkComplexity != nil && endpoint.NetworkComplexity.CalledServices == nil {
-				// json.Marshal returns null for a nil slice
-				endpoint.NetworkComplexity.CalledServices = []model.CalledService{}
-			}
-		}
 	}
 }
