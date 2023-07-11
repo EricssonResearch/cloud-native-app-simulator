@@ -125,6 +125,8 @@ For each microservice, HydraGen supports a set of configuration parameters that 
 
 HydraGen supports parameters to express the computational complexity or stress a microservice exerts on the different hardware resources. Initially, CPU-bounded or network-bounded tasks are implemented. The complexity of a CPU-bounded task can be described based on the time a busy-wait is executed, while the load on the network I/O can be described by specifying parameters such as the call forwarding mode and the request/response size for each service endpoint call.
 
+Documentation for implementing a new stressor can be found [here](stressors.md).
+
 ### CPU Complexity
 
 #### Required attributes
