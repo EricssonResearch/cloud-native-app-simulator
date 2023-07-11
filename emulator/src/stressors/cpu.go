@@ -31,10 +31,6 @@ func ConcatenateCPUResponses(taskResponses *MutexTaskResponses, cpuTaskResponse 
 	taskResponses.Mutex.Lock()
 	defer taskResponses.Mutex.Unlock()
 
-	if cpuTaskResponse == nil {
-		return
-	}
-
 	if taskResponses.CPUTask != nil {
 		taskResponses.CPUTask.Services = append(taskResponses.CPUTask.Services, cpuTaskResponse.Services...)
 		taskResponses.CPUTask.Statuses = append(taskResponses.CPUTask.Statuses, cpuTaskResponse.Statuses...)

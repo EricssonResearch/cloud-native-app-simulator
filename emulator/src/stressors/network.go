@@ -48,10 +48,6 @@ func ConcatenateNetworkResponses(taskResponses *MutexTaskResponses, networkTaskR
 	taskResponses.Mutex.Lock()
 	defer taskResponses.Mutex.Unlock()
 
-	if networkTaskResponse == nil {
-		return
-	}
-
 	if taskResponses.NetworkTask != nil {
 		taskResponses.NetworkTask.Services = append(taskResponses.NetworkTask.Services, networkTaskResponse.Services...)
 		taskResponses.NetworkTask.Statuses = append(taskResponses.NetworkTask.Statuses, networkTaskResponse.Statuses...)
@@ -63,10 +59,15 @@ func ConcatenateNetworkResponses(taskResponses *MutexTaskResponses, networkTaskR
 	for _, r := range endpointResponses {
 		taskResponses.NetworkTask.Statuses = append(taskResponses.NetworkTask.Statuses, r.Status)
 
+		// TODO: Too much duplicated code here if gRPC is added, should return the same response?
 		if rr := r.RESTResponse; rr != nil {
 			taskResponses.Mutex.Unlock()
-			ConcatenateCPUResponses(taskResponses, rr.CPUTask)
-			ConcatenateNetworkResponses(taskResponses, rr.NetworkTask, nil)
+			if rr.CPUTask != nil {
+				ConcatenateCPUResponses(taskResponses, rr.CPUTask)
+			}
+			if rr.NetworkTask != nil {
+				ConcatenateNetworkResponses(taskResponses, rr.NetworkTask, nil)
+			}
 			taskResponses.Mutex.Lock()
 		}
 	}
