@@ -18,11 +18,9 @@ package util
 
 import (
 	model "application-model"
-
+	"encoding/json"
 	"io"
 	"os"
-
-	"encoding/json"
 )
 
 // For local development, will be removed later

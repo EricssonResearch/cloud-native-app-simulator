@@ -20,6 +20,7 @@ import (
 	model "application-model"
 	"fmt"
 	"log"
+	"runtime"
 	"time"
 )
 
@@ -31,6 +32,32 @@ type EndpointTrace struct {
 	Endpoint *model.Endpoint
 	Time     time.Time
 	CPUTime  int64
+}
+
+// Call at start of program to print configuration to stdout
+func LogConfiguration(configMap *model.ConfigMap) {
+	// Get the process count from Go to make sure settings were applied
+	processes := runtime.GOMAXPROCS(0)
+	log.Printf("Application emulator started at *:5000-5001, logging: %t, processes: %d", LoggingEnabled, processes)
+
+	httpEndpoints := []string{}
+	grpcEndpoints := []string{}
+	invalidEndpoints := []string{}
+
+	for _, endpoint := range configMap.Endpoints {
+		if endpoint.Protocol == "http" {
+			httpEndpoints = append(httpEndpoints, endpoint.Name)
+		} else if endpoint.Protocol == "grpc" {
+			grpcEndpoints = append(grpcEndpoints, endpoint.Name)
+		} else {
+			invalidEndpoints = append(invalidEndpoints, endpoint.Name)
+		}
+	}
+
+	log.Printf("Service: %s", ServiceName)
+	log.Printf("HTTP endpoints: %d %v", len(httpEndpoints), httpEndpoints)
+	log.Printf("gRPC endpoints: %d %v", len(grpcEndpoints), grpcEndpoints)
+	log.Printf("Invalid endpoints: %d %v", len(invalidEndpoints), invalidEndpoints)
 }
 
 // Call at start of endpoint call to trace execution time

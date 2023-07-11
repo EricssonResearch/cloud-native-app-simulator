@@ -20,8 +20,6 @@ import (
 	"application-emulator/src/server"
 	"application-emulator/src/util"
 	model "application-model"
-
-	"log"
 	"os"
 	"runtime"
 	"sync"
@@ -33,13 +31,11 @@ func main() {
 		configMap = util.DefaultConfigMap()
 	}
 
+	runtime.GOMAXPROCS(configMap.Processes)
+
 	util.LoggingEnabled = configMap.Logging
 	util.ServiceName = os.Getenv("SERVICE_NAME")
-
-	runtime.GOMAXPROCS(configMap.Processes)
-	// Get the process count from Go to make sure settings were applied
-	processes := runtime.GOMAXPROCS(0)
-	log.Printf("Application emulator started at *:5000, logging: %t, processes: %d", util.LoggingEnabled, processes)
+	util.LogConfiguration(configMap)
 
 	wg := sync.WaitGroup{}
 

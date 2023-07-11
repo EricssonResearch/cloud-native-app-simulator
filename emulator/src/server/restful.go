@@ -20,13 +20,11 @@ import (
 	"application-emulator/src/stressors"
 	"application-emulator/src/util"
 	model "application-model"
-
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 	"sync"
-
-	"encoding/json"
-	"net/http"
 )
 
 const httpAddress = ":5000"
