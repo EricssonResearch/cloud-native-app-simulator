@@ -1,32 +1,32 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-    name: config-service1
+    name: config-service2
     labels:
-        name: config-service1
+        name: config-service2
         version: cluster3
     namespace: namespace1
 data:
-    conf.json: '{"processes":1,"logging":false,"endpoints":[{"name":"end1","protocol":"http","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1,"lock_threads":false},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[{"service":"service2","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service3","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service4","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service5","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256}]}},{"name":"end2","protocol":"http","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1,"lock_threads":false},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[]}},{"name":"end3","protocol":"http","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1,"lock_threads":false},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[{"service":"service2","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service3","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service4","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256}]}}]}'
+    conf.json: '{"processes":1,"logging":false,"endpoints":[{"name":"end1","protocol":"http","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1,"lock_threads":false},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[{"service":"service3","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256}]}},{"name":"end2","protocol":"http","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1,"lock_threads":false},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[{"service":"service3","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service4","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service5","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256}]}},{"name":"end3","protocol":"http","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1,"lock_threads":false},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[{"service":"service3","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service4","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service5","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service6","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service7","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256}]}}]}'
     service.proto: "syntax = \"proto3\";\n\n\nservice service1 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n    rpc end2 (Request) returns (Response) {}\n    \n    rpc end3 (Request) returns (Response) {}\n    \n}\n\nservice service2 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n    rpc end2 (Request) returns (Response) {}\n    \n    rpc end3 (Request) returns (Response) {}\n    \n}\n\nservice service3 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n}\n\nservice service4 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n    rpc end2 (Request) returns (Response) {}\n    \n    rpc end3 (Request) returns (Response) {}\n    \n}\n\nservice service5 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n}\n\nservice service6 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n    rpc end2 (Request) returns (Response) {}\n    \n    rpc end3 (Request) returns (Response) {}\n    \n}\n\nservice service7 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n    rpc end2 (Request) returns (Response) {}\n    \n}\n\n\nmessage Request {\n    string data = 1;\n}\n\nmessage Response {\n    string data = 1;\n}"
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-    name: service1
+    name: service2
     namespace: namespace1
     labels:
         version: cluster3
 spec:
     selector:
         matchLabels:
-            app: service1
+            app: service2
             version: cluster3
     replicas: 2
     template:
         metadata:
             labels:
-                app: service1
+                app: service2
                 version: cluster3
             annotations: {}
         spec:
@@ -36,7 +36,7 @@ spec:
                   imagePullPolicy: IfNotPresent
                   env:
                     - name: SERVICE_NAME
-                      value: service1
+                      value: service2
                   ports:
                     - containerPort: 5000
                   volumeMounts:
@@ -58,12 +58,12 @@ spec:
             volumes:
                 - name: config-data-volume
                   configMap:
-                    name: config-service1
+                    name: config-service2
 ---
 apiVersion: v1
 kind: Service
 metadata:
-    name: service1
+    name: service2
     namespace: namespace1
     labels:
         version: cluster3
@@ -71,7 +71,7 @@ metadata:
         http: /
 spec:
     selector:
-        app: service1
+        app: service2
     ports:
         - name: http
           port: 80
