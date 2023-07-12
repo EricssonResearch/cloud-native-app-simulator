@@ -51,7 +51,7 @@ func StressCPU(executionTime float32, lockThread bool) {
 		}
 
 		start := util.ThreadCPUTime()
-		target := start + int64(executionTime)*1000000000
+		target := start + int64(executionTime*1000000000.0)
 
 		for util.ThreadCPUTime() < target {
 		}
