@@ -20,27 +20,36 @@ import (
 	"application-emulator/src/stressors"
 	"application-emulator/src/util"
 	model "application-model"
-	"encoding/json"
+	generated "application-model/generated"
 	"fmt"
 	"net/http"
 	"strings"
+
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 const httpAddress = ":5000"
 
 // Send a response of type application/json
-func writeJSONResponse(status int, response any, writer http.ResponseWriter) {
+func writeJSONResponse(status int, response *generated.Response, writer http.ResponseWriter) {
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(status)
 
-	encoder := json.NewEncoder(writer)
-	encoder.Encode(response)
+	// TODO: protojson seems a lot slower
+	marshalOptions := protojson.MarshalOptions{UseProtoNames: true}
+	data, err := marshalOptions.Marshal(response)
+	if err != nil {
+		panic(err)
+	}
+
+	writer.Write(data)
+	writer.Write([]byte{'\n'})
 }
 
 // This should always be available because the readiness probe will send a request to this address
 func rootHandler(writer http.ResponseWriter, request *http.Request) {
 	if request.URL.Path == "/" {
-		writeJSONResponse(http.StatusOK, &model.RESTResponse{Status: "ok"}, writer)
+		writeJSONResponse(http.StatusOK, &generated.Response{Status: "ok"}, writer)
 	} else {
 		notFoundHandler(writer, request)
 	}
@@ -48,10 +57,10 @@ func rootHandler(writer http.ResponseWriter, request *http.Request) {
 
 func notFoundHandler(writer http.ResponseWriter, request *http.Request) {
 	endpoint := strings.TrimPrefix(request.URL.Path, "/")
-	response := &model.RESTResponse{
-		Status:       "error",
-		ErrorMessage: fmt.Sprintf("Endpoint %s doesn't exist", endpoint),
-		Endpoint:     endpoint,
+	response := &generated.Response{
+		Status:   "error",
+		Message:  fmt.Sprintf("Endpoint %s doesn't exist", endpoint),
+		Endpoint: endpoint,
 	}
 
 	writeJSONResponse(http.StatusNotFound, response, writer)
@@ -63,12 +72,12 @@ type endpointHandler struct {
 
 func (handler endpointHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	trace := util.TraceEndpointCall(handler.endpoint)
-	response := &model.RESTResponse{Status: "ok", Endpoint: handler.endpoint.Name}
+	response := &generated.Response{Status: "ok", Endpoint: handler.endpoint.Name}
 
 	if handler.endpoint.ExecutionMode == "parallel" {
-		response.TaskResponses = stressors.ExecParallel(request, handler.endpoint)
+		response.Tasks = stressors.ExecParallel(request, handler.endpoint)
 	} else {
-		response.TaskResponses = stressors.ExecSequential(request, handler.endpoint)
+		response.Tasks = stressors.ExecSequential(request, handler.endpoint)
 	}
 
 	writeJSONResponse(http.StatusOK, response, writer)

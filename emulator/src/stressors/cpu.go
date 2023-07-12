@@ -19,6 +19,7 @@ package stressors
 import (
 	"application-emulator/src/util"
 	model "application-model"
+	generated "application-model/generated"
 	"fmt"
 	"runtime"
 	"sync"
@@ -27,15 +28,15 @@ import (
 type CPUTask struct{}
 
 // Combines the CPU task response in taskResponses with cpuTaskResponse
-func ConcatenateCPUResponses(taskResponses *MutexTaskResponses, cpuTaskResponse *model.CPUTaskResponse) {
+func ConcatenateCPUResponses(taskResponses *MutexTaskResponses, cpuTaskResponse *generated.CPUTaskResponse) {
 	taskResponses.Mutex.Lock()
 	defer taskResponses.Mutex.Unlock()
 
-	if taskResponses.CPUTask != nil {
-		taskResponses.CPUTask.Services = append(taskResponses.CPUTask.Services, cpuTaskResponse.Services...)
-		taskResponses.CPUTask.Statuses = append(taskResponses.CPUTask.Statuses, cpuTaskResponse.Statuses...)
+	if taskResponses.CpuTask != nil {
+		taskResponses.CpuTask.Services = append(taskResponses.CpuTask.Services, cpuTaskResponse.Services...)
+		taskResponses.CpuTask.ExecutionTimes = append(taskResponses.CpuTask.ExecutionTimes, cpuTaskResponse.ExecutionTimes...)
 	} else {
-		taskResponses.CPUTask = cpuTaskResponse
+		taskResponses.CpuTask = cpuTaskResponse
 	}
 }
 
@@ -84,9 +85,9 @@ func (c *CPUTask) ExecTask(endpoint *model.Endpoint, responses *MutexTaskRespons
 		StressCPU(stressParams.ExecutionTime, true)
 	}
 
-	ConcatenateCPUResponses(responses, &model.CPUTaskResponse{
-		Services: []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
-		Statuses: []string{fmt.Sprintf("execution_time: %f", stressParams.ExecutionTime)},
+	ConcatenateCPUResponses(responses, &generated.CPUTaskResponse{
+		Services:       []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
+		ExecutionTimes: []float32{stressParams.ExecutionTime},
 	})
 
 	util.LogCPUTask(endpoint)

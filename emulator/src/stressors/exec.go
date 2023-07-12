@@ -18,13 +18,14 @@ package stressors
 
 import (
 	model "application-model"
+	generated "application-model/generated"
 	"sync"
 )
 
 // Stressors need to access model.TaskResponses in parallel
 type MutexTaskResponses struct {
 	*sync.Mutex
-	model.TaskResponses
+	*generated.TaskResponses
 }
 
 // Interface for a stressor used to simulate the workload of a microservice
@@ -36,14 +37,14 @@ type Stressor interface {
 }
 
 // Executes all stressors defined in the endpoint sequentially
-func ExecSequential(request any, endpoint *model.Endpoint) model.TaskResponses {
+func ExecSequential(request any, endpoint *model.Endpoint) *generated.TaskResponses {
 	stressors := []Stressor{
 		&CPUTask{},
 		&NetworkTask{Request: request},
 	}
 	responses := MutexTaskResponses{
 		&sync.Mutex{},
-		model.TaskResponses{},
+		&generated.TaskResponses{},
 	}
 
 	for _, stressor := range stressors {
@@ -62,14 +63,14 @@ func execStressor(stressor Stressor, endpoint *model.Endpoint, responses *MutexT
 }
 
 // Executes all stressors defined in the endpoint in parallel using goroutines
-func ExecParallel(request any, endpoint *model.Endpoint) model.TaskResponses {
+func ExecParallel(request any, endpoint *model.Endpoint) *generated.TaskResponses {
 	stressors := []Stressor{
 		&CPUTask{},
 		&NetworkTask{Request: request},
 	}
 	responses := MutexTaskResponses{
 		&sync.Mutex{},
-		model.TaskResponses{},
+		&generated.TaskResponses{},
 	}
 	wg := sync.WaitGroup{}
 

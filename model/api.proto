@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package model;
+option go_package = "./model";
+
+message CPUTaskResponse {
+	repeated string services = 1;
+	repeated float execution_times = 2;
+}
+
+message NetworkTaskResponse {
+	repeated string services = 1;
+	repeated string statuses = 2;
+	string payload = 3;
+}
+
+message TaskResponses {
+	CPUTaskResponse cpu_task = 1;
+	NetworkTaskResponse network_task = 2;
+}
+
+message Request {
+	string payload = 1;
+}
+
+message Response {
+	string status = 1;
+	string message = 2;
+	string endpoint = 3;
+
+	TaskResponses tasks = 4;
+}

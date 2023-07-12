@@ -18,6 +18,7 @@ package util
 
 import (
 	model "application-model"
+	generated "application-model/generated"
 	"fmt"
 	"log"
 	"runtime"
@@ -42,22 +43,18 @@ func LogConfiguration(configMap *model.ConfigMap) {
 
 	httpEndpoints := []string{}
 	grpcEndpoints := []string{}
-	invalidEndpoints := []string{}
 
 	for _, endpoint := range configMap.Endpoints {
 		if endpoint.Protocol == "http" {
 			httpEndpoints = append(httpEndpoints, endpoint.Name)
 		} else if endpoint.Protocol == "grpc" {
 			grpcEndpoints = append(grpcEndpoints, endpoint.Name)
-		} else {
-			invalidEndpoints = append(invalidEndpoints, endpoint.Name)
 		}
 	}
 
 	log.Printf("Service: %s", ServiceName)
-	log.Printf("HTTP endpoints: %d %v", len(httpEndpoints), httpEndpoints)
-	log.Printf("gRPC endpoints: %d %v", len(grpcEndpoints), grpcEndpoints)
-	log.Printf("Invalid endpoints: %d %v", len(invalidEndpoints), invalidEndpoints)
+	log.Printf("HTTP endpoints: %v", httpEndpoints)
+	log.Printf("gRPC endpoints: %v", grpcEndpoints)
 }
 
 // Call at start of endpoint call to trace execution time
@@ -99,7 +96,7 @@ func LogCPUTask(endpoint *model.Endpoint) {
 }
 
 // Call at end of network task to print params to stdout
-func LogNetworkTask(endpoint *model.Endpoint, responses []model.EndpointResponse) {
+func LogNetworkTask(endpoint *model.Endpoint, responses []generated.EndpointResponse) {
 	if LoggingEnabled {
 		executionMode := endpoint.NetworkComplexity.ForwardRequests
 		payloadSize := endpoint.NetworkComplexity.ResponsePayloadSize
@@ -107,9 +104,7 @@ func LogNetworkTask(endpoint *model.Endpoint, responses []model.EndpointResponse
 
 		statuses := make([]string, 0, len(responses))
 		for _, response := range responses {
-			if response.RESTResponse != nil {
-				statuses = append(statuses, fmt.Sprintf("http/%s:%s", response.RESTResponse.Endpoint, response.Status))
-			}
+			statuses = append(statuses, fmt.Sprintf("http/%s:%s", response.ResponseData.Endpoint, response.ProtocolStatus))
 		}
 		formattedStatuses := fmt.Sprint(statuses)
 
