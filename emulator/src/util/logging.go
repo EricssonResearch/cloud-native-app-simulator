@@ -94,7 +94,7 @@ func LogCPUTask(endpoint *model.Endpoint) {
 		threads := endpoint.CpuComplexity.Threads
 
 		log.Printf("%s/%s: CPU task executionTime=%s threads=%d lockThreads=%t",
-			ServiceName, endpoint.Name, executionTime, threads, endpoint.CpuComplexity.LockThreads)
+			ServiceName, endpoint.Name, executionTime, threads, true)
 	}
 }
 

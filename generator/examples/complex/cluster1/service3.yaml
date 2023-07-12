@@ -4,7 +4,7 @@ metadata:
     name: config-service3
     labels:
         name: config-service3
-        version: cluster4
+        version: cluster1
     namespace: namespace1
 data:
     conf.json: '{"processes":1,"logging":false,"endpoints":[{"name":"end1","protocol":"http","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[{"service":"service4","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service5","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service6","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service7","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service8","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service9","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service10","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256}]}},{"name":"end2","protocol":"http","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[{"service":"service4","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service5","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service6","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service7","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256}]}},{"name":"end3","protocol":"http","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[{"service":"service4","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service5","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service6","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256}]}}]}'
@@ -16,18 +16,18 @@ metadata:
     name: service3
     namespace: namespace1
     labels:
-        version: cluster4
+        version: cluster1
 spec:
     selector:
         matchLabels:
             app: service3
-            version: cluster4
-    replicas: 1
+            version: cluster1
+    replicas: 4
     template:
         metadata:
             labels:
                 app: service3
-                version: cluster4
+                version: cluster1
             annotations: {}
         spec:
             containers:
@@ -66,7 +66,7 @@ metadata:
     name: service3
     namespace: namespace1
     labels:
-        version: cluster4
+        version: cluster1
     annotations:
         http: /
 spec:

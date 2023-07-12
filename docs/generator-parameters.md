@@ -129,6 +129,8 @@ Documentation for implementing a new stressor can be found [here](stressors.md).
 
 ### CPU Complexity
 
+The CPU stressor will lock threads for exclusive access while it is executing. This prevents the service from responding to requests on that thread.
+
 #### Required attributes
 
 * **execution_time**: Determines how much time each thread will spend busy-waiting when responding to a request.
@@ -136,15 +138,13 @@ Documentation for implementing a new stressor can be found [here](stressors.md).
 #### Optional attributes
 
 * **threads**: The number of threads (goroutines) the CPU stressor should execute the busy-wait loop on. Default: 1
-* **lock_threads**: If the CPU stressor should lock threads for exclusive access while it is executing. This prevents the service from responding to requests on that thread. Default: "false"
 
 #### Format
 
 ```json
 "cpu_complexity": {
   "execution_time": <float:seconds>,
-  "threads": <integer>,
-  "lock_threads": "<string:false|true>"
+  "threads": <integer>
 }
 ```
 

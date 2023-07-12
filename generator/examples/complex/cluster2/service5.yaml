@@ -4,7 +4,7 @@ metadata:
     name: config-service5
     labels:
         name: config-service5
-        version: cluster3
+        version: cluster2
     namespace: namespace2
 data:
     conf.json: '{"processes":1,"logging":false,"endpoints":[{"name":"end1","protocol":"http","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[{"service":"service6","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256}]}}]}'
@@ -16,18 +16,18 @@ metadata:
     name: service5
     namespace: namespace2
     labels:
-        version: cluster3
+        version: cluster2
 spec:
     selector:
         matchLabels:
             app: service5
-            version: cluster3
-    replicas: 5
+            version: cluster2
+    replicas: 3
     template:
         metadata:
             labels:
                 app: service5
-                version: cluster3
+                version: cluster2
             annotations: {}
         spec:
             containers:
@@ -66,7 +66,7 @@ metadata:
     name: service5
     namespace: namespace2
     labels:
-        version: cluster3
+        version: cluster2
     annotations:
         http: /
 spec:

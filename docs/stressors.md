@@ -13,7 +13,6 @@ First, add a new structure for the stressor:
 type CpuComplexity struct {
     ExecutionTime float32 `json:"execution_time"`
     Threads       int     `json:"threads"`
-    LockThreads   bool    `json:"lock_threads"`
 }
 
 type NetworkComplexity struct {

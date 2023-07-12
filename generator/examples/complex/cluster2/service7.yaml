@@ -5,16 +5,16 @@ metadata:
     labels:
         name: config-service7
         version: cluster2
-    namespace: namespace1
+    namespace: namespace2
 data:
-    conf.json: '{"processes":1,"logging":false,"endpoints":[{"name":"end1","protocol":"http","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1,"lock_threads":false},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[]}},{"name":"end2","protocol":"http","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1,"lock_threads":false},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[]}}]}'
-    service.proto: "syntax = \"proto3\";\n\n\nservice service1 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n    rpc end2 (Request) returns (Response) {}\n    \n    rpc end3 (Request) returns (Response) {}\n    \n}\n\nservice service2 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n    rpc end2 (Request) returns (Response) {}\n    \n    rpc end3 (Request) returns (Response) {}\n    \n}\n\nservice service3 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n}\n\nservice service4 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n    rpc end2 (Request) returns (Response) {}\n    \n    rpc end3 (Request) returns (Response) {}\n    \n}\n\nservice service5 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n}\n\nservice service6 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n    rpc end2 (Request) returns (Response) {}\n    \n    rpc end3 (Request) returns (Response) {}\n    \n}\n\nservice service7 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n    rpc end2 (Request) returns (Response) {}\n    \n}\n\n\nmessage Request {\n    string data = 1;\n}\n\nmessage Response {\n    string data = 1;\n}"
+    conf.json: '{"processes":1,"logging":false,"endpoints":[{"name":"end1","protocol":"http","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[{"service":"service8","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service9","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service10","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service11","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256}]}}]}'
+    service.proto: "syntax = \"proto3\";\n\n\nservice service1 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n}\n\nservice service2 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n}\n\nservice service3 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n    rpc end2 (Request) returns (Response) {}\n    \n    rpc end3 (Request) returns (Response) {}\n    \n}\n\nservice service4 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n    rpc end2 (Request) returns (Response) {}\n    \n    rpc end3 (Request) returns (Response) {}\n    \n}\n\nservice service5 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n}\n\nservice service6 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n}\n\nservice service7 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n}\n\nservice service8 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n}\n\nservice service9 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n}\n\nservice service10 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n    rpc end2 (Request) returns (Response) {}\n    \n    rpc end3 (Request) returns (Response) {}\n    \n}\n\nservice service11 {\n    \n    rpc end1 (Request) returns (Response) {}\n    \n    rpc end2 (Request) returns (Response) {}\n    \n    rpc end3 (Request) returns (Response) {}\n    \n}\n\n\nmessage Request {\n    string data = 1;\n}\n\nmessage Response {\n    string data = 1;\n}"
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
     name: service7
-    namespace: namespace1
+    namespace: namespace2
     labels:
         version: cluster2
 spec:
@@ -22,7 +22,7 @@ spec:
         matchLabels:
             app: service7
             version: cluster2
-    replicas: 1
+    replicas: 4
     template:
         metadata:
             labels:
@@ -64,7 +64,7 @@ apiVersion: v1
 kind: Service
 metadata:
     name: service7
-    namespace: namespace1
+    namespace: namespace2
     labels:
         version: cluster2
     annotations:

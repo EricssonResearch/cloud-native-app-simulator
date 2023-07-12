@@ -46,6 +46,8 @@ func (c *CPUTask) ExecAllowed(endpoint *model.Endpoint) bool {
 func StressCPU(executionTime float32, lockThread bool) {
 	// TODO: This needs to be tested more
 	if executionTime > 0 {
+		// TODO: Threads need to be locked because otherwise util.ThreadCPUTime() can change in the middle of execution
+		// Maybe this should be switched to time.Now() or util.ProcessCPUTime()?
 		if lockThread {
 			runtime.LockOSThread()
 		}
@@ -73,13 +75,13 @@ func (c *CPUTask) ExecTask(endpoint *model.Endpoint, responses *MutexTaskRespons
 		for i := 0; i < stressParams.Threads; i++ {
 			go func() {
 				defer wg.Done()
-				StressCPU(stressParams.ExecutionTime, stressParams.LockThreads)
+				StressCPU(stressParams.ExecutionTime, true)
 			}()
 		}
 
 		wg.Wait()
 	} else {
-		StressCPU(stressParams.ExecutionTime, stressParams.LockThreads)
+		StressCPU(stressParams.ExecutionTime, true)
 	}
 
 	ConcatenateCPUResponses(responses, &model.CPUTaskResponse{
