@@ -15,3 +15,15 @@ limitations under the License.
 */
 
 package server
+
+import (
+	model "application-model"
+	"fmt"
+)
+
+// Launch a gRPC server to serve one or more endpoints
+func GRPC(endpointChannel chan model.Endpoint) {
+	for endpoint := range endpointChannel {
+		fmt.Println("Unhandled gRPC endpoint", endpoint.Name)
+	}
+}

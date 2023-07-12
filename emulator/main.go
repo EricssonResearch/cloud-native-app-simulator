@@ -38,18 +38,32 @@ func main() {
 	util.LogConfiguration(configMap)
 
 	wg := sync.WaitGroup{}
-	wg.Add(1)
+	wg.Add(2)
 
 	httpEndpoints := make(chan model.Endpoint)
+	grpcEndpoints := make(chan model.Endpoint)
+	grpcStarted := false
+
+	// Always launch HTTP server (required for readiness probe)
 	go func() {
 		defer wg.Done()
 		server.HTTP(httpEndpoints)
 	}()
 
 	for _, endpoint := range configMap.Endpoints {
-		// Only HTTP is supported right now
 		if endpoint.Protocol == "http" {
 			httpEndpoints <- endpoint
+		} else if endpoint.Protocol == "grpc" {
+			// Launch gRPC server on demand
+			if !grpcStarted {
+				go func() {
+					defer wg.Done()
+					server.GRPC(grpcEndpoints)
+				}()
+				grpcStarted = true
+			}
+
+			grpcEndpoints <- endpoint
 		}
 	}
 
