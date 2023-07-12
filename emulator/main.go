@@ -38,11 +38,13 @@ func main() {
 	util.LogConfiguration(configMap)
 
 	wg := sync.WaitGroup{}
-
-	// TODO: Check if protocol is HTTP
-	httpEndpoints := make(chan model.Endpoint)
-	go server.HTTP(httpEndpoints, &wg)
 	wg.Add(1)
+
+	httpEndpoints := make(chan model.Endpoint)
+	go func() {
+		defer wg.Done()
+		server.HTTP(httpEndpoints)
+	}()
 
 	for _, endpoint := range configMap.Endpoints {
 		// Only HTTP is supported right now

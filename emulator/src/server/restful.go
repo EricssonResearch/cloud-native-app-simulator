@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"sync"
 )
 
 const httpAddress = ":5000"
@@ -38,6 +37,7 @@ func writeJSONResponse(status int, response any, writer http.ResponseWriter) {
 	encoder.Encode(response)
 }
 
+// This should always be available because the readiness probe will send a request to this address
 func rootHandler(writer http.ResponseWriter, request *http.Request) {
 	if request.URL.Path == "/" {
 		writeJSONResponse(http.StatusOK, &model.RESTResponse{Status: "ok"}, writer)
@@ -76,9 +76,7 @@ func (handler endpointHandler) ServeHTTP(writer http.ResponseWriter, request *ht
 }
 
 // Launch a HTTP server to serve one or more endpoints
-func HTTP(endpointChannel chan model.Endpoint, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func HTTP(endpointChannel chan model.Endpoint) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", rootHandler)
 
