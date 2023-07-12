@@ -32,8 +32,8 @@ spec:
         spec:
             containers:
                 - name: app
-                  image: ghcr.io/ericssonresearch/cloud-native-app-simulator/app-demo:v3.0.1
-                  imagePullPolicy: IfNotPresent
+                  image: app-demo:latest
+                  imagePullPolicy: Never
                   env:
                     - name: SERVICE_NAME
                       value: service8
