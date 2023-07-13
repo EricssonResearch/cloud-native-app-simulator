@@ -36,7 +36,7 @@ func writeJSONResponse(status int, response *generated.Response, writer http.Res
 	writer.WriteHeader(status)
 
 	// TODO: protojson seems a lot slower
-	marshalOptions := protojson.MarshalOptions{UseProtoNames: true}
+	marshalOptions := protojson.MarshalOptions{UseProtoNames: true, AllowPartial: true}
 	data, err := marshalOptions.Marshal(response)
 	if err != nil {
 		panic(err)

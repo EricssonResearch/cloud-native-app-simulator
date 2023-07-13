@@ -36,7 +36,8 @@ func POST(service, endpoint string, port int, payload string, headers http.Heade
 		url = fmt.Sprintf("http://%s:%d/%s", service, port, endpoint)
 	}
 
-	postData, _ := protojson.Marshal(&generated.Request{Payload: payload})
+	marshalOptions := protojson.MarshalOptions{UseProtoNames: true, AllowPartial: true}
+	postData, _ := marshalOptions.Marshal(&generated.Request{Payload: payload})
 	request, _ := http.NewRequest(http.MethodPost, url, bytes.NewReader(postData))
 
 	// Override the content type
