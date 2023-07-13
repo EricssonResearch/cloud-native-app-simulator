@@ -28,8 +28,9 @@ type ConfigMapInstance struct {
 		Namespace string `yaml:"namespace"`
 	} `yaml:"metadata"`
 	Data struct {
-		Config  string `yaml:"conf.json"`
-		Service string `yaml:"service.proto"`
+		Config   string `yaml:"conf.json"`
+		Proto    string `yaml:"service.proto"`
+		Services string `yaml:"services.go"`
 	} `yaml:"data"`
 }
 

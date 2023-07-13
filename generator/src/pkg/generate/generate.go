@@ -99,19 +99,31 @@ func Parse(configFilename string) (model.FileConfig, []string) {
 
 func CreateK8sYaml(config model.FileConfig, clusters []string) {
 	path, _ := os.Getwd()
-	proto_temp, _ := template.ParseFiles(path + "/template/service.tmpl")
+	implTemp, _ := template.ParseFiles(path + "/template/impl.tmpl")
+	protoTemp, _ := template.ParseFiles(path + "/template/service.tmpl")
 	path = path + "/k8s"
 
 	for i := 0; i < len(clusters); i++ {
 		directory := fmt.Sprintf(path+"/%s", clusters[i])
 		os.Mkdir(directory, 0777)
 	}
-	var proto_temp_filled_byte bytes.Buffer
-	err := proto_temp.Execute(&proto_temp_filled_byte, config.Services)
+
+	// TODO: Need to provide name in form "Service1" instead of "service-1" for Go code
+	var implTempFilledBytes bytes.Buffer
+	err := implTemp.Execute(&implTempFilledBytes, config.Services)
 	if err != nil {
 		panic(err)
 	}
-	proto_temp_filled := proto_temp_filled_byte.String()
+
+	var protoTempFilledBytes bytes.Buffer
+	err = protoTemp.Execute(&protoTempFilledBytes, config.Services)
+	if err != nil {
+		panic(err)
+	}
+
+	implTempFilled := implTempFilledBytes.String()
+	protoTempFilled := protoTempFilledBytes.String()
+
 	for i := 0; i < len(config.Services); i++ {
 		serv := config.Services[i].Name
 		protocol := config.Services[i].Endpoints[0].Protocol
@@ -149,7 +161,7 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 				manifests = append(manifests, string(yamlDoc))
 				return nil
 			}
-			configmap := s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json), proto_temp_filled)
+			configmap := s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json), implTempFilled, protoTempFilled)
 			appendManifest(configmap)
 
 			imageURL := s.ImageURLProd
