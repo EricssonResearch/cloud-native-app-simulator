@@ -140,19 +140,17 @@ Add the new function to the network stressor in emulator/src/stressors/network.g
 for _, r := range endpointResponses {
     taskResponses.NetworkTask.Statuses = append(taskResponses.NetworkTask.Statuses, r.Status)
 
-    if rr := r.RESTResponse; rr != nil {
-        taskResponses.Mutex.Unlock()
-        if rr.CPUTask != nil {
-            ConcatenateCPUResponses(taskResponses, rr.CPUTask)
-        }
-        if rr.NetworkTask != nil {
-            ConcatenateNetworkResponses(taskResponses, rr.NetworkTask, nil)
-        }
-        if rr.MyTask != nil {
-            ConcatenateMyTaskResponses(taskResponses, rr.MyTask, nil)
-        }
-        taskResponses.Mutex.Lock()
+    taskResponses.Mutex.Unlock()
+    if r.ResponseData.Tasks.CpuTask != nil {
+        ConcatenateCPUResponses(taskResponses, r.ResponseData.Tasks.CpuTask)
     }
+    if r.ResponseData.Tasks.NetworkTask != nil {
+        ConcatenateNetworkResponses(taskResponses, r.ResponseData.Tasks.NetworkTask, nil)
+    }
+    if r.ResponseData.Tasks.MyTask != nil {
+        ConcatenateMyStressorResponses(taskResponses, r.ResponseData.Tasks.MyTask, nil)
+    }
+    taskResponses.Mutex.Lock()
 }
 ```
 
