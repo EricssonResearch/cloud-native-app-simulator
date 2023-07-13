@@ -53,13 +53,12 @@ func httpRequest(service model.CalledService, forwardHeaders http.Header) genera
 
 	if err != nil {
 		return generated.EndpointResponse{
-			ProtocolStatus: err.Error(),
+			Status: err.Error(),
 		}
 	} else {
 		return generated.EndpointResponse{
-			// TODO: Should also return RESTResponse.Status?
-			ProtocolStatus: fmt.Sprintf("%d %s", status, http.StatusText(status)),
-			ResponseData:   response,
+			Status:       fmt.Sprintf("%d %s", status, http.StatusText(status)),
+			ResponseData: response,
 		}
 	}
 }

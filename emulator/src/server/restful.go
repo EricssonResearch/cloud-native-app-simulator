@@ -49,7 +49,7 @@ func writeJSONResponse(status int, response *generated.Response, writer http.Res
 // This should always be available because the readiness probe will send a request to this address
 func rootHandler(writer http.ResponseWriter, request *http.Request) {
 	if request.URL.Path == "/" {
-		writeJSONResponse(http.StatusOK, &generated.Response{Status: "ok"}, writer)
+		writeJSONResponse(http.StatusOK, &generated.Response{}, writer)
 	} else {
 		notFoundHandler(writer, request)
 	}
@@ -58,7 +58,6 @@ func rootHandler(writer http.ResponseWriter, request *http.Request) {
 func notFoundHandler(writer http.ResponseWriter, request *http.Request) {
 	endpoint := strings.TrimPrefix(request.URL.Path, "/")
 	response := &generated.Response{
-		Status:   "error",
 		Message:  fmt.Sprintf("Endpoint %s doesn't exist", endpoint),
 		Endpoint: endpoint,
 	}
@@ -72,7 +71,7 @@ type endpointHandler struct {
 
 func (handler endpointHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	trace := util.TraceEndpointCall(handler.endpoint)
-	response := &generated.Response{Status: "ok", Endpoint: handler.endpoint.Name}
+	response := &generated.Response{Endpoint: handler.endpoint.Name}
 
 	if handler.endpoint.ExecutionMode == "parallel" {
 		response.Tasks = stressors.ExecParallel(request, handler.endpoint)

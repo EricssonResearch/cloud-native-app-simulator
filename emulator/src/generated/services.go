@@ -34,7 +34,7 @@ type Service1ServerImpl struct {
 }
 
 func (s *Service1ServerImpl) TestEndpoint(ctx context.Context, request *generated.Request) (*generated.Response, error) {
-	response := &generated.Response{Status: "ok", Endpoint: s.Endpoint.Name}
+	response := &generated.Response{Endpoint: s.Endpoint.Name}
 
 	if s.Endpoint.ExecutionMode == "parallel" {
 		response.Tasks = stressors.ExecParallel(request, s.Endpoint)

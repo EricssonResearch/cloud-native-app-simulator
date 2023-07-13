@@ -18,6 +18,6 @@ package generated
 
 // TODO: Better place to put this
 type EndpointResponse struct {
-	ProtocolStatus string
-	ResponseData   *Response
+	Status       string
+	ResponseData *Response
 }

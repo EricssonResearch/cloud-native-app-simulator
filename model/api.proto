@@ -26,9 +26,8 @@ message Request {
 }
 
 message Response {
-	string status = 1;
-	string message = 2;
-	string endpoint = 3;
+	string message = 1;
+	string endpoint = 2;
 
 	TaskResponses tasks = 4;
 }
