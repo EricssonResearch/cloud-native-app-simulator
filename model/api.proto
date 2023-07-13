@@ -1,7 +1,9 @@
+// protoc --go_out=model --go_opt=module=application-model model/api.proto
+
 syntax = "proto3";
 
 package generated;
-option go_package = "./model/generated";
+option go_package = "application-model/generated";
 
 message CPUTaskResponse {
 	repeated string services = 1;
