@@ -31,8 +31,11 @@ RUN go work use ./emulator
 RUN go work use ./model
 
 # Download as many modules as possible to be shared between pods
-RUN (cd emulator && go mod download)
-RUN (cd model && go mod download)
+RUN (cd emulator && go mod download -x)
+RUN (cd model && go mod download -x)
+
+# Don't allow any edits to /usr/src/app by Go compiler
+RUN chmod -R a-w /usr/src/app
 
 ENV CONF=/usr/src/app/config/conf.json
 ENV PROTO=/usr/src/app/config/service.proto
