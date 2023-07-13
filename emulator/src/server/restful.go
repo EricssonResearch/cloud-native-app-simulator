@@ -20,7 +20,7 @@ import (
 	"application-emulator/src/stressors"
 	"application-emulator/src/util"
 	model "application-model"
-	generated "application-model/generated"
+	"application-model/generated"
 	"fmt"
 	"net/http"
 	"strings"

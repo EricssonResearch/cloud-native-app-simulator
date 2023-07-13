@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package model
+package generated
 
 // TODO: Better place to put this
 type EndpointResponse struct {

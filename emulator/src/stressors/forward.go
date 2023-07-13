@@ -19,7 +19,7 @@ package stressors
 import (
 	"application-emulator/src/client"
 	model "application-model"
-	generated "application-model/generated"
+	"application-model/generated"
 	"fmt"
 	"net/http"
 	"sync"

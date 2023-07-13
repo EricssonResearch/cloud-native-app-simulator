@@ -17,7 +17,7 @@ limitations under the License.
 package client
 
 import (
-	generated "application-model/generated"
+	"application-model/generated"
 	"bytes"
 	"fmt"
 	"io"

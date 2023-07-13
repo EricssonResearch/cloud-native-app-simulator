@@ -18,7 +18,7 @@ package stressors
 
 import (
 	model "application-model"
-	generated "application-model/generated"
+	"application-model/generated"
 	"sync"
 )
 

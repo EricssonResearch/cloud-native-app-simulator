@@ -1,7 +1,7 @@
 syntax = "proto3";
 
-package model;
-option go_package = "./model";
+package generated;
+option go_package = "./model/generated";
 
 message CPUTaskResponse {
 	repeated string services = 1;

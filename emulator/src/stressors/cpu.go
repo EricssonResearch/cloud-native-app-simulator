@@ -19,7 +19,7 @@ package stressors
 import (
 	"application-emulator/src/util"
 	model "application-model"
-	generated "application-model/generated"
+	"application-model/generated"
 	"fmt"
 	"runtime"
 	"sync"
