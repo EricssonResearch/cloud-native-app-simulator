@@ -36,6 +36,15 @@ type Stressor interface {
 	ExecTask(endpoint *model.Endpoint, responses *MutexTaskResponses)
 }
 
+// Executes all stressors sequentially or in parallel depending on user config
+func Exec(request any, endpoint *model.Endpoint) *generated.TaskResponses {
+	if endpoint.ExecutionMode == "parallel" {
+		return ExecParallel(request, endpoint)
+	} else {
+		return ExecSequential(request, endpoint)
+	}
+}
+
 // Executes all stressors defined in the endpoint sequentially
 func ExecSequential(request any, endpoint *model.Endpoint) *generated.TaskResponses {
 	stressors := []Stressor{

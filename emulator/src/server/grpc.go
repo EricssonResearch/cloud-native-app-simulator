@@ -16,6 +16,31 @@ limitations under the License.
 
 package server
 
+import (
+	"application-emulator/src/generated"
+	model "application-model"
+	"errors"
+	"net"
+
+	"google.golang.org/grpc"
+)
+
+const grpcAddress = ":5001"
+
 // Launch a gRPC server to serve one or more endpoints
-func GRPC() {
+func GRPC(endpointChannel chan model.Endpoint) {
+	listener, err := net.Listen("tcp", grpcAddress)
+	if err != nil {
+		panic(err)
+	}
+
+	server := grpc.NewServer()
+	for endpoint := range endpointChannel {
+		generated.RegisterGeneratedService(server, &endpoint)
+	}
+
+	err = server.Serve(listener)
+	if err != nil && !errors.Is(err, grpc.ErrServerStopped) {
+		panic(err)
+	}
 }

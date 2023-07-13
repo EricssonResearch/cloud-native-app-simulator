@@ -22,6 +22,7 @@ import (
 	model "application-model"
 	"application-model/generated"
 	"context"
+	"log"
 
 	"google.golang.org/grpc"
 )
@@ -34,18 +35,22 @@ type Service1ServerImpl struct {
 }
 
 func (s *Service1ServerImpl) TestEndpoint(ctx context.Context, request *generated.Request) (*generated.Response, error) {
-	response := &generated.Response{Endpoint: s.Endpoint.Name}
-
-	if s.Endpoint.ExecutionMode == "parallel" {
-		response.Tasks = stressors.ExecParallel(request, s.Endpoint)
-	} else {
-		response.Tasks = stressors.ExecSequential(request, s.Endpoint)
+	trace := util.TraceEndpointCall(s.Endpoint)
+	response := &generated.Response{
+		Endpoint: s.Endpoint.Name,
+		Tasks:    stressors.Exec(request, s.Endpoint),
 	}
-
+	util.LogEndpointCall(trace)
+	// TODO: When to return error?
 	return response, nil
 }
 
-func RegisterGeneratedServices(s grpc.ServiceRegistrar) {
-	// TODO: How to pass endpoints?
-	RegisterService1Server(s, &Service1ServerImpl{Endpoint: &util.DefaultConfigMap().Endpoints[0]})
+// Maps endpoint to a generated service struct and registers it with registrar
+func RegisterGeneratedService(registrar grpc.ServiceRegistrar, endpoint *model.Endpoint) {
+	switch endpoint.Name {
+	case "service-1":
+		RegisterService1Server(registrar, &Service1ServerImpl{Endpoint: endpoint})
+	default:
+		log.Fatalf("Tried to register gRPC service %s with no generated code", endpoint.Name)
+	}
 }

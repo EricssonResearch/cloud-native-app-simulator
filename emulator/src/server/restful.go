@@ -21,6 +21,7 @@ import (
 	"application-emulator/src/util"
 	model "application-model"
 	"application-model/generated"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -71,14 +72,10 @@ type endpointHandler struct {
 
 func (handler endpointHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	trace := util.TraceEndpointCall(handler.endpoint)
-	response := &generated.Response{Endpoint: handler.endpoint.Name}
-
-	if handler.endpoint.ExecutionMode == "parallel" {
-		response.Tasks = stressors.ExecParallel(request, handler.endpoint)
-	} else {
-		response.Tasks = stressors.ExecSequential(request, handler.endpoint)
+	response := &generated.Response{
+		Endpoint: handler.endpoint.Name,
+		Tasks:    stressors.Exec(request, handler.endpoint),
 	}
-
 	writeJSONResponse(http.StatusOK, response, writer)
 	util.LogEndpointCall(trace)
 }
@@ -93,7 +90,7 @@ func HTTP(endpointChannel chan model.Endpoint) {
 	}
 
 	err := http.ListenAndServe(httpAddress, mux)
-	if err != nil && err != http.ErrServerClosed {
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		panic(err)
 	}
 }
