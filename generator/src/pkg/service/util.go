@@ -18,7 +18,6 @@ package service
 
 import (
 	model "application-model"
-	"strconv"
 )
 
 const (
@@ -87,15 +86,9 @@ func CreateDeployment(metadataName, selectorAppName, selectorClusterName string,
 	containerInstance.Image = containerImageURL
 	containerInstance.ImagePullPolicy = containerImagePolicy
 	containerInstance.Env = append(containerInstance.Env, envInstance)
-	if protocol == "http" {
-		containerInstance.ReadinessProbe.HttpGet.Path = "/"
-		containerInstance.ReadinessProbe.HttpGet.Port = containerPort
-	}
-	if protocol == "grpc" {
-		containerInstance.ReadinessProbe.Exec.Command = append(containerInstance.ReadinessProbe.Exec.Command, ("/bin/grpc_health_probe"), "-addr=:"+strconv.Itoa(containerPort))
 
-	}
-
+	containerInstance.ReadinessProbe.HttpGet.Path = "/"
+	containerInstance.ReadinessProbe.HttpGet.Port = containerPort
 	containerInstance.ReadinessProbe.InitialDelaySeconds = readinessProbe
 	containerInstance.ReadinessProbe.PeriodSeconds = 1
 	containerInstance.Resources.ResourceRequests.Cpu = requestCPU
