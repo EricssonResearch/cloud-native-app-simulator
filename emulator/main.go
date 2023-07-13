@@ -41,7 +41,6 @@ func main() {
 	wg.Add(2)
 
 	httpEndpoints := make(chan model.Endpoint)
-	grpcEndpoints := make(chan model.Endpoint)
 	grpcStarted := false
 
 	// Always launch HTTP server (required for readiness probe)
@@ -58,12 +57,10 @@ func main() {
 			if !grpcStarted {
 				go func() {
 					defer wg.Done()
-					server.GRPC(grpcEndpoints)
+					server.GRPC()
 				}()
 				grpcStarted = true
 			}
-
-			grpcEndpoints <- endpoint
 		}
 	}
 

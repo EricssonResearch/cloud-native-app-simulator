@@ -16,17 +16,28 @@
 
 FROM golang:1.20
 
-WORKDIR /usr/src/app
-
 RUN apt update
 RUN apt upgrade -y
 
-COPY . /usr/src/app
+# Copy relevant parts of the source tree to the new source dir
+COPY emulator /usr/src/app/emulator
+COPY model /usr/src/app/model
 
-RUN go mod download
-RUN go build -o /usr/bin/app-emulator ./emulator
+WORKDIR /usr/src/app
+
+# Create Go workspace
+RUN go work init
+RUN go work use ./emulator
+RUN go work use ./model
+
+# Download as many modules as possible to be shared between pods
+RUN (cd emulator && go mod download)
+RUN (cd model && go mod download)
 
 ENV CONF=/usr/src/app/config/conf.json
+ENV PROTO=/usr/src/app/config/service.proto
 
+# HTTP at 5000
+# gRPC at 5001
 EXPOSE 5000 5001
-ENTRYPOINT ["/usr/bin/app-emulator"]
+ENTRYPOINT ["/usr/src/app/emulator/run.sh"]
