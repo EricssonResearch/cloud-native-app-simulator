@@ -10,5 +10,9 @@ echo "Downloading any missing modules..."
 echo "Compiling service $SERVICE_NAME..."
 go build -o /tmp/emulator-$SERVICE_NAME /usr/src/app/emulator
 
+echo "Cleaning up after build..."
+go clean -cache
+go clean -modcache
+
 echo "Running /tmp/emulator-$SERVICE_NAME..."
 /tmp/emulator-$SERVICE_NAME
