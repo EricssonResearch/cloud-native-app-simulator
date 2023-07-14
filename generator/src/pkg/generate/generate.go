@@ -97,6 +97,27 @@ func Parse(configFilename string) (model.FileConfig, []string) {
 	return loaded_config, clusters
 }
 
+// Translate K8s name into Go friendly name (example: endpoint-1 -> Endpoint1)
+func GoName(name string) string {
+	builder := strings.Builder{}
+	nextUpper := true
+
+	for _, c := range name {
+		if c == '-' {
+			nextUpper = true
+		} else if nextUpper {
+			c = unicode.ToUpper(c)
+			nextUpper = false
+		} else {
+			c = unicode.ToLower(c)
+		}
+
+		builder.WriteRune(c)
+	}
+
+	return builder.String()
+}
+
 func CreateK8sYaml(config model.FileConfig, clusters []string) {
 	path, _ := os.Getwd()
 	implTemp, _ := template.ParseFiles(path + "/template/impl.tmpl")
