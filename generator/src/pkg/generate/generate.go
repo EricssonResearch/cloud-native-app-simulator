@@ -19,6 +19,7 @@ package generate
 import (
 	s "application-generator/src/pkg/service"
 	model "application-model"
+	"unicode"
 
 	"bytes"
 	"encoding/json"
@@ -120,7 +121,9 @@ func GoName(name string) string {
 
 func CreateK8sYaml(config model.FileConfig, clusters []string) {
 	path, _ := os.Getwd()
-	implTemp, _ := template.ParseFiles(path + "/template/impl.tmpl")
+	implTemp := template.New("impl.tmpl")
+	implTemp = implTemp.Funcs(template.FuncMap{"goname": GoName})
+	implTemp, _ = implTemp.ParseFiles(path + "/template/impl.tmpl")
 	protoTemp, _ := template.ParseFiles(path + "/template/service.tmpl")
 	path = path + "/k8s"
 

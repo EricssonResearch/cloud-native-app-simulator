@@ -195,7 +195,7 @@ func CreateServiceAccount(metadataName, accountName string) (serviceAccountInsta
 	return serviceAccount
 }
 
-func CreateConfig(metadataName, metadataLabelName, metadataLabelCluster, namespace, config, services, proto string) (configMapInstance model.ConfigMapInstance) {
+func CreateConfig(metadataName, metadataLabelName, metadataLabelCluster, namespace, config, impl, proto string) (configMapInstance model.ConfigMapInstance) {
 
 	const apiVersion = "v1"
 
@@ -210,8 +210,8 @@ func CreateConfig(metadataName, metadataLabelName, metadataLabelCluster, namespa
 	configMap.Metadata.Labels.Name = metadataLabelName
 	configMap.Metadata.Namespace = namespace
 	configMap.Data.Config = config
-	configMap.Data.Proto = proto
-	configMap.Data.Services = services
+	configMap.Data.GeneratedImpl = impl
+	configMap.Data.GeneratedProto = proto
 
 	return configMap
 }

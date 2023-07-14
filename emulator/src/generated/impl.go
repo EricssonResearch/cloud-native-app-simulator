@@ -31,14 +31,14 @@ import (
 
 type Service1ServerImpl struct {
 	UnimplementedService1Server
-	Endpoint *model.Endpoint
+	TestEndpointInfo *model.Endpoint
 }
 
 func (s *Service1ServerImpl) TestEndpoint(ctx context.Context, request *generated.Request) (*generated.Response, error) {
-	trace := util.TraceEndpointCall(s.Endpoint)
+	trace := util.TraceEndpointCall(s.TestEndpointInfo)
 	response := &generated.Response{
-		Endpoint: s.Endpoint.Name,
-		Tasks:    stressors.Exec(request, s.Endpoint),
+		Endpoint: s.TestEndpointInfo.Name,
+		Tasks:    stressors.Exec(request, s.TestEndpointInfo),
 	}
 	util.LogEndpointCall(trace)
 	// TODO: When to return error?
@@ -46,11 +46,18 @@ func (s *Service1ServerImpl) TestEndpoint(ctx context.Context, request *generate
 }
 
 // Maps endpoint to a generated service struct and registers it with registrar
-func RegisterGeneratedService(registrar grpc.ServiceRegistrar, endpoint *model.Endpoint) {
-	switch endpoint.Name {
-	case "service-1":
-		RegisterService1Server(registrar, &Service1ServerImpl{Endpoint: endpoint})
-	default:
-		log.Fatalf("Tried to register gRPC service %s with no generated code", endpoint.Name)
+func RegisterGeneratedService(registrar grpc.ServiceRegistrar, endpointChannel chan model.Endpoint) {
+	// Service name is empty in test setup
+	if util.ServiceName == "" {
+		impl := Service1ServerImpl{}
+		for endpoint := range endpointChannel {
+			switch endpoint.Name {
+			case "test-endpoint":
+				impl.TestEndpointInfo = &endpoint
+			default:
+				log.Fatalf("Service %s got invalid gRPC endpoint %s", util.ServiceName, endpoint.Name)
+			}
+		}
+		RegisterService1Server(registrar, &impl)
 	}
 }

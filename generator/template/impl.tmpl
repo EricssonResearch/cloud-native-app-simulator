@@ -14,8 +14,44 @@ import (
 )
 
 {{ range . }}
-type {{ .Name }}Impl struct {
-	Unimplemented{{ .Name }}
-	Endpoint *model.Endpoint
+type {{ goname .Name }}Impl struct {
+	Unimplemented{{ goname .Name }}
+	{{ range .Endpoints }}
+	{{ goname .Name }}Info *model.Endpoint
+	{{ end }}
 }
 {{ end }}
+
+{{ range $service := . }}
+{{ range $endpoint := .Endpoints }}
+func (s *{{ goname $service.Name }}Impl) {{ goname $endpoint.Name }}(ctx context.Context, request *generated.Request) (*generated.Response, error) {
+	trace := util.TraceEndpointCall(s.{{ goname $endpoint.Name }}Info)
+	response := &generated.Response{
+		Endpoint: s.{{ goname $endpoint.Name }}Info.Name,
+		Tasks:    stressors.Exec(request, s.{{ goname $endpoint.Name }}Info),
+	}
+	util.LogEndpointCall(trace)
+	return response, nil
+}
+{{ end }}
+{{ end }}
+
+// Maps endpoint to a generated service struct and registers it with registrar
+func RegisterGeneratedEndpoints(registrar grpc.ServiceRegistrar, endpointChannel chan model.Endpoint) {
+	{{ range . }}
+	if util.ServiceName == "{{ .Name }}" {
+		impl := {{ goname .Name }}Impl{}
+		for endpoint := range endpointChannel {
+			switch endpoint.name {
+			{{ range .Endpoints }}
+			case "{{ .Name }}":
+				impl.{{ goname .Name }}Info = &endpoint
+			{{ end }}
+			default:
+				log.Fatalf("Service %s got invalid gRPC endpoint %s", util.ServiceName, endpoint.Name)
+			}
+		}
+		Register{{ goname .Name }}Server(registrar, impl)
+	}
+	{{ end }}
+}
