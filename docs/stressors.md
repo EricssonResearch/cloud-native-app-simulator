@@ -113,6 +113,21 @@ func (m *MyStressorTask) ExecTask(endpoint *model.Endpoint, responses *MutexTask
         Services: []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
         Statuses: []string{fmt.Sprintf("sleep: %d", stressParams.MyVariable)},
     })
+
+    util.LogMyTask(endpoint)
+}
+```
+
+Logging for stressors should be added in util/logging.go:
+
+```go
+// Call at end of "my task" to print params to stdout
+func LogMyTask(endpoint *model.Endpoint) {
+    if LoggingEnabled {
+        myVariable := endpoint.MyStressorComplexity.MyVariable
+        log.Printf("%s/%s: My task myVariable=%d",
+            ServiceName, endpoint.Name, myVariable)
+    }
 }
 ```
 
