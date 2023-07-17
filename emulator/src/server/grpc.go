@@ -35,7 +35,7 @@ func GRPC(endpointChannel chan model.Endpoint) {
 	}
 
 	server := grpc.NewServer()
-	generated.RegisterGeneratedEndpoints(server, endpointChannel)
+	generated.RegisterGeneratedService(server, endpointChannel)
 
 	err = server.Serve(listener)
 	if err != nil && !errors.Is(err, grpc.ErrServerStopped) {

@@ -34,11 +34,13 @@ RUN go work use ./model
 RUN (cd emulator && go mod download -x)
 RUN (cd model && go mod download -x)
 
-# Don't allow any edits to /usr/src/app by Go compiler
+# Don't allow any edits to /usr/src/app by Go compiler (except overriding generated)
 RUN chmod -R a-w /usr/src/app
+RUN chmod -R a+w /usr/src/app/emulator/src/generated
 
 ENV CONF=/usr/src/app/config/conf.json
-ENV PROTO=/usr/src/app/config/service.proto
+ENV GRPCIMPL=/usr/src/app/config/impl.go
+ENV GRPCPROTO=/usr/src/app/config/service.proto
 
 # HTTP at 5000
 # gRPC at 5001

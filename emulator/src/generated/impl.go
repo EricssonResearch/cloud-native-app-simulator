@@ -41,7 +41,6 @@ func (s *Service1ServerImpl) TestEndpoint(ctx context.Context, request *generate
 		Tasks:    stressors.Exec(request, s.TestEndpointInfo),
 	}
 	util.LogEndpointCall(trace)
-	// TODO: When to return error?
 	return response, nil
 }
 
