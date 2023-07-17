@@ -34,12 +34,12 @@ func main() {
 	runtime.GOMAXPROCS(configMap.Processes)
 
 	util.LoggingEnabled = configMap.Logging
-	util.ServiceName = os.Getenv("SERVICE_NAME")
+	if name, ok := os.LookupEnv("SERVICE_NAME"); ok {
+		util.ServiceName = name
+	}
 	util.LogConfiguration(configMap)
 
 	wg := sync.WaitGroup{}
-	wg.Add(2)
-
 	httpEndpoints := make(chan model.Endpoint)
 	grpcEndpoints := make(chan model.Endpoint)
 	grpcStarted := false
@@ -49,6 +49,7 @@ func main() {
 		defer wg.Done()
 		server.HTTP(httpEndpoints)
 	}()
+	wg.Add(1)
 
 	for _, endpoint := range configMap.Endpoints {
 		if endpoint.Protocol == "http" {
@@ -60,6 +61,7 @@ func main() {
 					defer wg.Done()
 					server.GRPC(grpcEndpoints)
 				}()
+				wg.Add(1)
 				grpcStarted = true
 			}
 
@@ -67,6 +69,8 @@ func main() {
 		}
 	}
 
+	close(grpcEndpoints)
 	close(httpEndpoints)
+
 	wg.Wait()
 }

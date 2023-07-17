@@ -47,11 +47,11 @@ func (s *Service1ServerImpl) TestEndpoint(ctx context.Context, request *generate
 // Maps endpoint to a generated service struct and registers it with registrar
 func RegisterGeneratedService(registrar grpc.ServiceRegistrar, endpointChannel chan model.Endpoint) {
 	// Service name is empty in test setup
-	if util.ServiceName == "" {
+	if util.ServiceName == "service-1" {
 		impl := Service1ServerImpl{}
 		for endpoint := range endpointChannel {
 			switch endpoint.Name {
-			case "test-endpoint":
+			case "test-endpoint-grpc":
 				impl.TestEndpointInfo = &endpoint
 			default:
 				log.Fatalf("Service %s got invalid gRPC endpoint %s", util.ServiceName, endpoint.Name)

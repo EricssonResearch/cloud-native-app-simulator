@@ -19,13 +19,34 @@ package server
 import (
 	"application-emulator/src/generated"
 	model "application-model"
+	"context"
 	"errors"
 	"net"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/status"
 )
 
 const grpcAddress = ":5001"
+
+type HealthServerImpl struct {
+	grpc_health_v1.UnimplementedHealthServer
+	Server *grpc.Server
+}
+
+func (h *HealthServerImpl) Check(ctx context.Context, request *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
+	// If this service exists on the server OR the request isn't asking for a service
+	if _, ok := h.Server.GetServiceInfo()[request.Service]; ok || request.Service == "" {
+		return &grpc_health_v1.HealthCheckResponse{
+			Status: grpc_health_v1.HealthCheckResponse_SERVING,
+		}, nil
+	} else {
+		// https://github.com/grpc/grpc/blob/master/src/proto/grpc/health/v1/health.proto#L44
+		return nil, status.Error(codes.NotFound, "Service not found")
+	}
+}
 
 // Launch a gRPC server to serve one or more endpoints
 func GRPC(endpointChannel chan model.Endpoint) {
@@ -36,6 +57,7 @@ func GRPC(endpointChannel chan model.Endpoint) {
 
 	server := grpc.NewServer()
 	generated.RegisterGeneratedService(server, endpointChannel)
+	grpc_health_v1.RegisterHealthServer(server, &HealthServerImpl{Server: server})
 
 	err = server.Serve(listener)
 	if err != nil && !errors.Is(err, grpc.ErrServerStopped) {

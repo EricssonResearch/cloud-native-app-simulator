@@ -19,7 +19,6 @@ package generate
 import (
 	s "application-generator/src/pkg/service"
 	model "application-model"
-	"unicode"
 
 	"bytes"
 	"encoding/json"
@@ -98,31 +97,10 @@ func Parse(configFilename string) (model.FileConfig, []string) {
 	return loaded_config, clusters
 }
 
-// Translate K8s name into Go friendly name (example: endpoint-1 -> Endpoint1)
-func GoName(name string) string {
-	builder := strings.Builder{}
-	nextUpper := true
-
-	for _, c := range name {
-		if c == '-' {
-			nextUpper = true
-		} else if nextUpper {
-			c = unicode.ToUpper(c)
-			nextUpper = false
-		} else {
-			c = unicode.ToLower(c)
-		}
-
-		builder.WriteRune(c)
-	}
-
-	return builder.String()
-}
-
 func CreateK8sYaml(config model.FileConfig, clusters []string) {
 	path, _ := os.Getwd()
 	implTemp := template.New("impl.tmpl")
-	implTemp = implTemp.Funcs(template.FuncMap{"goname": GoName})
+	implTemp = implTemp.Funcs(template.FuncMap{"goname": model.GoName})
 	implTemp, _ = implTemp.ParseFiles(path + "/template/impl.tmpl")
 	protoTemp, _ := template.ParseFiles(path + "/template/service.tmpl")
 	path = path + "/k8s"

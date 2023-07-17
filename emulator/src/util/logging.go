@@ -25,8 +25,7 @@ import (
 	"time"
 )
 
-// TODO: Move these
-var ServiceName = ""
+var ServiceName = "service-1"
 var LoggingEnabled = false
 
 type EndpointTrace struct {
@@ -48,7 +47,7 @@ func LogConfiguration(configMap *model.ConfigMap) {
 		if endpoint.Protocol == "http" {
 			httpEndpoints = append(httpEndpoints, endpoint.Name)
 		} else if endpoint.Protocol == "grpc" {
-			grpcEndpoints = append(grpcEndpoints, endpoint.Name)
+			grpcEndpoints = append(grpcEndpoints, fmt.Sprintf("generated.%s.%s", model.GoName(ServiceName), model.GoName(endpoint.Name)))
 		}
 	}
 

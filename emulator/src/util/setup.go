@@ -30,8 +30,19 @@ func DefaultConfigMap() *model.ConfigMap {
 		Logging:   true,
 		Endpoints: []model.Endpoint{
 			{
-				Name:          "test-endpoint",
+				Name:          "test-endpoint-http",
 				Protocol:      "http",
+				ExecutionMode: "sequential",
+				CpuComplexity: &model.CpuComplexity{
+					ExecutionTime: 0,
+				},
+				NetworkComplexity: &model.NetworkComplexity{
+					ResponsePayloadSize: 128,
+				},
+			},
+			{
+				Name:          "test-endpoint-grpc",
+				Protocol:      "grpc",
 				ExecutionMode: "sequential",
 				CpuComplexity: &model.CpuComplexity{
 					ExecutionTime: 0,
