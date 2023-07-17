@@ -1,4 +1,7 @@
 {
+  "settings": {
+    "development": true
+  },
   "cluster_latencies": [
     {
       "src" : "cluster1",
@@ -27,7 +30,6 @@
         }
       },
       "processes": 2,
-      "threads": 2,
       "readiness_probe": 1,
       "endpoints": [
         {
@@ -40,7 +42,7 @@
             "called_services": [
               {
                 "service": "service2",
-                "port": "80",
+                "port": 80,
                 "endpoint": "endpoint1",
                 "protocol": "http",
                 "traffic_forward_ratio": 1,
@@ -48,7 +50,7 @@
               },
               {
                 "service": "service2",
-                "port": "80",
+                "port": 80,
                 "endpoint": "endpoint2",
                 "protocol": "http",
                 "traffic_forward_ratio": 1,
@@ -63,9 +65,7 @@
           "execution_mode": "parallel",
           "network_complexity": {
             "forward_requests": "asynchronous",
-            "response_payload_size": 512,
-            "called_services": [
-            ]
+            "response_payload_size": 512
           }
         }
       ]
@@ -90,7 +90,6 @@
         }
       },
       "processes": 2,
-      "threads": 2,
       "readiness_probe": 1,
       "endpoints": [
         {
@@ -98,25 +97,12 @@
           "protocol": "http",
           "execution_mode": "parallel",
           "cpu_complexity": {
-            "execution_time": "1s",
-            "method": "fibonacci",
-            "workers": 2,
-            "cpu_affinity": [
-              1,
-              2
-            ],
-            "cpu_load": "10%"
-          },
-          "memory_complexity": {
-            "execution_time": "1s",
-            "method": "swap",
-            "workers": 24,
-            "bytes_load": "10%"
+            "execution_time": 1,
+            "threads": 2
           },
           "network_complexity": {
             "forward_requests": "asynchronous",
-            "response_payload_size": 512,
-            "called_services": []
+            "response_payload_size": 512
           }
         },
         {
@@ -125,8 +111,7 @@
           "execution_mode": "parallel",
           "network_complexity": {
             "forward_requests": "asynchronous",
-            "response_payload_size": 512,
-            "called_services": []
+            "response_payload_size": 512
           }
         }
       ]

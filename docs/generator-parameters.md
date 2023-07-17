@@ -15,7 +15,7 @@ At least one cluster and endpoint is required. Other sections are optional and w
 #### Optional attributes
 
 * **resources**: Resource allocation requests and limits.
-* **processes**: The maximum number of processes the service is allowed to use (`GOMAXPROCS`). Default: 1
+* **processes**: The maximum number of processes the service is allowed to use (`GOMAXPROCS`). If this is set to 0, the Go runtime will choose the number of processes to use. Default: 0
 * **readiness_probe**: The initial delay before readiness probe is initiated. Default: 1 second
 
 #### Format
@@ -125,7 +125,11 @@ For each microservice, HydraGen supports a set of configuration parameters that 
 
 HydraGen supports parameters to express the computational complexity or stress a microservice exerts on the different hardware resources. Initially, CPU-bounded or network-bounded tasks are implemented. The complexity of a CPU-bounded task can be described based on the time a busy-wait is executed, while the load on the network I/O can be described by specifying parameters such as the call forwarding mode and the request/response size for each service endpoint call.
 
+Documentation for implementing a new stressor can be found [here](stressors.md).
+
 ### CPU Complexity
+
+The CPU stressor will lock threads for exclusive access while it is executing. This prevents the service from responding to requests on that thread.
 
 #### Required attributes
 
@@ -134,15 +138,13 @@ HydraGen supports parameters to express the computational complexity or stress a
 #### Optional attributes
 
 * **threads**: The number of threads (goroutines) the CPU stressor should execute the busy-wait loop on. Default: 1
-* **lock_threads**: If the CPU stressor should lock threads for exclusive access while it is executing. This prevents the service from responding to requests on that thread. Default: "false"
 
 #### Format
 
 ```json
 "cpu_complexity": {
   "execution_time": <float:seconds>,
-  "threads": <integer>,
-  "lock_threads": "<string:false|true>"
+  "threads": <integer>
 }
 ```
 

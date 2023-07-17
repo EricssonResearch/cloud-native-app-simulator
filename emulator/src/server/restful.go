@@ -14,26 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package restful
+package server
 
 import (
+	"application-emulator/src/stressors"
+	"application-emulator/src/util"
 	model "application-model"
-
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 	"sync"
-
-	"encoding/json"
-	"net/http"
 )
 
 const httpAddress = ":5000"
-
-type RestResponse struct {
-	Status       string `json:"status"`
-	ErrorMessage string `json:"message,omitempty"`
-	Endpoint     string `json:"endpoint,omitempty"`
-}
 
 // Send a response of type application/json
 func writeJSONResponse(status int, response any, writer http.ResponseWriter) {
@@ -46,7 +40,7 @@ func writeJSONResponse(status int, response any, writer http.ResponseWriter) {
 
 func rootHandler(writer http.ResponseWriter, request *http.Request) {
 	if request.URL.Path == "/" {
-		writeJSONResponse(http.StatusOK, &RestResponse{Status: "ok"}, writer)
+		writeJSONResponse(http.StatusOK, &model.RESTResponse{Status: "ok"}, writer)
 	} else {
 		notFoundHandler(writer, request)
 	}
@@ -54,7 +48,7 @@ func rootHandler(writer http.ResponseWriter, request *http.Request) {
 
 func notFoundHandler(writer http.ResponseWriter, request *http.Request) {
 	endpoint := strings.TrimPrefix(request.URL.Path, "/")
-	response := &RestResponse{
+	response := &model.RESTResponse{
 		Status:       "error",
 		ErrorMessage: fmt.Sprintf("Endpoint %s doesn't exist", endpoint),
 		Endpoint:     endpoint,
@@ -67,12 +61,18 @@ type endpointHandler struct {
 	endpoint *model.Endpoint
 }
 
-func (handler *endpointHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	response := &RestResponse{Status: "ok", Endpoint: handler.endpoint.Name}
+func (handler endpointHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	trace := util.TraceEndpointCall(handler.endpoint)
+	response := &model.RESTResponse{Status: "ok", Endpoint: handler.endpoint.Name}
 
-	// TODO: Async (goroutines)
+	if handler.endpoint.ExecutionMode == "parallel" {
+		response.TaskResponses = stressors.ExecParallel(request, handler.endpoint)
+	} else {
+		response.TaskResponses = stressors.ExecSequential(request, handler.endpoint)
+	}
 
 	writeJSONResponse(http.StatusOK, response, writer)
+	util.LogEndpointCall(trace)
 }
 
 // Launch a HTTP server to serve one or more endpoints
@@ -83,7 +83,7 @@ func HTTP(endpointChannel chan model.Endpoint, wg *sync.WaitGroup) {
 	mux.HandleFunc("/", rootHandler)
 
 	for endpoint := range endpointChannel {
-		mux.Handle(fmt.Sprintf("/%s", endpoint.Name), &endpointHandler{endpoint: &endpoint})
+		mux.Handle(fmt.Sprintf("/%s", endpoint.Name), endpointHandler{endpoint: &endpoint})
 	}
 
 	err := http.ListenAndServe(httpAddress, mux)

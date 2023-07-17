@@ -18,28 +18,27 @@ package util
 
 import (
 	model "application-model"
-
-	"fmt"
+	"encoding/json"
 	"io"
 	"os"
-	"runtime"
-
-	"encoding/json"
 )
 
 // For local development, will be removed later
 func DefaultConfigMap() *model.ConfigMap {
 	return &model.ConfigMap{
-		Processes: 4,
-		Threads:   4,
-		Logging:   false,
+		Processes: 8,
+		Logging:   true,
 		Endpoints: []model.Endpoint{
 			{
-				Name:              "test-endpoint",
-				Protocol:          "http",
-				ExecutionMode:     "sequential",
-				CpuComplexity:     nil,
-				NetworkComplexity: nil,
+				Name:          "test-endpoint",
+				Protocol:      "http",
+				ExecutionMode: "sequential",
+				CpuComplexity: &model.CpuComplexity{
+					ExecutionTime: 0,
+				},
+				NetworkComplexity: &model.NetworkComplexity{
+					ResponsePayloadSize: 128,
+				},
 			},
 		},
 	}
@@ -63,15 +62,4 @@ func LoadConfigMap() (*model.ConfigMap, error) {
 	}
 
 	return inputConfig, nil
-}
-
-// Configure the Go runtime to use the number of processes specified in the config map
-func SetMaxProcesses(configMap *model.ConfigMap) string {
-	runtime.GOMAXPROCS(configMap.Processes)
-
-	if configMap.Processes == 1 {
-		return "1 process"
-	} else {
-		return fmt.Sprintf("%d processes", configMap.Processes)
-	}
 }

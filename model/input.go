@@ -18,7 +18,7 @@ package model
 
 type CalledService struct {
 	Service             string `json:"service"`
-	Port                string `json:"port"`
+	Port                int    `json:"port"`
 	Endpoint            string `json:"endpoint"`
 	Protocol            string `json:"protocol"`
 	TrafficForwardRatio int    `json:"traffic_forward_ratio"`
@@ -27,6 +27,7 @@ type CalledService struct {
 
 type CpuComplexity struct {
 	ExecutionTime float32 `json:"execution_time"`
+	Threads       int     `json:"threads"`
 }
 
 type NetworkComplexity struct {
@@ -63,7 +64,6 @@ type Service struct {
 	Clusters       []Cluster  `json:"clusters"`
 	Resources      Resources  `json:"resources"`
 	Processes      int        `json:"processes"`
-	Threads        int        `json:"threads"`
 	ReadinessProbe int        `json:"readiness_probe"`
 	Endpoints      []Endpoint `json:"endpoints"`
 }

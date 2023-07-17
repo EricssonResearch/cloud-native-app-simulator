@@ -17,40 +17,37 @@ limitations under the License.
 package main
 
 import (
-	model "application-model"
-
-	"application-emulator/src/restful"
+	"application-emulator/src/server"
 	"application-emulator/src/util"
-
-	"fmt"
+	model "application-model"
+	"os"
+	"runtime"
 	"sync"
 )
 
 func main() {
 	configMap, err := util.LoadConfigMap()
 	if err != nil {
-		fmt.Println("Using default config map")
 		configMap = util.DefaultConfigMap()
 	}
 
-	processes := util.SetMaxProcesses(configMap)
-	fmt.Printf("Application emulator started at :5000, %s\n\n", processes)
+	runtime.GOMAXPROCS(configMap.Processes)
+
+	util.LoggingEnabled = configMap.Logging
+	util.ServiceName = os.Getenv("SERVICE_NAME")
+	util.LogConfiguration(configMap)
 
 	wg := sync.WaitGroup{}
 
 	// TODO: Check if protocol is HTTP
 	httpEndpoints := make(chan model.Endpoint)
-	go restful.HTTP(httpEndpoints, &wg)
+	go server.HTTP(httpEndpoints, &wg)
 	wg.Add(1)
 
-	fmt.Println("Endpoints:")
 	for _, endpoint := range configMap.Endpoints {
 		// Only HTTP is supported right now
 		if endpoint.Protocol == "http" {
-			fmt.Println("*", endpoint.Protocol, endpoint.Name)
 			httpEndpoints <- endpoint
-		} else {
-			fmt.Println("x", endpoint.Protocol, endpoint.Name)
 		}
 	}
 

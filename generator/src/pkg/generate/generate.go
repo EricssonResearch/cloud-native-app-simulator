@@ -53,22 +53,24 @@ func Unique(strSlice []string) []string {
 // Parse microservice config file, and return a config struct
 func Parse(configFilename string) (model.FileConfig, []string) {
 	configFile, err := os.Open(configFilename)
-	configFileByteValue, _ := io.ReadAll(configFile)
-
 	if err != nil {
 		panic(err)
 	}
 
+	configFileByteValue, _ := io.ReadAll(configFile)
 	loaded_config := s.CreateFileConfig()
-	err = json.Unmarshal(configFileByteValue, &loaded_config)
 
+	decoder := json.NewDecoder(bytes.NewReader(configFileByteValue))
+	// Panic if input contains unknown fields
+	decoder.DisallowUnknownFields()
+
+	err = decoder.Decode(&loaded_config)
 	if err != nil {
 		panic(err)
 	}
 
 	ApplyDefaults(&loaded_config)
 	err = ValidateFileConfig(&loaded_config)
-
 	if err != nil {
 		panic(err)
 	}
@@ -117,12 +119,11 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 
 		resources := config.Services[i].Resources
 		processes := config.Services[i].Processes
-		threads := config.Services[i].Threads
 
 		logging := config.Settings.Logging
 		development := config.Settings.Development
 
-		cm_data := s.CreateConfigMap(processes, threads, logging, config.Services[i].Endpoints)
+		cm_data := s.CreateConfigMap(processes, logging, config.Services[i].Endpoints)
 
 		serv_json, err := json.Marshal(cm_data)
 		if err != nil {
@@ -215,7 +216,6 @@ func CreateJsonInput(userConfig model.UserConfig) string {
 		service.Resources = resources
 
 		service.Processes = s.SvcProcessesDefault
-		service.Threads = s.SvcThreadsDefault
 		service.ReadinessProbe = s.SvcReadinessProbeDefault
 
 		// Randomly generating service endpoints
