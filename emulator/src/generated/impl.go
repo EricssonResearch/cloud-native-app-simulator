@@ -22,6 +22,7 @@ import (
 	model "application-model"
 	"application-model/generated"
 	"context"
+	"errors"
 	"log"
 
 	"google.golang.org/grpc"
@@ -47,7 +48,8 @@ func (s *Service1ServerImpl) TestEndpoint(ctx context.Context, request *generate
 // Maps endpoint to a generated service struct and registers it with registrar
 func RegisterGeneratedService(registrar grpc.ServiceRegistrar, endpointChannel chan model.Endpoint) {
 	// Service name is empty in test setup
-	if util.ServiceName == "service-1" {
+	switch util.ServiceName {
+	case "service-1":
 		impl := Service1ServerImpl{}
 		for endpoint := range endpointChannel {
 			switch endpoint.Name {
@@ -59,4 +61,20 @@ func RegisterGeneratedService(registrar grpc.ServiceRegistrar, endpointChannel c
 		}
 		RegisterService1Server(registrar, &impl)
 	}
+}
+
+// Searches for method by service, endpoint and returns the result
+func CallGeneratedEndpoint(ctx context.Context, cc grpc.ClientConnInterface, service, endpoint string, in *generated.Request) (*generated.Response, error) {
+	options := []grpc.CallOption{}
+
+	switch service {
+	case "service-1":
+		client := NewService1Client(cc)
+		switch endpoint {
+		case "test-endpoint-grpc":
+			return client.TestEndpoint(ctx, in, options...)
+		}
+	}
+
+	return nil, errors.New("Unknown service, endpoint combination")
 }

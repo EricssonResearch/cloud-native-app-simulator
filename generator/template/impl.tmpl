@@ -8,6 +8,7 @@ import (
 	model "application-model"
 	"application-model/generated"
 	"context"
+	"errors"
 	"log"
 
 	"google.golang.org/grpc"
@@ -38,8 +39,9 @@ func (s *{{ goname $service.Name }}Impl) {{ goname $endpoint.Name }}(ctx context
 
 // Maps endpoint to a generated service struct and registers it with registrar
 func RegisterGeneratedService(registrar grpc.ServiceRegistrar, endpointChannel chan model.Endpoint) {
+	switch util.ServiceName {
 	{{ range . }}
-	if util.ServiceName == "{{ .Name }}" {
+	case "{{ .Name }}": 
 		impl := {{ goname .Name }}Impl{}
 		for endpoint := range endpointChannel {
 			switch endpoint.Name {
@@ -52,6 +54,26 @@ func RegisterGeneratedService(registrar grpc.ServiceRegistrar, endpointChannel c
 			}
 		}
 		Register{{ goname .Name }}Server(registrar, &impl)
-	}
 	{{ end }}
+	}
+}
+
+// Searches for method by service, endpoint and returns the result
+func CallGeneratedEndpoint(ctx context.Context, cc grpc.ClientConnInterface, service, endpoint string, in *generated.Request) (*generated.Response, error) {
+	options := []grpc.CallOption{}
+
+	switch service {
+	{{ range . }}
+	case "{{ .Name }}": 
+		client := NewService1Client(cc)
+		switch endpoint {
+		{{ range .Endpoints }}
+		case "{{ .Name }}":
+			return client.{{ goname .Name }}(ctx, in, options...)
+		{{ end }}
+		}
+	{{ end }}
+	}
+
+	return nil, errors.New("Unknown service, endpoint combination")
 }
