@@ -7,9 +7,9 @@ option go_package = "application-emulator/src/generated";
 import "model/api.proto";
 
 {{ range . }}
-service {{ .Name }} {
+service {{ goname .Name }} {
 	{{ range .Endpoints }}
-	rpc {{ .Name }} (Request) returns (Response) {}
+	rpc {{ goname .Name }} (Request) returns (Response) {}
 	{{ end }}
 }
 {{ end }}
