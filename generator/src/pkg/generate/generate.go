@@ -99,10 +99,15 @@ func Parse(configFilename string) (model.FileConfig, []string) {
 
 func CreateK8sYaml(config model.FileConfig, clusters []string) {
 	path, _ := os.Getwd()
+
 	implTemp := template.New("impl.tmpl")
 	implTemp = implTemp.Funcs(template.FuncMap{"goname": model.GoName})
 	implTemp, _ = implTemp.ParseFiles(path + "/template/impl.tmpl")
-	protoTemp, _ := template.ParseFiles(path + "/template/service.tmpl")
+
+	protoTemp := template.New("service.tmpl")
+	protoTemp = protoTemp.Funcs(template.FuncMap{"goname": model.GoName})
+	protoTemp, _ = protoTemp.ParseFiles(path + "/template/service.tmpl")
+
 	path = path + "/k8s"
 
 	for i := 0; i < len(clusters); i++ {
