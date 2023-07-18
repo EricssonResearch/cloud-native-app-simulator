@@ -15,7 +15,7 @@ import (
 
 {{ range . }}
 type {{ goname .Name }}Impl struct {
-	Unimplemented{{ goname .Name }}
+	Unimplemented{{ goname .Name }}Server
 	{{ range .Endpoints }}
 	{{ goname .Name }}Info *model.Endpoint
 	{{ end }}
@@ -37,12 +37,12 @@ func (s *{{ goname $service.Name }}Impl) {{ goname $endpoint.Name }}(ctx context
 {{ end }}
 
 // Maps endpoint to a generated service struct and registers it with registrar
-func RegisterGeneratedEndpoints(registrar grpc.ServiceRegistrar, endpointChannel chan model.Endpoint) {
+func RegisterGeneratedService(registrar grpc.ServiceRegistrar, endpointChannel chan model.Endpoint) {
 	{{ range . }}
 	if util.ServiceName == "{{ .Name }}" {
 		impl := {{ goname .Name }}Impl{}
 		for endpoint := range endpointChannel {
-			switch endpoint.name {
+			switch endpoint.Name {
 			{{ range .Endpoints }}
 			case "{{ .Name }}":
 				impl.{{ goname .Name }}Info = &endpoint
@@ -51,7 +51,7 @@ func RegisterGeneratedEndpoints(registrar grpc.ServiceRegistrar, endpointChannel
 				log.Fatalf("Service %s got invalid gRPC endpoint %s", util.ServiceName, endpoint.Name)
 			}
 		}
-		Register{{ goname .Name }}Server(registrar, impl)
+		Register{{ goname .Name }}Server(registrar, &impl)
 	}
 	{{ end }}
 }

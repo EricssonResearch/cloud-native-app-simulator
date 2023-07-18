@@ -10,7 +10,7 @@ ln -s $GRPCIMPL emulator/src/generated/impl.go
 protoc -I$(pwd) --go_out=emulator --go_opt=module=application-emulator --go-grpc_out=emulator --go-grpc_opt=module=application-emulator $GRPCPROTO
 
 echo "Compiling service $SERVICE_NAME..."
-time go build -mod=readonly -work -ldflags "-s -w" -o /tmp/emulator-$SERVICE_NAME emulator
+time go build -mod=readonly -work -ldflags "-s -w" -o /tmp/emulator-$SERVICE_NAME ./emulator
 
 echo "Cleaning up after build..."
 go clean -cache
