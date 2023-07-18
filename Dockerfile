@@ -16,9 +16,6 @@
 
 FROM golang:1.20
 
-RUN apt update
-RUN apt upgrade -y
-
 # Copy relevant parts of the source tree to the new source dir
 COPY emulator /usr/src/app/emulator
 COPY model /usr/src/app/model

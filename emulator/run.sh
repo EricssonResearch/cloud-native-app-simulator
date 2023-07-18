@@ -3,11 +3,6 @@
 set -e
 
 cd /usr/src/app
-
-echo "Downloading any missing modules..."
-(cd model && go mod download -x)
-(cd emulator && go mod download -x)
-
 echo "Generating gRPC code for $SERVICE_NAME..."
 rm -Rf emulator/src/generated/*
 ln -s $GRPCIMPL emulator/src/generated/impl.go
