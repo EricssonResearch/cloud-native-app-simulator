@@ -30,9 +30,10 @@ const (
 	ImagePullPolicyProd = "IfNotPresent"
 	ImagePullPolicyDev  = "Never"
 
-	DefaultExtPort  = 80
-	DefaultPort     = 5000
-	defaultProtocol = "http"
+	DefaultExtHttpPort = 80
+	DefaultHttpPort    = 5000
+	DefaultExtGrpcPort = 81
+	DefaultGrpcPort    = 5001
 
 	Uri = "/"
 
@@ -60,20 +61,18 @@ const (
 )
 
 func CreateDeployment(metadataName, selectorAppName, selectorClusterName string, numberOfReplicas int,
-	templateAppLabel, templateClusterLabel, namespace string, containerPort int, containerName, containerImageURL, containerImagePolicy,
+	templateAppLabel, templateClusterLabel, namespace string, httpPort int, grpcPort int, containerName, containerImageURL, containerImagePolicy,
 	mountPath string, volumeName, configMapName string, readinessProbe int, requestCPU, requestMemory, limitCPU,
 	limitMemory, nodeAffinity, protocol string, annotations []model.Annotation) (deploymentInstance model.DeploymentInstance) {
 
 	var deployment model.DeploymentInstance
 	var containerInstance model.ContainerInstance
 	var envInstance model.EnvInstance
-	var containerPortInstance model.ContainerPortInstance
 	var containerVolume model.ContainerVolumeInstance
 	var volumeInstance model.VolumeInstance
 
 	envInstance.Name = "SERVICE_NAME"
 	envInstance.Value = metadataName
-	containerPortInstance.ContainerPort = containerPort
 	volumeInstance.Name = volumeName
 	volumeInstance.ConfigMap.Name = configMapName
 
@@ -81,14 +80,15 @@ func CreateDeployment(metadataName, selectorAppName, selectorClusterName string,
 	containerVolume.MountPath = mountPath
 
 	containerInstance.Volumes = append(containerInstance.Volumes, containerVolume)
-	containerInstance.Ports = append(containerInstance.Ports, containerPortInstance)
+	containerInstance.Ports = append(containerInstance.Ports, model.ContainerPortInstance{ContainerPort: httpPort})
+	containerInstance.Ports = append(containerInstance.Ports, model.ContainerPortInstance{ContainerPort: grpcPort})
 	containerInstance.Name = containerName
 	containerInstance.Image = containerImageURL
 	containerInstance.ImagePullPolicy = containerImagePolicy
 	containerInstance.Env = append(containerInstance.Env, envInstance)
 
 	containerInstance.ReadinessProbe.HttpGet.Path = "/"
-	containerInstance.ReadinessProbe.HttpGet.Port = containerPort
+	containerInstance.ReadinessProbe.HttpGet.Port = httpPort
 	containerInstance.ReadinessProbe.InitialDelaySeconds = readinessProbe
 	containerInstance.ReadinessProbe.PeriodSeconds = 1
 	containerInstance.Resources.ResourceRequests.Cpu = requestCPU
@@ -152,22 +152,15 @@ func CreateWorkerDeployment(metadataName, selectorName string, numberOfReplicas 
 	return deployment
 }
 
-func CreateService(metadataName, selectorAppName, protocol, uri, metadataLabelCluster, namespace string, defaultExtPort, defaultPort int) (serviceInstance model.ServiceInstance) {
+func CreateService(metadataName, selectorAppName, protocol, uri, metadataLabelCluster, namespace string, ports []model.ServicePortInstance) (serviceInstance model.ServiceInstance) {
 	const apiVersion = "v1"
-
 	const apiKind = "Service"
-
-	var port model.ServicePortInstance
 
 	var service model.ServiceInstance
 
 	annotations := map[string]string{
 		protocol: uri,
 	}
-
-	port.Port = defaultExtPort
-	port.TargetPort = defaultPort
-	port.Name = protocol
 
 	service.APIVersion = apiVersion
 	service.Kind = apiKind
@@ -176,7 +169,7 @@ func CreateService(metadataName, selectorAppName, protocol, uri, metadataLabelCl
 	service.Metadata.Labels.Cluster = metadataLabelCluster
 	service.Metadata.Annotations = annotations
 	service.Spec.Selector.App = selectorAppName
-	service.Spec.Ports = append(service.Spec.Ports, port)
+	service.Spec.Ports = append(service.Spec.Ports, ports...)
 
 	return service
 }
@@ -272,7 +265,7 @@ func CreateInputCluster() model.Cluster {
 func CreateInputEndpoint() model.Endpoint {
 
 	var ep model.Endpoint
-	ep.Protocol = defaultProtocol
+	ep.Protocol = "http"
 
 	var cpuComplexity model.CpuComplexity
 	var networkComplexity model.NetworkComplexity
@@ -294,8 +287,8 @@ func CreateInputCalledSvc() model.CalledService {
 
 	var calledSvc model.CalledService
 
-	calledSvc.Port = DefaultExtPort
-	calledSvc.Protocol = defaultProtocol
+	calledSvc.Port = DefaultExtHttpPort
+	calledSvc.Protocol = "http"
 	calledSvc.TrafficForwardRatio = CsTrafficForwardRatio
 	calledSvc.RequestPayloadSize = CsRequestSizeDefault
 

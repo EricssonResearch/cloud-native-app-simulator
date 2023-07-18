@@ -180,12 +180,25 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 			}
 
 			deployment := s.CreateDeployment(serv, serv, c_id, replicas, serv, c_id, namespace,
-				s.DefaultPort, s.ImageName, imageURL, imagePolicy, s.VolumePath, s.VolumeName, "config-"+serv, readinessProbe,
+				s.DefaultHttpPort, s.DefaultGrpcPort, s.ImageName, imageURL, imagePolicy, s.VolumePath, s.VolumeName, "config-"+serv, readinessProbe,
 				resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory,
 				nodeAffinity, protocol, annotations)
 			appendManifest(deployment)
 
-			service := s.CreateService(serv, serv, protocol, s.Uri, c_id, namespace, s.DefaultExtPort, s.DefaultPort)
+			ports := []model.ServicePortInstance{
+				{
+					Name:       "http",
+					Port:       s.DefaultExtHttpPort,
+					TargetPort: s.DefaultHttpPort,
+				},
+				{
+					Name:       "grpc",
+					Port:       s.DefaultExtGrpcPort,
+					TargetPort: s.DefaultGrpcPort,
+				},
+			}
+
+			service := s.CreateService(serv, serv, protocol, s.Uri, c_id, namespace, ports)
 			appendManifest(service)
 
 			yamlDocString := strings.Join(manifests, "---\n")
