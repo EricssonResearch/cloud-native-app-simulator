@@ -16,6 +16,11 @@
 
 FROM golang:1.20
 
+# Install protoc
+RUN apt update && apt install -y protobuf-compiler
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.31.0
+RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3.0
+
 # Copy relevant parts of the source tree to the new source dir
 COPY emulator /usr/src/app/emulator
 COPY model /usr/src/app/model
@@ -28,8 +33,8 @@ RUN go work use ./emulator
 RUN go work use ./model
 
 # Download as many modules as possible to be shared between pods
-RUN (cd emulator && go mod download -x)
-RUN (cd model && go mod download -x)
+RUN cd emulator && go mod download -x
+RUN cd model && go mod download -x
 
 # Don't allow any edits to /usr/src/app by Go compiler (except overriding generated)
 RUN chmod -R a-w /usr/src/app

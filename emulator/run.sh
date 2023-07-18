@@ -3,6 +3,7 @@
 set -e
 
 cd /usr/src/app
+
 echo "Generating gRPC code for $SERVICE_NAME..."
 rm -Rf emulator/src/generated/*
 ln -s $GRPCIMPL emulator/src/generated/impl.go
