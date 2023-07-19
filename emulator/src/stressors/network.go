@@ -61,7 +61,8 @@ func ConcatenateNetworkResponses(taskResponses *MutexTaskResponses, networkTaskR
 		taskResponses.NetworkTask.Statuses = append(taskResponses.NetworkTask.Statuses, r.Status)
 
 		// ResponseData is nil if an error occured
-		if r.ResponseData != nil {
+		// ResponseData.Tasks is nil if the endpoint was not found or ran no tasks
+		if r.ResponseData != nil && r.ResponseData.Tasks != nil {
 			taskResponses.Mutex.Unlock()
 			if r.ResponseData.Tasks.CpuTask != nil {
 				ConcatenateCPUResponses(taskResponses, r.ResponseData.Tasks.CpuTask)
