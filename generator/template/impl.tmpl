@@ -65,7 +65,7 @@ func CallGeneratedEndpoint(ctx context.Context, cc grpc.ClientConnInterface, ser
 	switch service {
 	{{ range . }}
 	case "{{ .Name }}": 
-		client := NewService1Client(cc)
+		client := New{{ goname .Name }}Client(cc)
 		switch endpoint {
 		{{ range .Endpoints }}
 		case "{{ .Name }}":

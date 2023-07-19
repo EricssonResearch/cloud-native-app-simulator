@@ -115,15 +115,21 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 		os.Mkdir(directory, 0777)
 	}
 
-	// TODO: Need to provide name in form "Service1" instead of "service-1" for Go code
+	grpcServices := []model.Service{}
+	for _, service := range config.Services {
+		if service.Protocol == "grpc" {
+			grpcServices = append(grpcServices, service)
+		}
+	}
+
 	var implTempFilledBytes bytes.Buffer
-	err := implTemp.Execute(&implTempFilledBytes, config.Services)
+	err := implTemp.Execute(&implTempFilledBytes, grpcServices)
 	if err != nil {
 		panic(err)
 	}
 
 	var protoTempFilledBytes bytes.Buffer
-	err = protoTemp.Execute(&protoTempFilledBytes, config.Services)
+	err = protoTemp.Execute(&protoTempFilledBytes, grpcServices)
 	if err != nil {
 		panic(err)
 	}
