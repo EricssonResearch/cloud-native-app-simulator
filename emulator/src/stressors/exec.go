@@ -24,8 +24,8 @@ import (
 
 // Stressors need to access model.TaskResponses in parallel
 type MutexTaskResponses struct {
-	*sync.Mutex
-	*generated.TaskResponses
+	sync.Mutex
+	generated.TaskResponses
 }
 
 // Interface for a stressor used to simulate the workload of a microservice
@@ -52,8 +52,8 @@ func ExecSequential(request any, endpoint *model.Endpoint) *generated.TaskRespon
 		&NetworkTask{Request: request},
 	}
 	responses := MutexTaskResponses{
-		&sync.Mutex{},
-		&generated.TaskResponses{},
+		sync.Mutex{},
+		generated.TaskResponses{},
 	}
 
 	for _, stressor := range stressors {
@@ -62,12 +62,11 @@ func ExecSequential(request any, endpoint *model.Endpoint) *generated.TaskRespon
 		}
 	}
 
-	return responses.TaskResponses
+	return &responses.TaskResponses
 }
 
 func execStressor(stressor Stressor, endpoint *model.Endpoint, responses *MutexTaskResponses, wg *sync.WaitGroup) {
 	defer wg.Done()
-	// responses can be accessed in parallel as long as
 	stressor.ExecTask(endpoint, responses)
 }
 
@@ -78,8 +77,8 @@ func ExecParallel(request any, endpoint *model.Endpoint) *generated.TaskResponse
 		&NetworkTask{Request: request},
 	}
 	responses := MutexTaskResponses{
-		&sync.Mutex{},
-		&generated.TaskResponses{},
+		sync.Mutex{},
+		generated.TaskResponses{},
 	}
 	wg := sync.WaitGroup{}
 
@@ -91,5 +90,5 @@ func ExecParallel(request any, endpoint *model.Endpoint) *generated.TaskResponse
 	}
 
 	wg.Wait()
-	return responses.TaskResponses
+	return &responses.TaskResponses
 }
