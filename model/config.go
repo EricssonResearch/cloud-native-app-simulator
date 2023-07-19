@@ -37,5 +37,6 @@ type ConfigMapInstance struct {
 type ConfigMap struct {
 	Processes int        `json:"processes"`
 	Logging   bool       `json:"logging"`
+	Protocol  string     `json:"protocol"`
 	Endpoints []Endpoint `json:"endpoints"`
 }

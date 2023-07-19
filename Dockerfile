@@ -49,7 +49,5 @@ ENV CONF=/usr/src/app/config/conf.json
 ENV GRPCIMPL=/usr/src/app/config/impl.go
 ENV GRPCPROTO=/usr/src/app/config/service.proto
 
-# HTTP at 5000
-# gRPC at 5001
-EXPOSE 5000 5001
+EXPOSE 5000
 ENTRYPOINT ["/usr/src/app/emulator/run.sh"]

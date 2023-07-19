@@ -139,7 +139,7 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 
 	for i := 0; i < len(config.Services); i++ {
 		serv := config.Services[i].Name
-		protocol := config.Services[i].Endpoints[0].Protocol
+		protocol := config.Services[i].Protocol
 		readinessProbe := config.Services[i].ReadinessProbe
 
 		resources := config.Services[i].Resources
@@ -148,7 +148,7 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 		logging := config.Settings.Logging
 		development := config.Settings.Development
 
-		cm_data := s.CreateConfigMap(processes, logging, config.Services[i].Endpoints)
+		cm_data := s.CreateConfigMap(processes, logging, protocol, config.Services[i].Endpoints)
 
 		serv_json, err := json.Marshal(cm_data)
 		if err != nil {
@@ -186,21 +186,16 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 			}
 
 			deployment := s.CreateDeployment(serv, serv, c_id, replicas, serv, c_id, namespace,
-				s.DefaultHttpPort, s.DefaultGrpcPort, s.ImageName, imageURL, imagePolicy, s.VolumePath, s.VolumeName, "config-"+serv, readinessProbe,
+				s.DefaultPort, s.ImageName, imageURL, imagePolicy, s.VolumePath, s.VolumeName, "config-"+serv, readinessProbe,
 				resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory,
 				nodeAffinity, protocol, annotations)
 			appendManifest(deployment)
 
 			ports := []model.ServicePortInstance{
 				{
-					Name:       "http",
-					Port:       s.DefaultExtHttpPort,
-					TargetPort: s.DefaultHttpPort,
-				},
-				{
-					Name:       "grpc",
-					Port:       s.DefaultExtGrpcPort,
-					TargetPort: s.DefaultGrpcPort,
+					Name:       protocol,
+					Port:       s.DefaultExtPort,
+					TargetPort: s.DefaultPort,
 				},
 			}
 

@@ -32,8 +32,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const grpcAddress = ":5001"
-
 type HealthServerImpl struct {
 	grpc_health_v1.UnimplementedHealthServer
 }
@@ -51,14 +49,14 @@ func (h *HealthServerImpl) Check(ctx context.Context, request *grpc_health_v1.He
 }
 
 // Launch a gRPC server to serve one or more endpoints
-func GRPC(endpointChannel chan model.Endpoint) {
-	listener, err := net.Listen("tcp", grpcAddress)
+func GRPC(endpoints []model.Endpoint) {
+	listener, err := net.Listen("tcp", ":5000")
 	if err != nil {
 		panic(err)
 	}
 
 	server := grpc.NewServer()
-	generated.RegisterGeneratedService(server, endpointChannel)
+	generated.RegisterGeneratedService(server, endpoints)
 	reflection.Register(server)
 	grpc_health_v1.RegisterHealthServer(server, &HealthServerImpl{})
 

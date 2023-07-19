@@ -26,7 +26,7 @@ type {{ goname .Name }}Impl struct {
 {{ range $service := . }}
 {{ range $endpoint := .Endpoints }}
 func (s *{{ goname $service.Name }}Impl) {{ goname $endpoint.Name }}(ctx context.Context, request *generated.Request) (*generated.Response, error) {
-	trace := util.TraceEndpointCall(s.{{ goname $endpoint.Name }}Info)
+	trace := util.TraceEndpointCall(s.{{ goname $endpoint.Name }}Info, "gRPC")
 	response := &generated.Response{
 		Endpoint: s.{{ goname $endpoint.Name }}Info.Name,
 		Tasks:    stressors.Exec(request, s.{{ goname $endpoint.Name }}Info),
@@ -38,12 +38,12 @@ func (s *{{ goname $service.Name }}Impl) {{ goname $endpoint.Name }}(ctx context
 {{ end }}
 
 // Maps endpoint to a generated service struct and registers it with registrar
-func RegisterGeneratedService(registrar grpc.ServiceRegistrar, endpointChannel chan model.Endpoint) {
+func RegisterGeneratedService(registrar grpc.ServiceRegistrar, endpoints []model.Endpoint) {
 	switch util.ServiceName {
 	{{ range . }}
 	case "{{ .Name }}": 
 		impl := {{ goname .Name }}Impl{}
-		for endpoint := range endpointChannel {
+		for _, endpoint := range endpoints {
 			switch endpoint.Name {
 			{{ range .Endpoints }}
 			case "{{ .Name }}":

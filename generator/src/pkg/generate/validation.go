@@ -120,19 +120,22 @@ func ValidateResources(config *model.FileConfig) error {
 	return nil
 }
 
-// Validate that protocols are set in both endpoint definition and call
-func ValidateProtocols(service *model.Service, endpoint *model.Endpoint) error {
+// Validate that protocols are set in both service definition and endpoint call
+func ValidateProtocols(service *model.Service) error {
+	// TODO: enum
 	validProtocols := map[string]bool{"http": true, "grpc": true}
-	if !validProtocols[endpoint.Protocol] {
-		return fmt.Errorf("Endpoint '%s' in service '%s' has invalid protocol '%s'",
-			endpoint.Name, service.Name, endpoint.Protocol)
+	if !validProtocols[service.Protocol] {
+		return fmt.Errorf("Service '%s' has invalid protocol '%s'",
+			service.Name, service.Protocol)
 	}
 
-	if endpoint.NetworkComplexity != nil {
-		for _, calledService := range endpoint.NetworkComplexity.CalledServices {
-			if !validProtocols[calledService.Protocol] {
-				return fmt.Errorf("Call to endpoint '%s' from endpoint '%s' has invalid protocol '%s'",
-					calledService.Endpoint, endpoint.Name, calledService.Protocol)
+	for _, endpoint := range service.Endpoints {
+		if endpoint.NetworkComplexity != nil {
+			for _, calledService := range endpoint.NetworkComplexity.CalledServices {
+				if !validProtocols[calledService.Protocol] {
+					return fmt.Errorf("Call to endpoint '%s' from endpoint '%s' has invalid protocol '%s'",
+						calledService.Endpoint, endpoint.Name, calledService.Protocol)
+				}
 			}
 		}
 	}
@@ -157,11 +160,9 @@ func ValidateRequiredParameters(config *model.FileConfig) error {
 		if len(service.Endpoints) == 0 {
 			return fmt.Errorf("At least one endpoint is required in service '%s'", service.Name)
 		} else {
-			for _, endpoint := range service.Endpoints {
-				err := ValidateProtocols(&service, &endpoint)
-				if err != nil {
-					return err
-				}
+			err := ValidateProtocols(&service)
+			if err != nil {
+				return err
 			}
 		}
 	}

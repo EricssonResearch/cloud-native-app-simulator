@@ -19,10 +19,8 @@ package main
 import (
 	"application-emulator/src/server"
 	"application-emulator/src/util"
-	model "application-model"
 	"os"
 	"runtime"
-	"sync"
 )
 
 func main() {
@@ -39,38 +37,9 @@ func main() {
 	}
 	util.LogConfiguration(configMap)
 
-	wg := sync.WaitGroup{}
-	httpEndpoints := make(chan model.Endpoint)
-	grpcEndpoints := make(chan model.Endpoint)
-	grpcStarted := false
-
-	// Always launch HTTP server (required for readiness probe)
-	go func() {
-		defer wg.Done()
-		server.HTTP(httpEndpoints)
-	}()
-	wg.Add(1)
-
-	for _, endpoint := range configMap.Endpoints {
-		if endpoint.Protocol == "http" {
-			httpEndpoints <- endpoint
-		} else if endpoint.Protocol == "grpc" {
-			// Launch gRPC server on demand
-			if !grpcStarted {
-				go func() {
-					defer wg.Done()
-					server.GRPC(grpcEndpoints)
-				}()
-				wg.Add(1)
-				grpcStarted = true
-			}
-
-			grpcEndpoints <- endpoint
-		}
+	if configMap.Protocol == "http" {
+		server.HTTP(configMap.Endpoints)
+	} else if configMap.Protocol == "grpc" {
+		server.GRPC(configMap.Endpoints)
 	}
-
-	close(grpcEndpoints)
-	close(httpEndpoints)
-
-	wg.Wait()
 }

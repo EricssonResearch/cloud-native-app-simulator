@@ -9,6 +9,7 @@ At least one cluster and endpoint is required. Other sections are optional and w
 #### Required attributes
 
 * **name**: The name of the service object in Kubernetes.
+* **protocol**. Determines if endpoints should respond to HTTP or gRPC requests.
 * **clusters**: An array of clusters that the service will be deployed on.
 * **endpoints**: An array of HTTP/gRPC endpoints that the service exposes.
 
@@ -25,6 +26,7 @@ At least one cluster and endpoint is required. Other sections are optional and w
   "services": [
     {
       "name": "<string>",
+      "protocol": "<string:http|grpc>",
       "clusters": [...],
       "resources": {...},
       "processes": <integer>,
@@ -92,12 +94,11 @@ HydraGen also supports the configuration of the requested resources to be alloca
 
 ## Describing Topological Architecture
 
-For each microservice, HydraGen supports a set of configuration parameters that define the topological architecture of an application by describing the dependencies between services. To define the microservice fan-in, different parameters can be used which specify the set of endpoints a component serves. For each endpoint, the user can specify parameters such as protocol and a relative fan-out based on a set of calls to subsequent microservice endpoints as well as the execution mode across these calls. Furthermore, for each subsequent microservice endpoint, the user can specify parameters such as the port and protocol. These options enable the user to generate complex multi-tier application architectures with different fan-in and/or fan-out characteristics.
+For each microservice, HydraGen supports a set of configuration parameters that define the topological architecture of an application by describing the dependencies between services. To define the microservice fan-in, different parameters can be used which specify the set of endpoints a component serves. For each endpoint, the user can specify parameters such as a relative fan-out based on a set of calls to subsequent microservice endpoints as well as the execution mode across these calls. These options enable the user to generate complex multi-tier application architectures with different fan-in and/or fan-out characteristics.
 
 #### Required attributes
 
 * **name**: The request path of the endpoint. Can only contain lowercase alphanumeric characters, '.' or '-'.
-* **protocol**. Determines if the endpoint should respond to HTTP or gRPC requests.
 
 #### Optional attributes
 
@@ -111,7 +112,6 @@ For each microservice, HydraGen supports a set of configuration parameters that 
 "endpoints": [
   {
     "name": "<string>",
-    "protocol": "<string:http|grpc>",
     "execution_mode": "<string:sequential|parallel>",
 
     "cpu_complexity": {...},

@@ -29,8 +29,6 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-const httpAddress = ":5000"
-
 // Send a response of type application/json
 func writeJSONResponse(status int, response *generated.Response, writer http.ResponseWriter) {
 	writer.Header().Set("Content-Type", "application/json")
@@ -71,7 +69,7 @@ type endpointHandler struct {
 }
 
 func (handler endpointHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	trace := util.TraceEndpointCall(handler.endpoint)
+	trace := util.TraceEndpointCall(handler.endpoint, "HTTP")
 	response := &generated.Response{
 		Endpoint: handler.endpoint.Name,
 		Tasks:    stressors.Exec(request, handler.endpoint),
@@ -81,15 +79,15 @@ func (handler endpointHandler) ServeHTTP(writer http.ResponseWriter, request *ht
 }
 
 // Launch a HTTP server to serve one or more endpoints
-func HTTP(endpointChannel chan model.Endpoint) {
+func HTTP(endpoints []model.Endpoint) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", rootHandler)
 
-	for endpoint := range endpointChannel {
+	for _, endpoint := range endpoints {
 		mux.Handle(fmt.Sprintf("/%s", endpoint.Name), endpointHandler{endpoint: &endpoint})
 	}
 
-	err := http.ListenAndServe(httpAddress, mux)
+	err := http.ListenAndServe(":5000", mux)
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		panic(err)
 	}

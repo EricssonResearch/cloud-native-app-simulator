@@ -18,6 +18,7 @@ package service
 
 import (
 	model "application-model"
+	"strconv"
 )
 
 const (
@@ -30,10 +31,8 @@ const (
 	ImagePullPolicyProd = "IfNotPresent"
 	ImagePullPolicyDev  = "Never"
 
-	DefaultExtHttpPort = 80
-	DefaultHttpPort    = 5000
-	DefaultExtGrpcPort = 81
-	DefaultGrpcPort    = 5001
+	DefaultExtPort = 80
+	DefaultPort    = 5000
 
 	Uri = "/"
 
@@ -61,7 +60,7 @@ const (
 )
 
 func CreateDeployment(metadataName, selectorAppName, selectorClusterName string, numberOfReplicas int,
-	templateAppLabel, templateClusterLabel, namespace string, httpPort int, grpcPort int, containerName, containerImageURL, containerImagePolicy,
+	templateAppLabel, templateClusterLabel, namespace string, port int, containerName, containerImageURL, containerImagePolicy,
 	mountPath string, volumeName, configMapName string, readinessProbe int, requestCPU, requestMemory, limitCPU,
 	limitMemory, nodeAffinity, protocol string, annotations []model.Annotation) (deploymentInstance model.DeploymentInstance) {
 
@@ -80,15 +79,19 @@ func CreateDeployment(metadataName, selectorAppName, selectorClusterName string,
 	containerVolume.MountPath = mountPath
 
 	containerInstance.Volumes = append(containerInstance.Volumes, containerVolume)
-	containerInstance.Ports = append(containerInstance.Ports, model.ContainerPortInstance{ContainerPort: httpPort})
-	containerInstance.Ports = append(containerInstance.Ports, model.ContainerPortInstance{ContainerPort: grpcPort})
+	containerInstance.Ports = append(containerInstance.Ports, model.ContainerPortInstance{ContainerPort: port})
 	containerInstance.Name = containerName
 	containerInstance.Image = containerImageURL
 	containerInstance.ImagePullPolicy = containerImagePolicy
 	containerInstance.Env = append(containerInstance.Env, envInstance)
 
-	containerInstance.ReadinessProbe.HttpGet.Path = "/"
-	containerInstance.ReadinessProbe.HttpGet.Port = httpPort
+	if protocol == "http" {
+		containerInstance.ReadinessProbe.HttpGet.Path = "/"
+		containerInstance.ReadinessProbe.HttpGet.Port = port
+	} else if protocol == "grpc" {
+		containerInstance.ReadinessProbe.Exec.Command = append(containerInstance.ReadinessProbe.Exec.Command, ("/bin/grpc_health_probe"), "-addr=:"+strconv.Itoa(port))
+	}
+
 	containerInstance.ReadinessProbe.InitialDelaySeconds = readinessProbe
 	containerInstance.ReadinessProbe.PeriodSeconds = 1
 	containerInstance.Resources.ResourceRequests.Cpu = requestCPU
@@ -216,11 +219,12 @@ func CreateFileConfig() model.FileConfig {
 	return fileConfig
 }
 
-func CreateConfigMap(processes int, logging bool, ep []model.Endpoint) *model.ConfigMap {
+func CreateConfigMap(processes int, logging bool, protocol string, ep []model.Endpoint) *model.ConfigMap {
 
 	cm_data := &model.ConfigMap{
 		Processes: processes,
 		Logging:   logging,
+		Protocol:  protocol,
 		Endpoints: []model.Endpoint(ep),
 	}
 
@@ -251,6 +255,7 @@ func CreateInputService() model.Service {
 
 	service.Processes = SvcProcessesDefault
 	service.ReadinessProbe = SvcReadinessProbeDefault
+	service.Protocol = "http"
 
 	return service
 }
@@ -263,10 +268,7 @@ func CreateInputCluster() model.Cluster {
 }
 
 func CreateInputEndpoint() model.Endpoint {
-
 	var ep model.Endpoint
-	ep.Protocol = "http"
-
 	var cpuComplexity model.CpuComplexity
 	var networkComplexity model.NetworkComplexity
 
@@ -287,7 +289,7 @@ func CreateInputCalledSvc() model.CalledService {
 
 	var calledSvc model.CalledService
 
-	calledSvc.Port = DefaultExtHttpPort
+	calledSvc.Port = DefaultExtPort
 	calledSvc.Protocol = "http"
 	calledSvc.TrafficForwardRatio = CsTrafficForwardRatio
 	calledSvc.RequestPayloadSize = CsRequestSizeDefault

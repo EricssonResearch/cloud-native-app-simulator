@@ -30,6 +30,7 @@ var LoggingEnabled = false
 
 type EndpointTrace struct {
 	Endpoint *model.Endpoint
+	Protocol string
 	Time     time.Time
 	CPUTime  int64
 }
@@ -38,29 +39,31 @@ type EndpointTrace struct {
 func LogConfiguration(configMap *model.ConfigMap) {
 	// Get the process count from Go to make sure settings were applied
 	processes := runtime.GOMAXPROCS(0)
-	log.Printf("Application emulator started at *:5000-5001, logging: %t, processes: %d", LoggingEnabled, processes)
+	log.Printf("Application emulator started at *:5000, logging: %t, processes: %d", LoggingEnabled, processes)
 
-	httpEndpoints := []string{}
-	grpcEndpoints := []string{}
-
+	endpoints := []string{}
 	for _, endpoint := range configMap.Endpoints {
-		if endpoint.Protocol == "http" {
-			httpEndpoints = append(httpEndpoints, endpoint.Name)
-		} else if endpoint.Protocol == "grpc" {
-			grpcEndpoints = append(grpcEndpoints, fmt.Sprintf("generated.%s.%s", model.GoName(ServiceName), model.GoName(endpoint.Name)))
+		if configMap.Protocol == "http" {
+			endpoints = append(endpoints, endpoint.Name)
+		} else if configMap.Protocol == "grpc" {
+			endpoints = append(endpoints, fmt.Sprintf("generated.%s/%s", model.GoName(ServiceName), model.GoName(endpoint.Name)))
 		}
 	}
 
 	log.Printf("Service: %s", ServiceName)
-	log.Printf("HTTP endpoints: %v", httpEndpoints)
-	log.Printf("gRPC endpoints: %v", grpcEndpoints)
+	if configMap.Protocol == "http" {
+		log.Printf("HTTP endpoints: %v", endpoints)
+	} else if configMap.Protocol == "grpc" {
+		log.Printf("gRPC endpoints: %v", endpoints)
+	}
 }
 
 // Call at start of endpoint call to trace execution time
-func TraceEndpointCall(endpoint *model.Endpoint) *EndpointTrace {
+func TraceEndpointCall(endpoint *model.Endpoint, protocol string) *EndpointTrace {
 	if LoggingEnabled {
 		trace := &EndpointTrace{
 			Endpoint: endpoint,
+			Protocol: protocol,
 			Time:     time.Now(),
 			CPUTime:  ProcessCPUTime(),
 		}
@@ -79,7 +82,7 @@ func LogEndpointCall(trace *EndpointTrace) {
 		responseTimeFmt, cpuTimeFmt := FormatTime(responseTime), FormatTime(cpuTime)
 
 		log.Printf("%s/%s: %s %s responseTime=%s cpuTime=%s",
-			ServiceName, trace.Endpoint.Name, trace.Endpoint.Protocol, trace.Endpoint.ExecutionMode, responseTimeFmt, cpuTimeFmt)
+			ServiceName, trace.Endpoint.Name, trace.Protocol, trace.Endpoint.ExecutionMode, responseTimeFmt, cpuTimeFmt)
 	}
 }
 

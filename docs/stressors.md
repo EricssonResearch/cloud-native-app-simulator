@@ -31,7 +31,6 @@ Then, add the structure to the endpoint configuration:
 ```go
 type Endpoint struct {
     Name                 string                `json:"name"`
-    Protocol             string                `json:"protocol"`
     ExecutionMode        string                `json:"execution_mode"`
     CpuComplexity        *CpuComplexity        `json:"cpu_complexity,omitempty"`
     NetworkComplexity    *NetworkComplexity    `json:"network_complexity,omitempty"`
@@ -45,7 +44,6 @@ The stressor can now be added to an endpoint in the input JSON file:
 "endpoints": [
     {
         "name": "end1",
-        "protocol": "http",
         "execution_mode": "sequential",
         "cpu_complexity": {
             "execution_time": 0.001
