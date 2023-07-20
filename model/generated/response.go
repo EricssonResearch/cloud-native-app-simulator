@@ -19,5 +19,6 @@ package generated
 // TODO: Better place to put this
 type EndpointResponse struct {
 	Status       string
+	Protocol     string
 	ResponseData *Response
 }

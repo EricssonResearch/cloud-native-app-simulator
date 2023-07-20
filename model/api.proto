@@ -12,8 +12,10 @@ message CPUTaskResponse {
 
 message NetworkTaskResponse {
 	repeated string services = 1;
-	repeated string statuses = 2;
-	string payload = 3;
+	repeated string protocols = 2;
+	repeated string statuses = 3;
+	
+	string payload = 4;
 }
 
 message TaskResponses {

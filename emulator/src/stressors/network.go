@@ -42,6 +42,7 @@ func ConcatenateNetworkResponses(taskResponses *MutexTaskResponses, networkTaskR
 
 	for _, r := range endpointResponses {
 		taskResponses.NetworkTask.Statuses = append(taskResponses.NetworkTask.Statuses, r.Status)
+		taskResponses.NetworkTask.Protocols = append(taskResponses.NetworkTask.Protocols, r.Protocol)
 
 		// ResponseData is nil if an error occured
 		// ResponseData.Tasks is nil if the endpoint was not found or ran no tasks
