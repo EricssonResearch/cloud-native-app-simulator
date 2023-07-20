@@ -106,7 +106,12 @@ func LogNetworkTask(endpoint *model.Endpoint, responses []generated.EndpointResp
 
 		statuses := make([]string, 0, len(responses))
 		for _, response := range responses {
-			statuses = append(statuses, fmt.Sprintf("http/%s:%s", response.ResponseData.Endpoint, response.Status))
+			if response.ResponseData != nil {
+				statuses = append(statuses, fmt.Sprintf("%s/%s:%s", response.Protocol, response.ResponseData.Endpoint, response.Status))
+			} else {
+				// TODO: still need endpoint here
+				statuses = append(statuses, fmt.Sprintf("%s/?:%s", response.Protocol, response.Status))
+			}
 		}
 		formattedStatuses := fmt.Sprint(statuses)
 
