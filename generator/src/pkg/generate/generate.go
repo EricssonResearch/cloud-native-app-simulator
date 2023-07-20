@@ -100,9 +100,9 @@ func Parse(configFilename string) (model.FileConfig, []string) {
 func CreateK8sYaml(config model.FileConfig, clusters []string) {
 	path, _ := os.Getwd()
 
-	implTemp := template.New("impl.tmpl")
+	implTemp := template.New("grpc.tmpl")
 	implTemp = implTemp.Funcs(template.FuncMap{"goname": model.GoName})
-	implTemp, _ = implTemp.ParseFiles(path + "/template/impl.tmpl")
+	implTemp, _ = implTemp.ParseFiles(path + "/template/grpc.tmpl")
 
 	protoTemp := template.New("service.tmpl")
 	protoTemp = protoTemp.Funcs(template.FuncMap{"goname": model.GoName})
@@ -134,8 +134,9 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 		panic(err)
 	}
 
-	implTempFilled := implTempFilledBytes.String()
-	protoTempFilled := protoTempFilledBytes.String()
+	os.Mkdir(path+"/generated", 0777)
+	os.WriteFile(path+"/generated/grpc.go", implTempFilledBytes.Bytes(), 0644)
+	os.WriteFile(path+"/generated/service.proto", protoTempFilledBytes.Bytes(), 0644)
 
 	for i := 0; i < len(config.Services); i++ {
 		serv := config.Services[i].Name
@@ -173,7 +174,7 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 				manifests = append(manifests, string(yamlDoc))
 				return nil
 			}
-			configmap := s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json), implTempFilled, protoTempFilled)
+			configmap := s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json))
 			appendManifest(configmap)
 
 			deployment := s.CreateDeployment(serv, serv, c_id, replicas, serv, c_id, namespace,

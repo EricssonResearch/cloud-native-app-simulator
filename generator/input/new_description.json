@@ -12,6 +12,7 @@
   "services": [
     {
       "name": "service1",
+      "protocol": "http",
       "clusters": [
         {
           "cluster": "cluster-1",
@@ -45,7 +46,6 @@
       "endpoints": [
         {
           "name": "end1",
-          "protocol": "http",
           "execution_mode": "sequential",
           "cpu_complexity": {
             "execution_time": 0.001
