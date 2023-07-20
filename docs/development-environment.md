@@ -21,17 +21,17 @@ To use docker to build required images you will need:
 
 - **docker tools:** To download and install Docker follow [these instructions](https://docs.docker.com/install/).
 
-## Build the worker image
+## Build the base image
 
-Now we need to build the docker image and push it to the kind clusters.
+The base image, containing source code and the compiler, needs to be built if using a development version.
 
 ```bash
-docker build -t app-demo .
+docker build -t hydragen-base-dev .
 ```
 
 ## Setting up Kind
 
-To be able to run the *app-demo container* on a sample cluster, we use
+To be able to run the *hydragen-emulator container* on a sample cluster, we use
 [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/).
 
 - **Installation:** To download and install Kind follow [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/).

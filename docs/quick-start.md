@@ -9,17 +9,7 @@
   
 ## Build and upload Docker images
 
-In the root directory for the repository, run:
-
-``` bash
-docker build -t app-demo .
-```
-
-After creating the docker image, upload it to each of the clusters _i_ by running:
-
-``` bash
-kind load docker-image app-demo --name={cluster$i}
-```
+TODO
 
 ## Environment Preparation
 

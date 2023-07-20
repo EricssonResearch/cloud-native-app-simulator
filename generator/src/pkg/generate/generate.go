@@ -146,7 +146,6 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 		processes := config.Services[i].Processes
 
 		logging := config.Settings.Logging
-		development := config.Settings.Development
 
 		cm_data := s.CreateConfigMap(processes, logging, protocol, config.Services[i].Endpoints)
 
@@ -177,16 +176,8 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 			configmap := s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json), implTempFilled, protoTempFilled)
 			appendManifest(configmap)
 
-			imageURL := s.ImageURLProd
-			imagePolicy := s.ImagePullPolicyProd
-
-			if development {
-				imageURL = s.ImageURLDev
-				imagePolicy = s.ImagePullPolicyDev
-			}
-
 			deployment := s.CreateDeployment(serv, serv, c_id, replicas, serv, c_id, namespace,
-				s.DefaultPort, s.ImageName, imageURL, imagePolicy, s.VolumePath, s.VolumeName, "config-"+serv, readinessProbe,
+				s.DefaultPort, "emulator", s.ImageURL, s.ImagePullPolicy, s.VolumePath, s.VolumeName, "config-"+serv, readinessProbe,
 				resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory,
 				nodeAffinity, protocol, annotations)
 			appendManifest(deployment)

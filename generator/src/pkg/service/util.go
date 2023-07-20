@@ -25,11 +25,13 @@ const (
 	VolumeName = "config-data-volume"
 	VolumePath = "/usr/src/app/config"
 
-	ImageName           = "app"
-	ImageURLProd        = "ghcr.io/ericssonresearch/cloud-native-app-simulator/app-demo:v3.0.1"
-	ImageURLDev         = "app-demo:latest"
-	ImagePullPolicyProd = "IfNotPresent"
-	ImagePullPolicyDev  = "Never"
+	BaseImageNameProd = "hydragen-base"
+	BaseImageNameDev  = "hydragen-base-dev"
+	// TODO: Update the version here once everything is released
+	BaseImageTagProd = "v4.0.0"
+	BaseImageTagDev  = "latest"
+	ImageURL         = "hydragen-emulator:latest"
+	ImagePullPolicy  = "Never"
 
 	DefaultExtPort = 80
 	DefaultPort    = 5000

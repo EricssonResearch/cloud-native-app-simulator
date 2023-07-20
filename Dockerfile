@@ -14,6 +14,10 @@
 # limitations under the License.
 #
 
+# This is the base image for the application emulator
+# It contains the source code, Go compiler and protobuf compiler
+# The generator will compile a unique layered image for the current configuration
+
 FROM golang:1.20
 
 # Install protoc
@@ -37,17 +41,6 @@ RUN go work init
 RUN go work use ./emulator
 RUN go work use ./model
 
-# Download as many modules as possible to be shared between pods
+# Download as many modules as possible to be shared between compilations
 RUN cd emulator && go mod download -x
 RUN cd model && go mod download -x
-
-# Don't allow any edits to /usr/src/app by Go compiler (except overriding generated)
-RUN chmod -R a-w /usr/src/app
-RUN chmod -R a+w /usr/src/app/emulator/src/generated
-
-ENV CONF=/usr/src/app/config/conf.json
-ENV GRPCIMPL=/usr/src/app/config/impl.go
-ENV GRPCPROTO=/usr/src/app/config/service.proto
-
-EXPOSE 5000
-ENTRYPOINT ["/usr/src/app/emulator/run.sh"]

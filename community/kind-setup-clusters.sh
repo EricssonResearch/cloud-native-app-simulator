@@ -34,5 +34,5 @@ fi
 # Create the kind multi-node clusters based on the given config
 for i in $(seq ${NUM}); do
   kind create cluster --name cluster-${i} --config $CONFIG
-  kind load docker-image app-demo --name=cluster-${i}
+  kind load docker-image hydragen-emulator --name=cluster-${i}
 done
