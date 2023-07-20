@@ -70,29 +70,31 @@ func (m *MyStressorTask) ExecAllowed(endpoint *model.Endpoint) bool { ... }
 func (m *MyStressorTask) ExecTask(endpoint *model.Endpoint, responses *MutexTaskResponses) { ... }
 ```
 
-The stressor should add a response to the task responses structure, which is located in model/api.go:
+The stressor should add a response to the task responses structure, which is located in model/api.proto:
 
 ```go
-type CPUTaskResponse struct {
-    Services []string `json:"services"`
-    Statuses []string `json:"statuses"`
+message CPUTaskResponse {
+    repeated string services = 1;
+    repeated float execution_times = 2;
 }
 
-type NetworkTaskResponse struct {
-    Services []string `json:"services"`
-    Statuses []string `json:"statuses"`
-    Payload  string   `json:"payload"`
+message NetworkTaskResponse {
+    repeated string services = 1;
+    repeated string protocols = 2;
+    repeated string statuses = 3;
+    
+    string payload = 4;
 }
 
-type MyTaskResponse struct {
-    Services []string `json:"services"`
-    Statuses []string `json:"statuses"`
+message MyTaskResponse {
+    repeated string services = 1;
+    repeated int my_variables = 2;
 }
 
-type TaskResponses struct {
-    CPUTask     *CPUTaskResponse     `json:"cpu_task,omitempty"`
-    NetworkTask *NetworkTaskResponse `json:"network_task,omitempty"`
-    MyTask      *MyTaskResponse      `json:"my_task,omitempty"`
+message TaskResponses {
+    CPUTaskResponse cpu_task = 1;
+    NetworkTaskResponse network_task = 2;
+    MyTaskResponse my_task = 3;
 }
 ```
 
@@ -109,7 +111,7 @@ func (m *MyStressorTask) ExecTask(endpoint *model.Endpoint, responses *MutexTask
 
     ConcatenateMyStressorResponses(responses, &model.MyTaskResponse{
         Services: []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
-        Statuses: []string{fmt.Sprintf("sleep: %d", stressParams.MyVariable)},
+        MyVariables: []int{stressParams.MyVariable},
     })
 
     util.LogMyTask(endpoint)
@@ -140,7 +142,7 @@ func ConcatenateMyStressorResponses(taskResponses *MutexTaskResponses, myTaskRes
 
     if taskResponses.MyTask != nil {
         taskResponses.MyTask.Services = append(taskResponses.MyTask.Services, myTaskResponse.Services...)
-        taskResponses.MyTask.Statuses = append(taskResponses.MyTask.Statuses, myTaskResponse.Statuses...)
+        taskResponses.MyTask.MyVariables = append(taskResponses.MyTask.MyVariables, myTaskResponse.MyVariables...)
     } else {
         taskResponses.MyTask = myTaskResponse
     }
@@ -150,21 +152,24 @@ func ConcatenateMyStressorResponses(taskResponses *MutexTaskResponses, myTaskRes
 Add the new function to the network stressor in emulator/src/stressors/network.go:
 
 ```go
-for _, r := range endpointResponses {
-    taskResponses.NetworkTask.Statuses = append(taskResponses.NetworkTask.Statuses, r.Status)
+    for _, r := range endpointResponses {
+        taskResponses.NetworkTask.Statuses = append(taskResponses.NetworkTask.Statuses, r.Status)
+        taskResponses.NetworkTask.Protocols = append(taskResponses.NetworkTask.Protocols, r.Protocol)
 
-    taskResponses.Mutex.Unlock()
-    if r.ResponseData.Tasks.CpuTask != nil {
-        ConcatenateCPUResponses(taskResponses, r.ResponseData.Tasks.CpuTask)
+        if r.ResponseData != nil && r.ResponseData.Tasks != nil {
+            taskResponses.Mutex.Unlock()
+            if r.ResponseData.Tasks.CpuTask != nil {
+                ConcatenateCPUResponses(taskResponses, r.ResponseData.Tasks.CpuTask)
+            }
+            if r.ResponseData.Tasks.NetworkTask != nil {
+                ConcatenateNetworkResponses(taskResponses, r.ResponseData.Tasks.NetworkTask, nil)
+            }
+            if r.ResponseData.Tasks.MyTask != nil {
+                ConcatenateMyStressorResponses(taskResponses, r.ResponseData.Tasks.MyTask)
+            }
+            taskResponses.Mutex.Lock()
+        }
     }
-    if r.ResponseData.Tasks.NetworkTask != nil {
-        ConcatenateNetworkResponses(taskResponses, r.ResponseData.Tasks.NetworkTask, nil)
-    }
-    if r.ResponseData.Tasks.MyTask != nil {
-        ConcatenateMyStressorResponses(taskResponses, r.ResponseData.Tasks.MyTask, nil)
-    }
-    taskResponses.Mutex.Lock()
-}
 ```
 
 ## Executing the stressor when a request is received
