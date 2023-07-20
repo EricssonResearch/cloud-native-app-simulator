@@ -17,9 +17,25 @@ limitations under the License.
 package model
 
 import (
+	"math/rand"
 	"strings"
 	"unicode"
 )
+
+// Characters in response payload
+const characters = "abcdefghijklmnopqrstuvwxyz"
+
+// Generates a random payload of size n
+func RandomPayload(n int) string {
+	builder := strings.Builder{}
+	builder.Grow(n)
+
+	for i := 0; i < n; i++ {
+		builder.WriteByte(characters[rand.Int()%len(characters)])
+	}
+
+	return builder.String()
+}
 
 // Translate K8s name into Go friendly name (example: endpoint-1 -> Endpoint1)
 func GoName(name string) string {

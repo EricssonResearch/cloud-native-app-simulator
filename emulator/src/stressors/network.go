@@ -21,27 +21,10 @@ import (
 	model "application-model"
 	"application-model/generated"
 	"fmt"
-	"math/rand"
-	"strings"
 )
 
 type NetworkTask struct {
 	Request any
-}
-
-// Characters in response payload
-const characters = "abcdefghijklmnopqrstuvwxyz"
-
-// Generates a random payload of size n
-func RandomPayload(n int) string {
-	builder := strings.Builder{}
-	builder.Grow(n)
-
-	for i := 0; i < n; i++ {
-		builder.WriteByte(characters[rand.Int()%len(characters)])
-	}
-
-	return builder.String()
 }
 
 // Combines the task responses in taskResponses with networkTaskResponse and endpointResponses
@@ -93,7 +76,7 @@ func (n *NetworkTask) ExecTask(endpoint *model.Endpoint, responses *MutexTaskRes
 	ConcatenateNetworkResponses(responses, &generated.NetworkTaskResponse{
 		Services: []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
 		Statuses: []string{},
-		Payload:  RandomPayload(stressParams.ResponsePayloadSize),
+		Payload:  model.RandomPayload(stressParams.ResponsePayloadSize),
 	}, calls)
 
 	util.LogNetworkTask(endpoint, calls)

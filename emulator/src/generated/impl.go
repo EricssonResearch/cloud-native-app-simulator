@@ -64,9 +64,7 @@ func RegisterGeneratedService(registrar grpc.ServiceRegistrar, endpoints []model
 }
 
 // Searches for method by service, endpoint and returns the result
-func CallGeneratedEndpoint(ctx context.Context, cc grpc.ClientConnInterface, service, endpoint string, in *generated.Request) (*generated.Response, error) {
-	options := []grpc.CallOption{}
-
+func CallGeneratedEndpoint(ctx context.Context, cc grpc.ClientConnInterface, service, endpoint string, in *generated.Request, options ...grpc.CallOption) (*generated.Response, error) {
 	switch service {
 	case "service-1":
 		client := NewService1Client(cc)

@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"application-emulator/src/generated"
 	"application-emulator/src/server"
 	"application-emulator/src/util"
 	"os"
@@ -36,6 +37,9 @@ func main() {
 		util.ServiceName = name
 	}
 	util.LogConfiguration(configMap)
+
+	util.GRPCCallGeneratedEndpoint = generated.CallGeneratedEndpoint
+	util.GRPCRegisterGeneratedService = generated.RegisterGeneratedService
 
 	if configMap.Protocol == "http" {
 		server.HTTP(configMap.Endpoints)
