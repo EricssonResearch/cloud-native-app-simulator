@@ -127,7 +127,7 @@ func ForwardParallel(request any, services []model.CalledService) []generated.En
 		if service.Protocol == "http" {
 			wg.Add(1)
 			go parallelHTTPRequest(responses, i, service, forwardHeaders, &wg)
-		} else if service.Protocol == "http" {
+		} else if service.Protocol == "grpc" {
 			wg.Add(1)
 			go parallelGRPCRequest(responses, i, service, &wg)
 		}
