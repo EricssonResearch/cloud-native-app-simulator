@@ -22,14 +22,13 @@ ARG TAG=v4.0.0
 
 FROM ${BASE}:${TAG} as builder
 
-# Delete placeholder files and copy everything the application generator created
-RUN rm -Rf /usr/src/emulator/generated/*
-COPY ./k8s/generated/ /usr/src/emulator/generated/
+# Copy everything the application generator created
+COPY ./k8s/generated/ /usr/src/emulator/emulator/src/generated/
 
 WORKDIR /usr/src/emulator
 
 # Run protobuf compiler
-RUN protoc -I/usr/src/emulator --go_out=emulator --go_opt=module=application-emulator --go-grpc_out=emulator --go-grpc_opt=module=application-emulator /usr/src/emulator/generated/service.proto
+RUN protoc -I/usr/src/emulator --go_out=emulator --go_opt=module=application-emulator --go-grpc_out=emulator --go-grpc_opt=module=application-emulator /usr/src/emulator/emulator/src/generated/service.proto
 # Compile the binary without cgo
 # This makes it possible to run without a base image
 RUN CGO_ENABLED=0 go build -mod=readonly -work -ldflags "-s -w" -o app-emulator ./emulator

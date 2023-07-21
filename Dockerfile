@@ -33,6 +33,8 @@ RUN GRPC_HEALTH_PROBE_VERSION=v0.4.19 && \
 # Copy relevant parts of the source tree to the new source dir
 COPY emulator /usr/src/emulator/emulator
 COPY model /usr/src/emulator/model
+# Delete placeholder files
+RUN rm -Rf /usr/src/emulator/emulator/src/generated
 
 WORKDIR /usr/src/emulator
 
