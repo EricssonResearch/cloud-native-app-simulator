@@ -43,4 +43,3 @@ RUN go work use ./model
 
 # Download as many modules as possible to be shared between compilations
 RUN cd emulator && go mod download -x
-RUN cd model && go mod download -x
