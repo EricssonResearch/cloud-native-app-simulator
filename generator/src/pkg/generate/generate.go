@@ -300,6 +300,8 @@ func CreateDockerImage(config model.FileConfig) {
 
 	cmd := exec.Command(
 		"docker", "build", "-t", s.ImageName, "--build-arg", "BASE="+baseName, "--build-arg", "TAG="+baseTag, path)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
