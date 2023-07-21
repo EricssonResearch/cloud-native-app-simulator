@@ -30,6 +30,7 @@ const (
 	// TODO: Update the version here once everything is released
 	BaseImageTagProd = "v4.0.0"
 	BaseImageTagDev  = "latest"
+	ImageName        = "hydragen-emulator"
 	ImageURL         = "hydragen-emulator:latest"
 	ImagePullPolicy  = "Never"
 

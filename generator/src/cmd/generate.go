@@ -162,6 +162,7 @@ var generateCmd = &cobra.Command{
 
 		config, clusters := generate.Parse(inputFile)
 		generate.CreateK8sYaml(config, clusters)
+		generate.CreateDockerImage(config)
 	},
 }
 

@@ -19,6 +19,7 @@ package generate
 import (
 	s "application-generator/src/pkg/service"
 	model "application-model"
+	"os/exec"
 
 	"bytes"
 	"encoding/json"
@@ -283,4 +284,23 @@ func CreateJsonInput(userConfig model.UserConfig) string {
 	}
 
 	return path
+}
+
+func CreateDockerImage(config model.FileConfig) {
+	path, _ := os.Getwd()
+	path = path + "/docker"
+
+	baseName := s.BaseImageNameProd
+	baseTag := s.BaseImageTagProd
+
+	if config.Settings.Development {
+		baseName = s.BaseImageNameDev
+		baseTag = s.BaseImageTagDev
+	}
+
+	cmd := exec.Command(
+		"docker", "build", "-t", s.ImageName, "--build-arg", "BASE="+baseName, "--build-arg", "TAG="+baseTag, path)
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
 }
