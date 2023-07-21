@@ -33,6 +33,11 @@ RUN protoc -I/usr/src/emulator --go_out=emulator --go_opt=module=application-emu
 # This makes it possible to run without a base image
 RUN CGO_ENABLED=0 go build -mod=readonly -work -ldflags "-s -w" -o app-emulator ./emulator
 
+# Install grpc_health_probe
+RUN GRPC_HEALTH_PROBE_VERSION=v0.4.19 && \
+    wget -qO/usr/bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 && \
+    chmod +x /usr/bin/grpc_health_probe
+
 FROM scratch
 
 # Copy final binary to /usr/bin/app-emulator

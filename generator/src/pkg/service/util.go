@@ -92,7 +92,7 @@ func CreateDeployment(metadataName, selectorAppName, selectorClusterName string,
 		containerInstance.ReadinessProbe.HttpGet.Path = "/"
 		containerInstance.ReadinessProbe.HttpGet.Port = port
 	} else if protocol == "grpc" {
-		containerInstance.ReadinessProbe.Exec.Command = append(containerInstance.ReadinessProbe.Exec.Command, ("/bin/grpc_health_probe"), "-addr=:"+strconv.Itoa(port))
+		containerInstance.ReadinessProbe.Exec.Command = append(containerInstance.ReadinessProbe.Exec.Command, ("/usr/bin/grpc_health_probe"), "-addr=:"+strconv.Itoa(port))
 	}
 
 	containerInstance.ReadinessProbe.InitialDelaySeconds = readinessProbe
