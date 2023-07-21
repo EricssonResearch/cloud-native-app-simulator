@@ -23,7 +23,7 @@ import (
 
 const (
 	VolumeName = "config-data-volume"
-	VolumePath = "/usr/src/app/config"
+	VolumePath = "/usr/src/emulator/config"
 
 	BaseImageNameProd = "hydragen-base"
 	BaseImageNameDev  = "hydragen-base-dev"

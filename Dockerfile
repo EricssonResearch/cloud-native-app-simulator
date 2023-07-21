@@ -31,10 +31,10 @@ RUN GRPC_HEALTH_PROBE_VERSION=v0.4.19 && \
     chmod +x /bin/grpc_health_probe
 
 # Copy relevant parts of the source tree to the new source dir
-COPY emulator /usr/src/app/emulator
-COPY model /usr/src/app/model
+COPY emulator /usr/src/emulator/emulator
+COPY model /usr/src/emulator/model
 
-WORKDIR /usr/src/app
+WORKDIR /usr/src/emulator
 
 # Create Go workspace
 RUN go work init

@@ -287,9 +287,6 @@ func CreateJsonInput(userConfig model.UserConfig) string {
 }
 
 func CreateDockerImage(config model.FileConfig) {
-	path, _ := os.Getwd()
-	path = path + "/docker"
-
 	baseName := s.BaseImageNameProd
 	baseTag := s.BaseImageTagProd
 
@@ -298,6 +295,7 @@ func CreateDockerImage(config model.FileConfig) {
 		baseTag = s.BaseImageTagDev
 	}
 
+	path, _ := os.Getwd()
 	cmd := exec.Command(
 		"docker", "build", "-t", s.ImageName, "--build-arg", "BASE="+baseName, "--build-arg", "TAG="+baseTag, path)
 	cmd.Stdout = os.Stdout
