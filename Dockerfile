@@ -28,7 +28,7 @@ RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3.0
 # Install grpc_health_probe
 RUN GRPC_HEALTH_PROBE_VERSION=v0.4.19 && \
     wget -qO/bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 && \
-    chmod +x /bin/grpc_health_probe
+    chmod +x /usr/bin/grpc_health_probe
 
 # Copy relevant parts of the source tree to the new source dir
 COPY emulator /usr/src/emulator/emulator

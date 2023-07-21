@@ -37,6 +37,7 @@ FROM scratch
 
 # Copy final binary to /usr/bin/app-emulator
 COPY --from=builder /usr/src/emulator/app-emulator /usr/bin/app-emulator
+COPY --from=builder /usr/bin/grpc_health_probe /usr/bin/grpc_health_probe
 
 ENV CONF=/usr/src/emulator/config/conf.json
 
