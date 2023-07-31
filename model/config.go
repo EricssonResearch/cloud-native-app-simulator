@@ -37,4 +37,5 @@ type ConfigMap struct {
 	Logging   bool       `json:"logging"`
 	Protocol  string     `json:"protocol"`
 	Endpoints []Endpoint `json:"endpoints"`
+	BuildID   string     `json:"build_id"`
 }

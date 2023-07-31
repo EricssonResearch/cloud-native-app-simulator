@@ -18,6 +18,7 @@ package service
 
 import (
 	model "application-model"
+	"fmt"
 	"strconv"
 )
 
@@ -220,13 +221,14 @@ func CreateFileConfig() model.FileConfig {
 	return fileConfig
 }
 
-func CreateConfigMap(processes int, logging bool, protocol string, ep []model.Endpoint) *model.ConfigMap {
+func CreateConfigMap(processes int, logging bool, protocol string, ep []model.Endpoint, buildID int) *model.ConfigMap {
 
 	cm_data := &model.ConfigMap{
 		Processes: processes,
 		Logging:   logging,
 		Protocol:  protocol,
 		Endpoints: []model.Endpoint(ep),
+		BuildID:   fmt.Sprint(buildID),
 	}
 
 	return cm_data

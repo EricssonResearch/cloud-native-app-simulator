@@ -19,6 +19,7 @@
 
 ARG BASE="hydragen-base"
 ARG TAG=v4.0.0
+ARG BUILDID=""
 
 FROM ${BASE}:${TAG} as builder
 
@@ -31,7 +32,7 @@ WORKDIR /usr/src/emulator
 RUN protoc -I/usr/src/emulator --go_out=emulator --go_opt=module=application-emulator --go-grpc_out=emulator --go-grpc_opt=module=application-emulator /usr/src/emulator/emulator/src/generated/service.proto
 # Compile the binary without cgo
 # This makes it possible to run without a base image
-RUN CGO_ENABLED=0 go build -mod=readonly -work -ldflags "-s -w" -o app-emulator ./emulator
+RUN CGO_ENABLED=0 go build -mod=readonly -work -ldflags "-s -w -X main.buildId=${BUILDID}" -o app-emulator ./emulator
 
 # Install grpc_health_probe
 RUN GRPC_HEALTH_PROBE_VERSION=v0.4.19 && \

@@ -20,14 +20,22 @@ import (
 	"application-emulator/src/generated"
 	"application-emulator/src/server"
 	"application-emulator/src/util"
+	"log"
 	"os"
 	"runtime"
 )
+
+// Randomly generated string in Dockerfile which is used to make sure the binary is up to date with the configuration
+var buildID string
 
 func main() {
 	configMap, err := util.LoadConfigMap()
 	if err != nil {
 		configMap = util.DefaultConfigMap()
+	}
+
+	if configMap.BuildID != "" && configMap.BuildID != buildID {
+		log.Fatalf("Build ID mismatch: %s != %s, have you deployed the latest Docker image?", configMap.BuildID, buildID)
 	}
 
 	runtime.GOMAXPROCS(configMap.Processes)

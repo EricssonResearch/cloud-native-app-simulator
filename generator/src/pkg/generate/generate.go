@@ -98,7 +98,7 @@ func Parse(configFilename string) (model.FileConfig, []string) {
 	return loaded_config, clusters
 }
 
-func CreateK8sYaml(config model.FileConfig, clusters []string) {
+func CreateK8sYaml(config model.FileConfig, clusters []string, buildID int) {
 	path, _ := os.Getwd()
 
 	implTemp := template.New("grpc.tmpl")
@@ -149,7 +149,7 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 
 		logging := config.Settings.Logging
 
-		cm_data := s.CreateConfigMap(processes, logging, protocol, config.Services[i].Endpoints)
+		cm_data := s.CreateConfigMap(processes, logging, protocol, config.Services[i].Endpoints, buildID)
 
 		serv_json, err := json.Marshal(cm_data)
 		if err != nil {
@@ -286,7 +286,7 @@ func CreateJsonInput(userConfig model.UserConfig) string {
 	return path
 }
 
-func CreateDockerImage(config model.FileConfig) {
+func CreateDockerImage(config model.FileConfig, buildID int) {
 	baseName := s.BaseImageNameProd
 	baseTag := s.BaseImageTagProd
 
@@ -297,7 +297,7 @@ func CreateDockerImage(config model.FileConfig) {
 
 	path, _ := os.Getwd()
 	cmd := exec.Command(
-		"docker", "build", "-t", s.ImageName, "--build-arg", "BASE="+baseName, "--build-arg", "TAG="+baseTag, path)
+		"docker", "build", "-t", s.ImageName, "--build-arg", "BASE="+baseName, "--build-arg", "TAG="+baseTag, "--build-arg", "BUILDID="+fmt.Sprint(buildID), path)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
