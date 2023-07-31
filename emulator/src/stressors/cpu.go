@@ -33,8 +33,9 @@ func ConcatenateCPUResponses(taskResponses *MutexTaskResponses, cpuTaskResponse 
 	defer taskResponses.Mutex.Unlock()
 
 	if taskResponses.CpuTask != nil {
-		taskResponses.CpuTask.Services = append(taskResponses.CpuTask.Services, cpuTaskResponse.Services...)
-		taskResponses.CpuTask.ExecutionTimes = append(taskResponses.CpuTask.ExecutionTimes, cpuTaskResponse.ExecutionTimes...)
+		for k, v := range cpuTaskResponse.Services {
+			taskResponses.CpuTask.Services[k] = v
+		}
 	} else {
 		taskResponses.CpuTask = cpuTaskResponse
 	}
@@ -85,9 +86,11 @@ func (c *CPUTask) ExecTask(endpoint *model.Endpoint, responses *MutexTaskRespons
 		StressCPU(stressParams.ExecutionTime, true)
 	}
 
+	svc := fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)
 	ConcatenateCPUResponses(responses, &generated.CPUTaskResponse{
-		Services:       []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
-		ExecutionTimes: []float32{stressParams.ExecutionTime},
+		Services: map[string]float32{
+			svc: stressParams.ExecutionTime,
+		},
 	})
 
 	util.LogCPUTask(endpoint)

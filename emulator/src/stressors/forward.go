@@ -55,11 +55,13 @@ func httpRequest(service model.CalledService, forwardHeaders http.Header) genera
 
 	if err != nil {
 		return generated.EndpointResponse{
+			Endpoint: service.Endpoint,
 			Status:   err.Error(),
 			Protocol: "HTTP",
 		}
 	} else {
 		return generated.EndpointResponse{
+			Endpoint:     service.Endpoint,
 			Status:       fmt.Sprintf("%d %s", status, http.StatusText(status)),
 			Protocol:     "HTTP",
 			ResponseData: response,
@@ -73,11 +75,13 @@ func grpcRequest(service model.CalledService) generated.EndpointResponse {
 
 	if err != nil {
 		return generated.EndpointResponse{
+			Endpoint: service.Endpoint,
 			Status:   err.Error(),
 			Protocol: "gRPC",
 		}
 	} else {
 		return generated.EndpointResponse{
+			Endpoint:     service.Endpoint,
 			Status:       codes.OK.String(),
 			Protocol:     "gRPC",
 			ResponseData: response,

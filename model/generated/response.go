@@ -16,8 +16,8 @@ limitations under the License.
 
 package generated
 
-// TODO: Better place to put this
 type EndpointResponse struct {
+	Endpoint     string
 	Status       string
 	Protocol     string
 	ResponseData *Response

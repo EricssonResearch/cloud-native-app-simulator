@@ -6,16 +6,19 @@ package generated;
 option go_package = "application-model/generated";
 
 message CPUTaskResponse {
-	repeated string services = 1;
-	repeated float execution_times = 2;
+	map<string, float> services = 1;
+}
+
+message ServiceResponse {
+	string protocol = 1;
+	string status = 2;
 }
 
 message NetworkTaskResponse {
 	repeated string services = 1;
-	repeated string protocols = 2;
-	repeated string statuses = 3;
+	map<string, ServiceResponse> responses = 2;
 	
-	string payload = 4;
+	string payload = 3;
 }
 
 message TaskResponses {
