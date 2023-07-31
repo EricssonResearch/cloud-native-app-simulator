@@ -74,5 +74,5 @@ func CallGeneratedEndpoint(ctx context.Context, cc grpc.ClientConnInterface, ser
 		}
 	}
 
-	return nil, errors.New("Unknown service, endpoint combination")
+	return nil, errors.New("unknown service, endpoint combination")
 }

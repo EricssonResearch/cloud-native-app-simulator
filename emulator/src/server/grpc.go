@@ -43,7 +43,7 @@ func (h *HealthServerImpl) Check(ctx context.Context, request *grpc_health_v1.He
 		}, nil
 	} else {
 		// https://github.com/grpc/grpc/blob/master/src/proto/grpc/health/v1/health.proto#L44
-		return nil, status.Errorf(codes.NotFound, "Only serving %s", grpcServiceName)
+		return nil, status.Errorf(codes.NotFound, "only serving %s", grpcServiceName)
 	}
 }
 

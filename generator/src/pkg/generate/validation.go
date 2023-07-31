@@ -47,7 +47,7 @@ func ValidateNames(config *model.FileConfig) error {
 		// There can be several conformance errors but only one is returned by this function
 		// If the user fixes one error, the next error will be shown when running the generator again
 		if len(errs) > 0 {
-			return fmt.Errorf("Service '%s' has invalid name: %s", service.Name, errs[0])
+			return fmt.Errorf("service '%s' has invalid name: %s", service.Name, errs[0])
 		}
 
 		serviceNames = append(serviceNames, service.Name)
@@ -56,7 +56,7 @@ func ValidateNames(config *model.FileConfig) error {
 	for _, service := range config.Services {
 		// Duplicate name found
 		if serviceNameOccurrences[service.Name] > 1 {
-			return fmt.Errorf("Duplicate service name '%s'", service.Name)
+			return fmt.Errorf("duplicate service name '%s'", service.Name)
 		}
 
 		endpointNames := []string{}
@@ -66,18 +66,18 @@ func ValidateNames(config *model.FileConfig) error {
 		for _, endpoint := range service.Endpoints {
 			errs := validation.IsDNS1123Subdomain(endpoint.Name)
 			if len(errs) > 0 {
-				return fmt.Errorf("Endpoint '%s' has invalid name: %s", endpoint.Name, errs[0])
+				return fmt.Errorf("endpoint '%s' has invalid name: %s", endpoint.Name, errs[0])
 			}
 
 			if endpoint.NetworkComplexity != nil {
 				for _, calledService := range endpoint.NetworkComplexity.CalledServices {
 					errs = validation.IsDNS1035Label(calledService.Service)
 					if len(errs) > 0 {
-						return fmt.Errorf("Call from endpoint '%s' to invalid service '%s': %s", endpoint.Name, calledService.Service, errs[0])
+						return fmt.Errorf("call from endpoint '%s' to invalid service '%s': %s", endpoint.Name, calledService.Service, errs[0])
 					}
 					errs = validation.IsDNS1123Subdomain(calledService.Endpoint)
 					if len(errs) > 0 {
-						return fmt.Errorf("Call from endpoint '%s' to invalid endpoint '%s': %s", endpoint.Name, calledService.Endpoint, errs[0])
+						return fmt.Errorf("call from endpoint '%s' to invalid endpoint '%s': %s", endpoint.Name, calledService.Endpoint, errs[0])
 					}
 				}
 			}
@@ -88,7 +88,7 @@ func ValidateNames(config *model.FileConfig) error {
 		for _, endpoint := range service.Endpoints {
 			// Duplicate name found
 			if endpointNameOccurrences[endpoint.Name] > 1 {
-				return fmt.Errorf("Duplicate endpoint '%s' in service '%s'", endpoint.Name, service.Name)
+				return fmt.Errorf("duplicate endpoint '%s' in service '%s'", endpoint.Name, service.Name)
 			}
 		}
 	}
@@ -109,10 +109,10 @@ func ValidateResources(config *model.FileConfig) error {
 		for _, limit := range limits {
 			quantity, err := resource.ParseQuantity(limit)
 			if err != nil {
-				return fmt.Errorf("Invalid resource allocation '%s': %s", limit, err)
+				return fmt.Errorf("invalid resource allocation '%s': %s", limit, err)
 			}
 			if quantity.Sign() != 1 {
-				return fmt.Errorf("Resource allocation '%s' too low", limit)
+				return fmt.Errorf("resource allocation '%s' too low", limit)
 			}
 		}
 	}
@@ -125,7 +125,7 @@ func ValidateProtocols(service *model.Service) error {
 	// TODO: enum
 	validProtocols := map[string]bool{"http": true, "grpc": true}
 	if !validProtocols[service.Protocol] {
-		return fmt.Errorf("Service '%s' has invalid protocol '%s'",
+		return fmt.Errorf("service '%s' has invalid protocol '%s'",
 			service.Name, service.Protocol)
 	}
 
@@ -133,7 +133,7 @@ func ValidateProtocols(service *model.Service) error {
 		if endpoint.NetworkComplexity != nil {
 			for _, calledService := range endpoint.NetworkComplexity.CalledServices {
 				if !validProtocols[calledService.Protocol] {
-					return fmt.Errorf("Call to endpoint '%s' from endpoint '%s' has invalid protocol '%s'",
+					return fmt.Errorf("call to endpoint '%s' from endpoint '%s' has invalid protocol '%s'",
 						calledService.Endpoint, endpoint.Name, calledService.Protocol)
 				}
 			}
@@ -146,19 +146,19 @@ func ValidateProtocols(service *model.Service) error {
 // Validate that input JSON contains required parameters
 func ValidateRequiredParameters(config *model.FileConfig) error {
 	if len(config.Services) == 0 {
-		return errors.New("At least one service is required")
+		return errors.New("at least one service is required")
 	}
 
 	for _, service := range config.Services {
 		if len(service.Clusters) == 0 {
-			return fmt.Errorf("Service '%s' needs to be deployed on at least one cluster", service.Name)
+			return fmt.Errorf("service '%s' needs to be deployed on at least one cluster", service.Name)
 		}
 		if service.Processes < 0 {
-			return fmt.Errorf("Service '%s' had invalid number of processes (0 = auto, >0 = manual)", service.Name)
+			return fmt.Errorf("service '%s' had invalid number of processes (0 = auto, >0 = manual)", service.Name)
 		}
 
 		if len(service.Endpoints) == 0 {
-			return fmt.Errorf("At least one endpoint is required in service '%s'", service.Name)
+			return fmt.Errorf("at least one endpoint is required in service '%s'", service.Name)
 		} else {
 			err := ValidateProtocols(&service)
 			if err != nil {
