@@ -35,7 +35,7 @@ func main() {
 	}
 
 	if configMap.BuildID != "" && configMap.BuildID != buildID {
-		log.Fatalf("Build ID mismatch: %s != %s, have you deployed the latest Docker image?", configMap.BuildID, buildID)
+		log.Printf("Build ID mismatch: %s != %s, have you deployed the latest Docker image?", configMap.BuildID, buildID)
 	}
 
 	runtime.GOMAXPROCS(configMap.Processes)
