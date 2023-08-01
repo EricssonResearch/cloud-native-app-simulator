@@ -158,7 +158,8 @@ Add the new function to the network stressor in emulator/src/stressors/network.g
 
 ```go
     for _, r := range endpointResponses {
-        taskResponses.NetworkTask.Responses[r.Endpoint] = &generated.ServiceResponse{
+        key := fmt.Sprintf("%s/%s", r.Service.Service, r.Service.Endpoint)
+        taskResponses.NetworkTask.Responses[key] = &generated.ServiceResponse{
             Protocol: r.Protocol,
             Status:   r.Status,
         }

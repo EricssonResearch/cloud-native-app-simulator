@@ -16,8 +16,10 @@ limitations under the License.
 
 package generated
 
+import model "application-model"
+
 type EndpointResponse struct {
-	Endpoint     string
+	Service      *model.CalledService
 	Status       string
 	Protocol     string
 	ResponseData *Response
