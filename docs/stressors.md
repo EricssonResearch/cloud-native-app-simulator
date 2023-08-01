@@ -74,21 +74,23 @@ The stressor should add a response to the task responses structure, which is loc
 
 ```go
 message CPUTaskResponse {
-    repeated string services = 1;
-    repeated float execution_times = 2;
+    map<string, float> services = 1;
+}
+
+message ServiceResponse {
+    string protocol = 1;
+    string status = 2;
 }
 
 message NetworkTaskResponse {
     repeated string services = 1;
-    repeated string protocols = 2;
-    repeated string statuses = 3;
+    map<string, ServiceResponse> responses = 2;
     
-    string payload = 4;
+    string payload = 3;
 }
 
 message MyTaskResponse {
-    repeated string services = 1;
-    repeated int my_variables = 2;
+    map<string, int> services = 1;
 }
 
 message TaskResponses {
@@ -109,9 +111,11 @@ func (m *MyStressorTask) ExecTask(endpoint *model.Endpoint, responses *MutexTask
     stressParams := endpoint.MyStressorComplexity
     time.Sleep(stressParams.MyVariable * time.Second)
 
-    ConcatenateMyStressorResponses(responses, &model.MyTaskResponse{
-        Services: []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
-        MyVariables: []int{stressParams.MyVariable},
+    svc := fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)
+    ConcatenateMyStressorResponses(responses, &generated.MyTaskResponse{
+        Services: map[string]int{
+            svc: stressParams.MyVariable,
+        },
     })
 
     util.LogMyTask(endpoint)
@@ -136,13 +140,14 @@ func LogMyTask(endpoint *model.Endpoint) {
 The network stressor will concatenate responses it receives from other endpoints, which means our new stressor needs a `ConcatenateMyStressorResponses`. The function should append the response to the current list of responses.
 
 ```go
-func ConcatenateMyStressorResponses(taskResponses *MutexTaskResponses, myTaskResponse *model.MyTaskResponse) {
+func ConcatenateMyStressorResponses(taskResponses *MutexTaskResponses, myTaskResponse *generated.MyTaskResponse) {
     taskResponses.Mutex.Lock()
     defer taskResponses.Mutex.Unlock()
 
     if taskResponses.MyTask != nil {
-        taskResponses.MyTask.Services = append(taskResponses.MyTask.Services, myTaskResponse.Services...)
-        taskResponses.MyTask.MyVariables = append(taskResponses.MyTask.MyVariables, myTaskResponse.MyVariables...)
+        for k, v := range myTaskResponse.Services {
+            taskResponses.MyTask.Services[k] = v
+        }
     } else {
         taskResponses.MyTask = myTaskResponse
     }
@@ -153,8 +158,10 @@ Add the new function to the network stressor in emulator/src/stressors/network.g
 
 ```go
     for _, r := range endpointResponses {
-        taskResponses.NetworkTask.Statuses = append(taskResponses.NetworkTask.Statuses, r.Status)
-        taskResponses.NetworkTask.Protocols = append(taskResponses.NetworkTask.Protocols, r.Protocol)
+        taskResponses.NetworkTask.Responses[r.Endpoint] = &generated.ServiceResponse{
+            Protocol: r.Protocol,
+            Status:   r.Status,
+        }
 
         if r.ResponseData != nil && r.ResponseData.Tasks != nil {
             taskResponses.Mutex.Unlock()
