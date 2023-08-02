@@ -109,13 +109,6 @@ func CreateK8sYaml(config model.FileConfig, clusters []string, buildID int) {
 	protoTemp = protoTemp.Funcs(template.FuncMap{"goname": model.GoName})
 	protoTemp, _ = protoTemp.ParseFiles(path + "/template/service.tmpl")
 
-	path = path + "/k8s"
-
-	for i := 0; i < len(clusters); i++ {
-		directory := fmt.Sprintf(path+"/%s", clusters[i])
-		os.Mkdir(directory, 0777)
-	}
-
 	grpcServices := []model.Service{}
 	for _, service := range config.Services {
 		if service.Protocol == "grpc" {
@@ -138,6 +131,13 @@ func CreateK8sYaml(config model.FileConfig, clusters []string, buildID int) {
 	os.Mkdir(path+"/generated", 0777)
 	os.WriteFile(path+"/generated/grpc.go", implTempFilledBytes.Bytes(), 0644)
 	os.WriteFile(path+"/generated/service.proto", protoTempFilledBytes.Bytes(), 0644)
+
+	path = path + "/k8s"
+
+	for i := 0; i < len(clusters); i++ {
+		directory := fmt.Sprintf(path+"/%s", clusters[i])
+		os.Mkdir(directory, 0777)
+	}
 
 	for i := 0; i < len(config.Services); i++ {
 		serv := config.Services[i].Name

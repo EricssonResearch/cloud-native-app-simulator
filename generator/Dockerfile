@@ -25,7 +25,7 @@ FROM ${BASE}:${TAG} as builder
 ARG BUILDID
 
 # Copy everything the application generator created
-COPY ./k8s/generated/ /usr/src/emulator/emulator/src/generated/
+COPY ./generated/ /usr/src/emulator/emulator/src/generated/
 
 WORKDIR /usr/src/emulator
 
