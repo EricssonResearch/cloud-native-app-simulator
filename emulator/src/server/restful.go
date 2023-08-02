@@ -21,6 +21,7 @@ import (
 	"application-emulator/src/util"
 	model "application-model"
 	"application-model/generated"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -29,20 +30,31 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
+const useProtoJSON = true
+
 // Send a response of type application/json
 func writeJSONResponse(status int, response *generated.Response, writer http.ResponseWriter) {
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(status)
 
-	// TODO: protojson seems a lot slower
-	marshalOptions := protojson.MarshalOptions{UseProtoNames: true, AllowPartial: true}
-	data, err := marshalOptions.Marshal(response)
-	if err != nil {
-		panic(err)
-	}
+	if useProtoJSON {
+		marshalOptions := protojson.MarshalOptions{UseProtoNames: true, AllowPartial: true}
+		data, err := marshalOptions.Marshal(response)
+		if err != nil {
+			panic(err)
+		}
 
-	writer.Write(data)
-	writer.Write([]byte{'\n'})
+		writer.Write(data)
+		writer.Write([]byte{'\n'})
+	} else {
+		data, err := json.Marshal(response)
+		if err != nil {
+			panic(err)
+		}
+
+		writer.Write(data)
+		writer.Write([]byte{'\n'})
+	}
 }
 
 // This should always be available because the readiness probe will send a request to this address

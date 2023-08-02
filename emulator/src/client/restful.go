@@ -19,12 +19,15 @@ package client
 import (
 	"application-model/generated"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 
 	"google.golang.org/protobuf/encoding/protojson"
 )
+
+const useProtoJSON = true
 
 // Sends a HTTP POST request to the specified endpoint
 func POST(service, endpoint string, port int, payload string, headers http.Header) (int, *generated.Response, error) {
@@ -36,8 +39,15 @@ func POST(service, endpoint string, port int, payload string, headers http.Heade
 		url = fmt.Sprintf("http://%s:%d/%s", service, port, endpoint)
 	}
 
-	marshalOptions := protojson.MarshalOptions{UseProtoNames: true, AllowPartial: true}
-	postData, _ := marshalOptions.Marshal(&generated.Request{Payload: payload})
+	var postData []byte
+
+	if useProtoJSON {
+		marshalOptions := protojson.MarshalOptions{UseProtoNames: true, AllowPartial: true}
+		postData, _ = marshalOptions.Marshal(&generated.Request{Payload: payload})
+	} else {
+		postData, _ = json.Marshal(&generated.Request{Payload: payload})
+	}
+
 	request, _ := http.NewRequest(http.MethodPost, url, bytes.NewReader(postData))
 
 	// Override the content type
@@ -62,11 +72,18 @@ func POST(service, endpoint string, port int, payload string, headers http.Heade
 		return 0, nil, err
 	}
 
-	// Assume that we receieve a valid model.RESTResponse
+	// Assume that we received a valid model.RESTResponse
 	endpointResponse := &generated.Response{}
-	err = protojson.Unmarshal(data, endpointResponse)
-	if err != nil {
-		return 0, nil, err
+	if useProtoJSON {
+		err = protojson.Unmarshal(data, endpointResponse)
+		if err != nil {
+			return 0, nil, err
+		}
+	} else {
+		err = json.Unmarshal(data, endpointResponse)
+		if err != nil {
+			return 0, nil, err
+		}
 	}
 
 	return response.StatusCode, endpointResponse, nil

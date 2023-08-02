@@ -122,7 +122,6 @@ func ValidateResources(config *model.FileConfig) error {
 
 // Validate that protocols are set in both service definition and endpoint call
 func ValidateProtocols(service *model.Service) error {
-	// TODO: enum
 	validProtocols := map[string]bool{"http": true, "grpc": true}
 	if !validProtocols[service.Protocol] {
 		return fmt.Errorf("service '%s' has invalid protocol '%s'",
@@ -154,7 +153,7 @@ func ValidateRequiredParameters(config *model.FileConfig) error {
 			return fmt.Errorf("service '%s' needs to be deployed on at least one cluster", service.Name)
 		}
 		if service.Processes < 0 {
-			return fmt.Errorf("service '%s' had invalid number of processes (0 = auto, >0 = manual)", service.Name)
+			return fmt.Errorf("service '%s' has invalid number of processes (0 = auto, >0 = manual)", service.Name)
 		}
 
 		if len(service.Endpoints) == 0 {

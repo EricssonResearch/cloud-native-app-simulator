@@ -46,10 +46,8 @@ func (c *CPUTask) ExecAllowed(endpoint *model.Endpoint) bool {
 }
 
 func StressCPU(executionTime float32, lockThread bool) {
-	// TODO: This needs to be tested more
 	if executionTime > 0 {
-		// TODO: Threads need to be locked because otherwise util.ThreadCPUTime() can change in the middle of execution
-		// Maybe this should be switched to time.Now() or util.ProcessCPUTime()?
+		// Threads need to be locked because otherwise util.ThreadCPUTime() can change in the middle of execution
 		if lockThread {
 			runtime.LockOSThread()
 		}
