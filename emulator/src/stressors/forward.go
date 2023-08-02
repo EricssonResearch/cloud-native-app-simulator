@@ -25,6 +25,7 @@ import (
 	"sync"
 
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Headers to propagate from inbound to outbound
@@ -76,7 +77,7 @@ func grpcRequest(service model.CalledService) generated.EndpointResponse {
 	if err != nil {
 		return generated.EndpointResponse{
 			Service:  &service,
-			Status:   err.Error(),
+			Status:   status.Convert(err).Code().String(),
 			Protocol: "gRPC",
 		}
 	} else {
