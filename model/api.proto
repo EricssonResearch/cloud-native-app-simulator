@@ -15,7 +15,7 @@ message ServiceResponse {
 	string protocol = 1;
 	// Response status code
 	// HTTP: 200 OK, 404 Not Found, etc
-	// gRPC: OK, INVALID_ARGUMENT, etc
+	// gRPC: OK, InvalidArgument, etc
 	string status = 2;
 }
 

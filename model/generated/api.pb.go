@@ -79,7 +79,7 @@ type ServiceResponse struct {
 	Protocol string `protobuf:"bytes,1,opt,name=protocol,proto3" json:"protocol,omitempty"`
 	// Response status code
 	// HTTP: 200 OK, 404 Not Found, etc
-	// gRPC: OK, INVALID_ARGUMENT, etc
+	// gRPC: OK, InvalidArgument, etc
 	Status string `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
 }
 
