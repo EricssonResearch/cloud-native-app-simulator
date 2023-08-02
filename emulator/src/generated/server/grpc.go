@@ -14,30 +14,30 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package generated
+package server
+
+// This file will be replaced by the generated gRPC code when the emulator image is built
 
 import (
+	generated "application-emulator/src/generated"
 	"application-emulator/src/stressors"
 	"application-emulator/src/util"
 	model "application-model"
-	"application-model/generated"
+	generated_model "application-model/generated"
 	"context"
-	"errors"
 	"log"
 
 	"google.golang.org/grpc"
 )
 
-// This file will be replaced by the generated gRPC code when the emulator executes
-
 type Service1ServerImpl struct {
-	UnimplementedService1Server
+	generated.UnimplementedService1Server
 	TestEndpointInfo *model.Endpoint
 }
 
-func (s *Service1ServerImpl) TestEndpoint(ctx context.Context, request *generated.Request) (*generated.Response, error) {
+func (s *Service1ServerImpl) TestEndpoint(ctx context.Context, request *generated_model.Request) (*generated_model.Response, error) {
 	trace := util.TraceEndpointCall(s.TestEndpointInfo, "gRPC")
-	response := &generated.Response{
+	response := &generated_model.Response{
 		Endpoint: s.TestEndpointInfo.Name,
 		Tasks:    stressors.Exec(request, s.TestEndpointInfo),
 	}
@@ -59,20 +59,6 @@ func RegisterGeneratedService(registrar grpc.ServiceRegistrar, endpoints []model
 				log.Fatalf("Service %s got invalid gRPC endpoint %s", util.ServiceName, endpoint.Name)
 			}
 		}
-		RegisterService1Server(registrar, &impl)
+		generated.RegisterService1Server(registrar, &impl)
 	}
-}
-
-// Searches for method by service, endpoint and returns the result
-func CallGeneratedEndpoint(ctx context.Context, cc grpc.ClientConnInterface, service, endpoint string, in *generated.Request, options ...grpc.CallOption) (*generated.Response, error) {
-	switch service {
-	case "service-1":
-		client := NewService1Client(cc)
-		switch endpoint {
-		case "test-endpoint":
-			return client.TestEndpoint(ctx, in, options...)
-		}
-	}
-
-	return nil, errors.New("unknown service, endpoint combination")
 }

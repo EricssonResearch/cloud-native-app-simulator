@@ -17,7 +17,7 @@ limitations under the License.
 package client
 
 import (
-	"application-emulator/src/util"
+	"application-emulator/src/generated/client"
 	"application-model/generated"
 	"context"
 	"fmt"
@@ -50,7 +50,7 @@ func GRPC(service, endpoint string, port int, payload string) (*generated.Respon
 	defer cancel()
 
 	callOptions := []grpc.CallOption{}
-	response, err := util.GRPCCallGeneratedEndpoint(ctx, conn, service, endpoint, &generated.Request{Payload: payload}, callOptions...)
+	response, err := client.CallGeneratedEndpoint(ctx, conn, service, endpoint, &generated.Request{Payload: payload}, callOptions...)
 	if err != nil {
 		return nil, err
 	}

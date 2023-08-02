@@ -102,9 +102,13 @@ func Parse(configFilename string) (model.FileConfig, []string) {
 func CreateK8sYaml(config model.FileConfig, clusters []string, buildID int) {
 	path, _ := os.Getwd()
 
-	implTemp := template.New("grpc.tmpl")
-	implTemp = implTemp.Funcs(template.FuncMap{"goname": strcase.ToCamel})
-	implTemp, _ = implTemp.ParseFiles(path + "/template/grpc.tmpl")
+	implClientTemp := template.New("grpc.tmpl")
+	implClientTemp = implClientTemp.Funcs(template.FuncMap{"goname": strcase.ToCamel})
+	implClientTemp, _ = implClientTemp.ParseFiles(path + "/template/client/grpc.tmpl")
+
+	implServerTemp := template.New("grpc.tmpl")
+	implServerTemp = implServerTemp.Funcs(template.FuncMap{"goname": strcase.ToCamel})
+	implServerTemp, _ = implServerTemp.ParseFiles(path + "/template/server/grpc.tmpl")
 
 	protoTemp := template.New("service.tmpl")
 	protoTemp = protoTemp.Funcs(template.FuncMap{"goname": strcase.ToCamel})
@@ -117,8 +121,14 @@ func CreateK8sYaml(config model.FileConfig, clusters []string, buildID int) {
 		}
 	}
 
-	var implTempFilledBytes bytes.Buffer
-	err := implTemp.Execute(&implTempFilledBytes, grpcServices)
+	var implClientTempFilledBytes bytes.Buffer
+	err := implClientTemp.Execute(&implClientTempFilledBytes, grpcServices)
+	if err != nil {
+		panic(err)
+	}
+
+	var implServerTempFilledBytes bytes.Buffer
+	err = implServerTemp.Execute(&implServerTempFilledBytes, grpcServices)
 	if err != nil {
 		panic(err)
 	}
@@ -130,7 +140,10 @@ func CreateK8sYaml(config model.FileConfig, clusters []string, buildID int) {
 	}
 
 	os.Mkdir(path+"/generated", 0777)
-	os.WriteFile(path+"/generated/grpc.go", implTempFilledBytes.Bytes(), 0644)
+	os.Mkdir(path+"/generated/client", 0777)
+	os.Mkdir(path+"/generated/server", 0777)
+	os.WriteFile(path+"/generated/client/grpc.go", implClientTempFilledBytes.Bytes(), 0644)
+	os.WriteFile(path+"/generated/server/grpc.go", implServerTempFilledBytes.Bytes(), 0644)
 	os.WriteFile(path+"/generated/service.proto", protoTempFilledBytes.Bytes(), 0644)
 
 	path = path + "/k8s"

@@ -17,6 +17,7 @@ limitations under the License.
 package server
 
 import (
+	"application-emulator/src/generated/server"
 	"application-emulator/src/util"
 	model "application-model"
 	"context"
@@ -56,12 +57,12 @@ func GRPC(endpoints []model.Endpoint) {
 		panic(err)
 	}
 
-	server := grpc.NewServer()
-	util.GRPCRegisterGeneratedService(server, endpoints)
-	reflection.Register(server)
-	grpc_health_v1.RegisterHealthServer(server, &HealthServerImpl{})
+	grpcServer := grpc.NewServer()
+	server.RegisterGeneratedService(grpcServer, endpoints)
+	reflection.Register(grpcServer)
+	grpc_health_v1.RegisterHealthServer(grpcServer, &HealthServerImpl{})
 
-	err = server.Serve(listener)
+	err = grpcServer.Serve(listener)
 	if err != nil && !errors.Is(err, grpc.ErrServerStopped) {
 		panic(err)
 	}
