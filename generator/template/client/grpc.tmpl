@@ -6,9 +6,10 @@ import (
 	generated "application-emulator/src/generated"
 	generated_model "application-model/generated"
 	"context"
-	"errors"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func CallGeneratedEndpoint(ctx context.Context, cc grpc.ClientConnInterface, service, endpoint string, in *generated_model.Request, options ...grpc.CallOption) (*generated_model.Response, error) {
@@ -25,5 +26,5 @@ func CallGeneratedEndpoint(ctx context.Context, cc grpc.ClientConnInterface, ser
 	{{ end }}
 	}
 
-	return nil, errors.New("unknown service, endpoint combination")
+	return nil, status.Error(codes.InvalidArgument, "unknown service, endpoint combination")
 }

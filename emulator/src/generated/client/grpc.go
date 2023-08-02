@@ -22,9 +22,10 @@ import (
 	generated "application-emulator/src/generated"
 	generated_model "application-model/generated"
 	"context"
-	"errors"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Searches for method by service, endpoint and returns the result
@@ -38,5 +39,5 @@ func CallGeneratedEndpoint(ctx context.Context, cc grpc.ClientConnInterface, ser
 		}
 	}
 
-	return nil, errors.New("unknown service, endpoint combination")
+	return nil, status.Error(codes.InvalidArgument, "unknown service, endpoint combination")
 }
