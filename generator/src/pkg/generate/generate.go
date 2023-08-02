@@ -32,6 +32,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/iancoleman/strcase"
 	"gopkg.in/yaml.v3"
 )
 
@@ -102,11 +103,11 @@ func CreateK8sYaml(config model.FileConfig, clusters []string, buildID int) {
 	path, _ := os.Getwd()
 
 	implTemp := template.New("grpc.tmpl")
-	implTemp = implTemp.Funcs(template.FuncMap{"goname": model.GoName})
+	implTemp = implTemp.Funcs(template.FuncMap{"goname": strcase.ToCamel})
 	implTemp, _ = implTemp.ParseFiles(path + "/template/grpc.tmpl")
 
 	protoTemp := template.New("service.tmpl")
-	protoTemp = protoTemp.Funcs(template.FuncMap{"goname": model.GoName})
+	protoTemp = protoTemp.Funcs(template.FuncMap{"goname": strcase.ToCamel})
 	protoTemp, _ = protoTemp.ParseFiles(path + "/template/service.tmpl")
 
 	grpcServices := []model.Service{}

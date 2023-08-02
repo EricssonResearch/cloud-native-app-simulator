@@ -21,7 +21,28 @@ import (
 	model "application-model"
 	"application-model/generated"
 	"fmt"
+	"math/rand"
+	"strings"
 )
+
+// Characters in response payload
+const characters = "abcdefghijklmnopqrstuvwxyz"
+
+// Generates a random payload of size n
+func RandomPayload(n int) string {
+	if n == 0 {
+		return ""
+	}
+
+	builder := strings.Builder{}
+	builder.Grow(n)
+
+	for i := 0; i < n; i++ {
+		builder.WriteByte(characters[rand.Int()%len(characters)])
+	}
+
+	return builder.String()
+}
 
 type NetworkTask struct {
 	Request any
@@ -83,7 +104,7 @@ func (n *NetworkTask) ExecTask(endpoint *model.Endpoint, responses *MutexTaskRes
 	ConcatenateNetworkResponses(responses, &generated.NetworkTaskResponse{
 		Services:  []string{svc},
 		Responses: make(map[string]*generated.ServiceResponse),
-		Payload:   model.RandomPayload(stressParams.ResponsePayloadSize),
+		Payload:   RandomPayload(stressParams.ResponsePayloadSize),
 	}, calls)
 
 	util.LogNetworkTask(endpoint, calls)

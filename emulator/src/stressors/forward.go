@@ -51,7 +51,7 @@ func ExtractHeaders(request any) http.Header {
 
 func httpRequest(service model.CalledService, forwardHeaders http.Header) generated.EndpointResponse {
 	status, response, err :=
-		client.POST(service.Service, service.Endpoint, service.Port, model.RandomPayload(service.RequestPayloadSize), forwardHeaders)
+		client.POST(service.Service, service.Endpoint, service.Port, RandomPayload(service.RequestPayloadSize), forwardHeaders)
 
 	if err != nil {
 		return generated.EndpointResponse{
@@ -71,7 +71,7 @@ func httpRequest(service model.CalledService, forwardHeaders http.Header) genera
 
 func grpcRequest(service model.CalledService) generated.EndpointResponse {
 	response, err :=
-		client.GRPC(service.Service, service.Endpoint, service.Port, model.RandomPayload(service.RequestPayloadSize))
+		client.GRPC(service.Service, service.Endpoint, service.Port, RandomPayload(service.RequestPayloadSize))
 
 	if err != nil {
 		return generated.EndpointResponse{

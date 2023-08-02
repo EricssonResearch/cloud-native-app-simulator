@@ -23,6 +23,8 @@ import (
 	"log"
 	"runtime"
 	"time"
+
+	"github.com/iancoleman/strcase"
 )
 
 var ServiceName = "service-1"
@@ -46,7 +48,7 @@ func LogConfiguration(configMap *model.ConfigMap) {
 		if configMap.Protocol == "http" {
 			endpoints = append(endpoints, endpoint.Name)
 		} else if configMap.Protocol == "grpc" {
-			endpoints = append(endpoints, fmt.Sprintf("generated.%s/%s", model.GoName(ServiceName), model.GoName(endpoint.Name)))
+			endpoints = append(endpoints, fmt.Sprintf("generated.%s/%s", strcase.ToCamel(ServiceName), strcase.ToCamel(endpoint.Name)))
 		}
 	}
 
