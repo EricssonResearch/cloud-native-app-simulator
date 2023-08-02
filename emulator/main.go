@@ -20,6 +20,9 @@ import (
 	"application-emulator/src/generated"
 	"application-emulator/src/server"
 	"application-emulator/src/util"
+	model "application-model"
+	"encoding/json"
+	"io"
 	"log"
 	"os"
 	"runtime"
@@ -28,10 +31,30 @@ import (
 // Randomly generated string in Dockerfile which is used to make sure the binary is up to date with the configuration
 var buildID string
 
-func main() {
-	configMap, err := util.LoadConfigMap()
+// Load the config map from the CONF environment variable
+func LoadConfigMap() (*model.ConfigMap, error) {
+	configFilename := os.Getenv("CONF")
+	configFile, err := os.Open(configFilename)
+	configFileByteValue, _ := io.ReadAll(configFile)
+
 	if err != nil {
-		configMap = util.DefaultConfigMap()
+		return nil, err
+	}
+
+	inputConfig := &model.ConfigMap{}
+	err = json.Unmarshal(configFileByteValue, inputConfig)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return inputConfig, nil
+}
+
+func main() {
+	configMap, err := LoadConfigMap()
+	if err != nil {
+		panic(err)
 	}
 
 	if configMap.BuildID != "" && configMap.BuildID != buildID {
