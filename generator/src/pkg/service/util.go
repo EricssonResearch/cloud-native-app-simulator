@@ -35,8 +35,9 @@ const (
 	ImageURL         = "hydragen-emulator:latest"
 	ImagePullPolicy  = "Never"
 
-	DefaultExtPort = 80
-	DefaultPort    = 5000
+	DefaultExtPort  = 80
+	DefaultPort     = 5000
+	DefaultProtocol = "http"
 
 	Uri = "/"
 
@@ -258,7 +259,7 @@ func CreateInputService() model.Service {
 
 	service.Processes = SvcProcessesDefault
 	service.ReadinessProbe = SvcReadinessProbeDefault
-	service.Protocol = "http"
+	service.Protocol = DefaultProtocol
 
 	return service
 }
@@ -293,7 +294,7 @@ func CreateInputCalledSvc() model.CalledService {
 	var calledSvc model.CalledService
 
 	calledSvc.Port = DefaultExtPort
-	calledSvc.Protocol = "http"
+	calledSvc.Protocol = DefaultProtocol
 	calledSvc.TrafficForwardRatio = CsTrafficForwardRatio
 	calledSvc.RequestPayloadSize = CsRequestSizeDefault
 
