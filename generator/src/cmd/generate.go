@@ -163,6 +163,8 @@ var generateCmd = &cobra.Command{
 
 		buildID := rand.Int()
 		config, clusters := generate.Parse(inputFile)
+
+		generate.CreateGrpcEndpoints(config)
 		generate.CreateK8sYaml(config, clusters, buildID)
 		generate.CreateDockerImage(config, buildID)
 	},

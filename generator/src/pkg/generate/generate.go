@@ -99,7 +99,7 @@ func Parse(configFilename string) (model.FileConfig, []string) {
 	return loaded_config, clusters
 }
 
-func CreateK8sYaml(config model.FileConfig, clusters []string, buildID int) {
+func CreateGrpcEndpoints(config model.FileConfig) {
 	path, _ := os.Getwd()
 
 	implClientTemp := template.New("grpc.tmpl")
@@ -145,7 +145,10 @@ func CreateK8sYaml(config model.FileConfig, clusters []string, buildID int) {
 	os.WriteFile(path+"/generated/client/grpc.go", implClientTempFilledBytes.Bytes(), 0644)
 	os.WriteFile(path+"/generated/server/grpc.go", implServerTempFilledBytes.Bytes(), 0644)
 	os.WriteFile(path+"/generated/service.proto", protoTempFilledBytes.Bytes(), 0644)
+}
 
+func CreateK8sYaml(config model.FileConfig, clusters []string, buildID int) {
+	path, _ := os.Getwd()
 	path = path + "/k8s"
 
 	for i := 0; i < len(clusters); i++ {
