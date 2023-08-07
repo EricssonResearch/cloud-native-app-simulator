@@ -28,13 +28,14 @@ type ConfigMapInstance struct {
 		Namespace string `yaml:"namespace"`
 	} `yaml:"metadata"`
 	Data struct {
-		Config  string `yaml:"conf.json"`
-		Service string `yaml:"service.proto"`
+		Config string `yaml:"conf.json"`
 	} `yaml:"data"`
 }
 
 type ConfigMap struct {
 	Processes int        `json:"processes"`
 	Logging   bool       `json:"logging"`
+	Protocol  string     `json:"protocol"`
 	Endpoints []Endpoint `json:"endpoints"`
+	BuildID   string     `json:"build_id"`
 }

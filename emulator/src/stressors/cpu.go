@@ -19,6 +19,7 @@ package stressors
 import (
 	"application-emulator/src/util"
 	model "application-model"
+	"application-model/generated"
 	"fmt"
 	"runtime"
 	"sync"
@@ -27,15 +28,16 @@ import (
 type CPUTask struct{}
 
 // Combines the CPU task response in taskResponses with cpuTaskResponse
-func ConcatenateCPUResponses(taskResponses *MutexTaskResponses, cpuTaskResponse *model.CPUTaskResponse) {
+func ConcatenateCPUResponses(taskResponses *MutexTaskResponses, cpuTaskResponse *generated.CPUTaskResponse) {
 	taskResponses.Mutex.Lock()
 	defer taskResponses.Mutex.Unlock()
 
-	if taskResponses.CPUTask != nil {
-		taskResponses.CPUTask.Services = append(taskResponses.CPUTask.Services, cpuTaskResponse.Services...)
-		taskResponses.CPUTask.Statuses = append(taskResponses.CPUTask.Statuses, cpuTaskResponse.Statuses...)
+	if taskResponses.CpuTask != nil {
+		for k, v := range cpuTaskResponse.Services {
+			taskResponses.CpuTask.Services[k] = v
+		}
 	} else {
-		taskResponses.CPUTask = cpuTaskResponse
+		taskResponses.CpuTask = cpuTaskResponse
 	}
 }
 
@@ -44,10 +46,8 @@ func (c *CPUTask) ExecAllowed(endpoint *model.Endpoint) bool {
 }
 
 func StressCPU(executionTime float32, lockThread bool) {
-	// TODO: This needs to be tested more
 	if executionTime > 0 {
-		// TODO: Threads need to be locked because otherwise util.ThreadCPUTime() can change in the middle of execution
-		// Maybe this should be switched to time.Now() or util.ProcessCPUTime()?
+		// Threads need to be locked because otherwise util.ThreadCPUTime() can change in the middle of execution
 		if lockThread {
 			runtime.LockOSThread()
 		}
@@ -84,9 +84,11 @@ func (c *CPUTask) ExecTask(endpoint *model.Endpoint, responses *MutexTaskRespons
 		StressCPU(stressParams.ExecutionTime, true)
 	}
 
-	ConcatenateCPUResponses(responses, &model.CPUTaskResponse{
-		Services: []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
-		Statuses: []string{fmt.Sprintf("execution_time: %f", stressParams.ExecutionTime)},
+	svc := fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)
+	ConcatenateCPUResponses(responses, &generated.CPUTaskResponse{
+		Services: map[string]float32{
+			svc: stressParams.ExecutionTime,
+		},
 	})
 
 	util.LogCPUTask(endpoint)

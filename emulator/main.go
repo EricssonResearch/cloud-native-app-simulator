@@ -20,37 +20,57 @@ import (
 	"application-emulator/src/server"
 	"application-emulator/src/util"
 	model "application-model"
+	"encoding/json"
+	"io"
+	"log"
 	"os"
 	"runtime"
-	"sync"
 )
 
-func main() {
-	configMap, err := util.LoadConfigMap()
+// Randomly generated string in Dockerfile which is used to make sure the binary is up to date with the configuration
+var buildID string
+
+// Load the config map from the CONF environment variable
+func LoadConfigMap() (*model.ConfigMap, error) {
+	configFilename := os.Getenv("CONF")
+	configFile, err := os.Open(configFilename)
+	configFileByteValue, _ := io.ReadAll(configFile)
+
 	if err != nil {
-		configMap = util.DefaultConfigMap()
+		return nil, err
+	}
+
+	inputConfig := &model.ConfigMap{}
+	err = json.Unmarshal(configFileByteValue, inputConfig)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return inputConfig, nil
+}
+
+func main() {
+	configMap, err := LoadConfigMap()
+	if err != nil {
+		panic(err)
+	}
+
+	if configMap.BuildID != "" && configMap.BuildID != buildID {
+		log.Printf("Build ID mismatch: %s != %s, have you deployed the latest Docker image?", configMap.BuildID, buildID)
 	}
 
 	runtime.GOMAXPROCS(configMap.Processes)
 
 	util.LoggingEnabled = configMap.Logging
-	util.ServiceName = os.Getenv("SERVICE_NAME")
+	if name, ok := os.LookupEnv("SERVICE_NAME"); ok {
+		util.ServiceName = name
+	}
 	util.LogConfiguration(configMap)
 
-	wg := sync.WaitGroup{}
-
-	// TODO: Check if protocol is HTTP
-	httpEndpoints := make(chan model.Endpoint)
-	go server.HTTP(httpEndpoints, &wg)
-	wg.Add(1)
-
-	for _, endpoint := range configMap.Endpoints {
-		// Only HTTP is supported right now
-		if endpoint.Protocol == "http" {
-			httpEndpoints <- endpoint
-		}
+	if configMap.Protocol == "http" {
+		server.HTTP(configMap.Endpoints)
+	} else if configMap.Protocol == "grpc" {
+		server.GRPC(configMap.Endpoints)
 	}
-
-	close(httpEndpoints)
-	wg.Wait()
 }

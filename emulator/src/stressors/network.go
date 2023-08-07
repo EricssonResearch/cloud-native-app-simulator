@@ -19,20 +19,21 @@ package stressors
 import (
 	"application-emulator/src/util"
 	model "application-model"
+	"application-model/generated"
 	"fmt"
 	"math/rand"
 	"strings"
 )
-
-type NetworkTask struct {
-	Request any
-}
 
 // Characters in response payload
 const characters = "abcdefghijklmnopqrstuvwxyz"
 
 // Generates a random payload of size n
 func RandomPayload(n int) string {
+	if n == 0 {
+		return ""
+	}
+
 	builder := strings.Builder{}
 	builder.Grow(n)
 
@@ -43,30 +44,41 @@ func RandomPayload(n int) string {
 	return builder.String()
 }
 
+type NetworkTask struct {
+	Request any
+}
+
 // Combines the task responses in taskResponses with networkTaskResponse and endpointResponses
-func ConcatenateNetworkResponses(taskResponses *MutexTaskResponses, networkTaskResponse *model.NetworkTaskResponse, endpointResponses []model.EndpointResponse) {
+func ConcatenateNetworkResponses(taskResponses *MutexTaskResponses, networkTaskResponse *generated.NetworkTaskResponse, endpointResponses []generated.EndpointResponse) {
 	taskResponses.Mutex.Lock()
 	defer taskResponses.Mutex.Unlock()
 
 	if taskResponses.NetworkTask != nil {
 		taskResponses.NetworkTask.Services = append(taskResponses.NetworkTask.Services, networkTaskResponse.Services...)
-		taskResponses.NetworkTask.Statuses = append(taskResponses.NetworkTask.Statuses, networkTaskResponse.Statuses...)
+		for k, v := range networkTaskResponse.Responses {
+			taskResponses.NetworkTask.Responses[k] = v
+		}
 		// Don't replace the payload
 	} else {
 		taskResponses.NetworkTask = networkTaskResponse
 	}
 
 	for _, r := range endpointResponses {
-		taskResponses.NetworkTask.Statuses = append(taskResponses.NetworkTask.Statuses, r.Status)
+		key := fmt.Sprintf("%s/%s", r.Service.Service, r.Service.Endpoint)
+		taskResponses.NetworkTask.Responses[key] = &generated.ServiceResponse{
+			Protocol: r.Protocol,
+			Status:   r.Status,
+		}
 
-		// TODO: Too much duplicated code here if gRPC is added, should return the same response?
-		if rr := r.RESTResponse; rr != nil {
+		// ResponseData is nil if an error occured
+		// ResponseData.Tasks is nil if the endpoint was not found or ran no tasks
+		if r.ResponseData != nil && r.ResponseData.Tasks != nil {
 			taskResponses.Mutex.Unlock()
-			if rr.CPUTask != nil {
-				ConcatenateCPUResponses(taskResponses, rr.CPUTask)
+			if r.ResponseData.Tasks.CpuTask != nil {
+				ConcatenateCPUResponses(taskResponses, r.ResponseData.Tasks.CpuTask)
 			}
-			if rr.NetworkTask != nil {
-				ConcatenateNetworkResponses(taskResponses, rr.NetworkTask, nil)
+			if r.ResponseData.Tasks.NetworkTask != nil {
+				ConcatenateNetworkResponses(taskResponses, r.ResponseData.Tasks.NetworkTask, nil)
 			}
 			taskResponses.Mutex.Lock()
 		}
@@ -81,17 +93,18 @@ func (n *NetworkTask) ExecAllowed(endpoint *model.Endpoint) bool {
 func (n *NetworkTask) ExecTask(endpoint *model.Endpoint, responses *MutexTaskResponses) {
 	stressParams := endpoint.NetworkComplexity
 
-	var calls []model.EndpointResponse
+	var calls []generated.EndpointResponse
 	if stressParams.ForwardRequests == "asynchronous" {
 		calls = ForwardParallel(n.Request, stressParams.CalledServices)
 	} else if stressParams.ForwardRequests == "synchronous" {
 		calls = ForwardSequential(n.Request, stressParams.CalledServices)
 	}
 
-	ConcatenateNetworkResponses(responses, &model.NetworkTaskResponse{
-		Services: []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
-		Statuses: []string{},
-		Payload:  RandomPayload(stressParams.ResponsePayloadSize),
+	svc := fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)
+	ConcatenateNetworkResponses(responses, &generated.NetworkTaskResponse{
+		Services:  []string{svc},
+		Responses: make(map[string]*generated.ServiceResponse),
+		Payload:   RandomPayload(stressParams.ResponsePayloadSize),
 	}, calls)
 
 	util.LogNetworkTask(endpoint, calls)

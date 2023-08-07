@@ -20,27 +20,47 @@ import (
 	"application-emulator/src/stressors"
 	"application-emulator/src/util"
 	model "application-model"
+	"application-model/generated"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
-	"sync"
+
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
-const httpAddress = ":5000"
+const useProtoJSON = true
 
 // Send a response of type application/json
-func writeJSONResponse(status int, response any, writer http.ResponseWriter) {
+func writeJSONResponse(status int, response *generated.Response, writer http.ResponseWriter) {
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(status)
 
-	encoder := json.NewEncoder(writer)
-	encoder.Encode(response)
+	if useProtoJSON {
+		marshalOptions := protojson.MarshalOptions{UseProtoNames: true, AllowPartial: true}
+		data, err := marshalOptions.Marshal(response)
+		if err != nil {
+			panic(err)
+		}
+
+		writer.Write(data)
+		writer.Write([]byte{'\n'})
+	} else {
+		data, err := json.Marshal(response)
+		if err != nil {
+			panic(err)
+		}
+
+		writer.Write(data)
+		writer.Write([]byte{'\n'})
+	}
 }
 
+// This should always be available because the readiness probe will send a request to this address
 func rootHandler(writer http.ResponseWriter, request *http.Request) {
 	if request.URL.Path == "/" {
-		writeJSONResponse(http.StatusOK, &model.RESTResponse{Status: "ok"}, writer)
+		writeJSONResponse(http.StatusOK, &generated.Response{}, writer)
 	} else {
 		notFoundHandler(writer, request)
 	}
@@ -48,10 +68,9 @@ func rootHandler(writer http.ResponseWriter, request *http.Request) {
 
 func notFoundHandler(writer http.ResponseWriter, request *http.Request) {
 	endpoint := strings.TrimPrefix(request.URL.Path, "/")
-	response := &model.RESTResponse{
-		Status:       "error",
-		ErrorMessage: fmt.Sprintf("Endpoint %s doesn't exist", endpoint),
-		Endpoint:     endpoint,
+	response := &generated.Response{
+		Message:  fmt.Sprintf("Endpoint %s doesn't exist", endpoint),
+		Endpoint: endpoint,
 	}
 
 	writeJSONResponse(http.StatusNotFound, response, writer)
@@ -62,32 +81,26 @@ type endpointHandler struct {
 }
 
 func (handler endpointHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	trace := util.TraceEndpointCall(handler.endpoint)
-	response := &model.RESTResponse{Status: "ok", Endpoint: handler.endpoint.Name}
-
-	if handler.endpoint.ExecutionMode == "parallel" {
-		response.TaskResponses = stressors.ExecParallel(request, handler.endpoint)
-	} else {
-		response.TaskResponses = stressors.ExecSequential(request, handler.endpoint)
+	trace := util.TraceEndpointCall(handler.endpoint, "HTTP")
+	response := &generated.Response{
+		Endpoint: handler.endpoint.Name,
+		Tasks:    stressors.Exec(request, handler.endpoint),
 	}
-
 	writeJSONResponse(http.StatusOK, response, writer)
 	util.LogEndpointCall(trace)
 }
 
 // Launch a HTTP server to serve one or more endpoints
-func HTTP(endpointChannel chan model.Endpoint, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func HTTP(endpoints []model.Endpoint) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", rootHandler)
 
-	for endpoint := range endpointChannel {
+	for _, endpoint := range endpoints {
 		mux.Handle(fmt.Sprintf("/%s", endpoint.Name), endpointHandler{endpoint: &endpoint})
 	}
 
-	err := http.ListenAndServe(httpAddress, mux)
-	if err != nil && err != http.ErrServerClosed {
+	err := http.ListenAndServe(":5000", mux)
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		panic(err)
 	}
 }

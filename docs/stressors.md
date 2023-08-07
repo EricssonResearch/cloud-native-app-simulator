@@ -31,7 +31,6 @@ Then, add the structure to the endpoint configuration:
 ```go
 type Endpoint struct {
     Name                 string                `json:"name"`
-    Protocol             string                `json:"protocol"`
     ExecutionMode        string                `json:"execution_mode"`
     CpuComplexity        *CpuComplexity        `json:"cpu_complexity,omitempty"`
     NetworkComplexity    *NetworkComplexity    `json:"network_complexity,omitempty"`
@@ -45,7 +44,6 @@ The stressor can now be added to an endpoint in the input JSON file:
 "endpoints": [
     {
         "name": "end1",
-        "protocol": "http",
         "execution_mode": "sequential",
         "cpu_complexity": {
             "execution_time": 0.001
@@ -72,29 +70,33 @@ func (m *MyStressorTask) ExecAllowed(endpoint *model.Endpoint) bool { ... }
 func (m *MyStressorTask) ExecTask(endpoint *model.Endpoint, responses *MutexTaskResponses) { ... }
 ```
 
-The stressor should add a response to the task responses structure, which is located in model/api.go:
+The stressor should add a response to the task responses structure, which is located in model/api.proto:
 
 ```go
-type CPUTaskResponse struct {
-    Services []string `json:"services"`
-    Statuses []string `json:"statuses"`
+message CPUTaskResponse {
+    map<string, float> services = 1;
 }
 
-type NetworkTaskResponse struct {
-    Services []string `json:"services"`
-    Statuses []string `json:"statuses"`
-    Payload  string   `json:"payload"`
+message ServiceResponse {
+    string protocol = 1;
+    string status = 2;
 }
 
-type MyTaskResponse struct {
-    Services []string `json:"services"`
-    Statuses []string `json:"statuses"`
+message NetworkTaskResponse {
+    repeated string services = 1;
+    map<string, ServiceResponse> responses = 2;
+    
+    string payload = 3;
 }
 
-type TaskResponses struct {
-    CPUTask     *CPUTaskResponse     `json:"cpu_task,omitempty"`
-    NetworkTask *NetworkTaskResponse `json:"network_task,omitempty"`
-    MyTask      *MyTaskResponse      `json:"my_task,omitempty"`
+message MyTaskResponse {
+    map<string, int> services = 1;
+}
+
+message TaskResponses {
+    CPUTaskResponse cpu_task = 1;
+    NetworkTaskResponse network_task = 2;
+    MyTaskResponse my_task = 3;
 }
 ```
 
@@ -109,9 +111,11 @@ func (m *MyStressorTask) ExecTask(endpoint *model.Endpoint, responses *MutexTask
     stressParams := endpoint.MyStressorComplexity
     time.Sleep(stressParams.MyVariable * time.Second)
 
-    ConcatenateMyStressorResponses(responses, &model.MyTaskResponse{
-        Services: []string{fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)},
-        Statuses: []string{fmt.Sprintf("sleep: %d", stressParams.MyVariable)},
+    svc := fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)
+    ConcatenateMyStressorResponses(responses, &generated.MyTaskResponse{
+        Services: map[string]int{
+            svc: stressParams.MyVariable,
+        },
     })
 
     util.LogMyTask(endpoint)
@@ -136,13 +140,14 @@ func LogMyTask(endpoint *model.Endpoint) {
 The network stressor will concatenate responses it receives from other endpoints, which means our new stressor needs a `ConcatenateMyStressorResponses`. The function should append the response to the current list of responses.
 
 ```go
-func ConcatenateMyStressorResponses(taskResponses *MutexTaskResponses, myTaskResponse *model.MyTaskResponse) {
+func ConcatenateMyStressorResponses(taskResponses *MutexTaskResponses, myTaskResponse *generated.MyTaskResponse) {
     taskResponses.Mutex.Lock()
     defer taskResponses.Mutex.Unlock()
 
     if taskResponses.MyTask != nil {
-        taskResponses.MyTask.Services = append(taskResponses.MyTask.Services, myTaskResponse.Services...)
-        taskResponses.MyTask.Statuses = append(taskResponses.MyTask.Statuses, myTaskResponse.Statuses...)
+        for k, v := range myTaskResponse.Services {
+            taskResponses.MyTask.Services[k] = v
+        }
     } else {
         taskResponses.MyTask = myTaskResponse
     }
@@ -152,23 +157,27 @@ func ConcatenateMyStressorResponses(taskResponses *MutexTaskResponses, myTaskRes
 Add the new function to the network stressor in emulator/src/stressors/network.go:
 
 ```go
-for _, r := range endpointResponses {
-    taskResponses.NetworkTask.Statuses = append(taskResponses.NetworkTask.Statuses, r.Status)
+    for _, r := range endpointResponses {
+        key := fmt.Sprintf("%s/%s", r.Service.Service, r.Service.Endpoint)
+        taskResponses.NetworkTask.Responses[key] = &generated.ServiceResponse{
+            Protocol: r.Protocol,
+            Status:   r.Status,
+        }
 
-    if rr := r.RESTResponse; rr != nil {
-        taskResponses.Mutex.Unlock()
-        if rr.CPUTask != nil {
-            ConcatenateCPUResponses(taskResponses, rr.CPUTask)
+        if r.ResponseData != nil && r.ResponseData.Tasks != nil {
+            taskResponses.Mutex.Unlock()
+            if r.ResponseData.Tasks.CpuTask != nil {
+                ConcatenateCPUResponses(taskResponses, r.ResponseData.Tasks.CpuTask)
+            }
+            if r.ResponseData.Tasks.NetworkTask != nil {
+                ConcatenateNetworkResponses(taskResponses, r.ResponseData.Tasks.NetworkTask, nil)
+            }
+            if r.ResponseData.Tasks.MyTask != nil {
+                ConcatenateMyStressorResponses(taskResponses, r.ResponseData.Tasks.MyTask)
+            }
+            taskResponses.Mutex.Lock()
         }
-        if rr.NetworkTask != nil {
-            ConcatenateNetworkResponses(taskResponses, rr.NetworkTask, nil)
-        }
-        if rr.MyTask != nil {
-            ConcatenateMyTaskResponses(taskResponses, rr.MyTask, nil)
-        }
-        taskResponses.Mutex.Lock()
     }
-}
 ```
 
 ## Executing the stressor when a request is received

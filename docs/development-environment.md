@@ -21,17 +21,9 @@ To use docker to build required images you will need:
 
 - **docker tools:** To download and install Docker follow [these instructions](https://docs.docker.com/install/).
 
-## Build the worker image
-
-Now we need to build the docker image and push it to the kind clusters.
-
-```bash
-docker build -t app-demo .
-```
-
 ## Setting up Kind
 
-To be able to run the *app-demo container* on a sample cluster, we use
+To be able to run the *hydragen-emulator container* on a sample cluster, we use
 [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/).
 
 - **Installation:** To download and install Kind follow [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/).
@@ -49,19 +41,15 @@ cd community
 ./kind-setup-clusters.sh [number of clusters (default 2)] [config of each cluster (default kind-cluster-3-nodes.yaml)]
 ```
 
-## Pushing the image to a cluster
+## Build the base image
 
-Initially when you setup a cluster, the initial image is pushed to the clusters, but you might need to 
-push the image in all kind clusters.
+The base image, containing code and compilers, needs to be built from the local source code.
 
 ```bash
-cd community
-./push-image-to-clusters [number of clusters (default 2)]
+docker build -t hydragen-base-dev .
 ```
 
-## Deploying the image
-
-By default, HydraGen will deploy a release image from GitHub Packages on every worker. To deploy the development image instead set this option in the input JSON configuration:
+By default, HydraGen will use a release image from GitHub Packages as the base when building your image (`hydragen-base`). To use the development base image instead set this option in the input JSON configuration:
 
 ```json
 {
@@ -71,6 +59,15 @@ By default, HydraGen will deploy a release image from GitHub Packages on every w
     },
     ...
 }
+```
+
+## Pushing the image to a cluster
+
+The generated image needs to be pushed to all the clusters after you have run `generator.sh`.
+
+```bash
+cd community
+./push-image-to-clusters.sh [number of clusters (default 2)]
 ```
 
 ## Logging

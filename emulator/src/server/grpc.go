@@ -15,3 +15,55 @@ limitations under the License.
 */
 
 package server
+
+import (
+	"application-emulator/src/generated/server"
+	"application-emulator/src/util"
+	model "application-model"
+	"context"
+	"errors"
+	"fmt"
+	"net"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
+
+	"github.com/iancoleman/strcase"
+)
+
+type HealthServerImpl struct {
+	grpc_health_v1.UnimplementedHealthServer
+}
+
+func (h *HealthServerImpl) Check(ctx context.Context, request *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
+	grpcServiceName := fmt.Sprintf("generated.%s", strcase.ToCamel(util.ServiceName))
+	if request.Service == "" || request.Service == grpcServiceName {
+		return &grpc_health_v1.HealthCheckResponse{
+			Status: grpc_health_v1.HealthCheckResponse_SERVING,
+		}, nil
+	} else {
+		// https://github.com/grpc/grpc/blob/master/src/proto/grpc/health/v1/health.proto#L44
+		return nil, status.Errorf(codes.NotFound, "only serving %s", grpcServiceName)
+	}
+}
+
+// Launch a gRPC server to serve one or more endpoints
+func GRPC(endpoints []model.Endpoint) {
+	listener, err := net.Listen("tcp", ":5000")
+	if err != nil {
+		panic(err)
+	}
+
+	grpcServer := grpc.NewServer()
+	server.RegisterGeneratedService(grpcServer, endpoints)
+	reflection.Register(grpcServer)
+	grpc_health_v1.RegisterHealthServer(grpcServer, &HealthServerImpl{})
+
+	err = grpcServer.Serve(listener)
+	if err != nil && !errors.Is(err, grpc.ErrServerStopped) {
+		panic(err)
+	}
+}

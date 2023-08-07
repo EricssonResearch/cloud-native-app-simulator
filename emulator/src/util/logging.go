@@ -18,18 +18,21 @@ package util
 
 import (
 	model "application-model"
+	"application-model/generated"
 	"fmt"
 	"log"
 	"runtime"
 	"time"
+
+	"github.com/iancoleman/strcase"
 )
 
-// TODO: Move these
-var ServiceName = ""
+var ServiceName = "service-1"
 var LoggingEnabled = false
 
 type EndpointTrace struct {
 	Endpoint *model.Endpoint
+	Protocol string
 	Time     time.Time
 	CPUTime  int64
 }
@@ -38,33 +41,31 @@ type EndpointTrace struct {
 func LogConfiguration(configMap *model.ConfigMap) {
 	// Get the process count from Go to make sure settings were applied
 	processes := runtime.GOMAXPROCS(0)
-	log.Printf("Application emulator started at *:5000-5001, logging: %t, processes: %d", LoggingEnabled, processes)
+	log.Printf("Application emulator started at *:5000, logging: %t, processes: %d", LoggingEnabled, processes)
 
-	httpEndpoints := []string{}
-	grpcEndpoints := []string{}
-	invalidEndpoints := []string{}
-
+	endpoints := []string{}
 	for _, endpoint := range configMap.Endpoints {
-		if endpoint.Protocol == "http" {
-			httpEndpoints = append(httpEndpoints, endpoint.Name)
-		} else if endpoint.Protocol == "grpc" {
-			grpcEndpoints = append(grpcEndpoints, endpoint.Name)
-		} else {
-			invalidEndpoints = append(invalidEndpoints, endpoint.Name)
+		if configMap.Protocol == "http" {
+			endpoints = append(endpoints, endpoint.Name)
+		} else if configMap.Protocol == "grpc" {
+			endpoints = append(endpoints, fmt.Sprintf("generated.%s/%s", strcase.ToCamel(ServiceName), strcase.ToCamel(endpoint.Name)))
 		}
 	}
 
 	log.Printf("Service: %s", ServiceName)
-	log.Printf("HTTP endpoints: %d %v", len(httpEndpoints), httpEndpoints)
-	log.Printf("gRPC endpoints: %d %v", len(grpcEndpoints), grpcEndpoints)
-	log.Printf("Invalid endpoints: %d %v", len(invalidEndpoints), invalidEndpoints)
+	if configMap.Protocol == "http" {
+		log.Printf("HTTP endpoints: %v", endpoints)
+	} else if configMap.Protocol == "grpc" {
+		log.Printf("gRPC endpoints: %v", endpoints)
+	}
 }
 
 // Call at start of endpoint call to trace execution time
-func TraceEndpointCall(endpoint *model.Endpoint) *EndpointTrace {
+func TraceEndpointCall(endpoint *model.Endpoint, protocol string) *EndpointTrace {
 	if LoggingEnabled {
 		trace := &EndpointTrace{
 			Endpoint: endpoint,
+			Protocol: protocol,
 			Time:     time.Now(),
 			CPUTime:  ProcessCPUTime(),
 		}
@@ -83,7 +84,7 @@ func LogEndpointCall(trace *EndpointTrace) {
 		responseTimeFmt, cpuTimeFmt := FormatTime(responseTime), FormatTime(cpuTime)
 
 		log.Printf("%s/%s: %s %s responseTime=%s cpuTime=%s",
-			ServiceName, trace.Endpoint.Name, trace.Endpoint.Protocol, trace.Endpoint.ExecutionMode, responseTimeFmt, cpuTimeFmt)
+			ServiceName, trace.Endpoint.Name, trace.Protocol, trace.Endpoint.ExecutionMode, responseTimeFmt, cpuTimeFmt)
 	}
 }
 
@@ -99,7 +100,7 @@ func LogCPUTask(endpoint *model.Endpoint) {
 }
 
 // Call at end of network task to print params to stdout
-func LogNetworkTask(endpoint *model.Endpoint, responses []model.EndpointResponse) {
+func LogNetworkTask(endpoint *model.Endpoint, responses []generated.EndpointResponse) {
 	if LoggingEnabled {
 		executionMode := endpoint.NetworkComplexity.ForwardRequests
 		payloadSize := endpoint.NetworkComplexity.ResponsePayloadSize
@@ -107,9 +108,7 @@ func LogNetworkTask(endpoint *model.Endpoint, responses []model.EndpointResponse
 
 		statuses := make([]string, 0, len(responses))
 		for _, response := range responses {
-			if response.RESTResponse != nil {
-				statuses = append(statuses, fmt.Sprintf("http/%s:%s", response.RESTResponse.Endpoint, response.Status))
-			}
+			statuses = append(statuses, fmt.Sprintf("%s/%s:%s", response.Protocol, response.Service.Endpoint, response.Status))
 		}
 		formattedStatuses := fmt.Sprint(statuses)
 

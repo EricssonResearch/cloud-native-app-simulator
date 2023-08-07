@@ -23,12 +23,18 @@ else
 	NUM=$4
 fi
 
+if [[ -d generated ]]; then
+	echo "deleting previous generated files"
+	rm -r generated
+fi
+
 if [[ -d k8s ]]; then
 	echo "deleting previous manifest files"
 	rm -r k8s
 fi
 
+mkdir generated
 mkdir k8s
-#generate kubernetes kubernetes manifest files
-echo "generating kubernetes manifest files"
+
+echo "generating image and kubernetes manifest files"
 go run main.go generate $1 $2

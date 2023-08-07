@@ -1,0 +1,49 @@
+// protoc --go_out=model --go_opt=module=application-model model/api.proto
+
+syntax = "proto3";
+
+package generated;
+option go_package = "application-model/generated";
+
+message CPUTaskResponse {
+	// List of all services that executed CPU tasks and their execution times
+	map<string, float> services = 1;
+}
+
+message ServiceResponse {
+	// Protocol used to contact this service
+	string protocol = 1;
+	// Response status code
+	// HTTP: 200 OK, 404 Not Found, etc
+	// gRPC: OK, InvalidArgument, etc
+	string status = 2;
+}
+
+message NetworkTaskResponse {
+	// List of all services that executed or responded to network tasks
+	repeated string services = 1;
+	// Responses from services
+	map<string, ServiceResponse> responses = 2;
+
+	// Random payload
+	string payload = 3;
+}
+
+message TaskResponses {
+	CPUTaskResponse cpu_task = 1;
+	NetworkTaskResponse network_task = 2;
+}
+
+message Request {
+	// Random payload
+	string payload = 1;
+}
+
+message Response {
+	// Name of called endpoint
+	string endpoint = 1;
+	// Task responses
+	TaskResponses tasks = 2;
+	// Error message
+	string message = 3;
+}

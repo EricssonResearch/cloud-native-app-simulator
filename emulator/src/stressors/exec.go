@@ -18,13 +18,14 @@ package stressors
 
 import (
 	model "application-model"
+	"application-model/generated"
 	"sync"
 )
 
 // Stressors need to access model.TaskResponses in parallel
 type MutexTaskResponses struct {
-	*sync.Mutex
-	model.TaskResponses
+	sync.Mutex
+	generated.TaskResponses
 }
 
 // Interface for a stressor used to simulate the workload of a microservice
@@ -35,15 +36,24 @@ type Stressor interface {
 	ExecTask(endpoint *model.Endpoint, responses *MutexTaskResponses)
 }
 
+// Executes all stressors sequentially or in parallel depending on user config
+func Exec(request any, endpoint *model.Endpoint) *generated.TaskResponses {
+	if endpoint.ExecutionMode == "parallel" {
+		return ExecParallel(request, endpoint)
+	} else {
+		return ExecSequential(request, endpoint)
+	}
+}
+
 // Executes all stressors defined in the endpoint sequentially
-func ExecSequential(request any, endpoint *model.Endpoint) model.TaskResponses {
+func ExecSequential(request any, endpoint *model.Endpoint) *generated.TaskResponses {
 	stressors := []Stressor{
 		&CPUTask{},
 		&NetworkTask{Request: request},
 	}
 	responses := MutexTaskResponses{
-		&sync.Mutex{},
-		model.TaskResponses{},
+		sync.Mutex{},
+		generated.TaskResponses{},
 	}
 
 	for _, stressor := range stressors {
@@ -52,24 +62,23 @@ func ExecSequential(request any, endpoint *model.Endpoint) model.TaskResponses {
 		}
 	}
 
-	return responses.TaskResponses
+	return &responses.TaskResponses
 }
 
 func execStressor(stressor Stressor, endpoint *model.Endpoint, responses *MutexTaskResponses, wg *sync.WaitGroup) {
 	defer wg.Done()
-	// responses can be accessed in parallel as long as
 	stressor.ExecTask(endpoint, responses)
 }
 
 // Executes all stressors defined in the endpoint in parallel using goroutines
-func ExecParallel(request any, endpoint *model.Endpoint) model.TaskResponses {
+func ExecParallel(request any, endpoint *model.Endpoint) *generated.TaskResponses {
 	stressors := []Stressor{
 		&CPUTask{},
 		&NetworkTask{Request: request},
 	}
 	responses := MutexTaskResponses{
-		&sync.Mutex{},
-		model.TaskResponses{},
+		sync.Mutex{},
+		generated.TaskResponses{},
 	}
 	wg := sync.WaitGroup{}
 
@@ -81,5 +90,5 @@ func ExecParallel(request any, endpoint *model.Endpoint) model.TaskResponses {
 	}
 
 	wg.Wait()
-	return responses.TaskResponses
+	return &responses.TaskResponses
 }

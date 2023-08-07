@@ -19,6 +19,7 @@ package generate
 import (
 	s "application-generator/src/pkg/service"
 	model "application-model"
+	"os/exec"
 
 	"bytes"
 	"encoding/json"
@@ -31,6 +32,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/iancoleman/strcase"
 	"gopkg.in/yaml.v3"
 )
 
@@ -97,33 +99,74 @@ func Parse(configFilename string) (model.FileConfig, []string) {
 	return loaded_config, clusters
 }
 
-func CreateK8sYaml(config model.FileConfig, clusters []string) {
+func CreateGrpcEndpoints(config model.FileConfig) {
 	path, _ := os.Getwd()
-	proto_temp, _ := template.ParseFiles(path + "/template/service.tmpl")
+
+	implClientTemp := template.New("grpc.tmpl")
+	implClientTemp = implClientTemp.Funcs(template.FuncMap{"goname": strcase.ToCamel})
+	implClientTemp, _ = implClientTemp.ParseFiles(path + "/template/client/grpc.tmpl")
+
+	implServerTemp := template.New("grpc.tmpl")
+	implServerTemp = implServerTemp.Funcs(template.FuncMap{"goname": strcase.ToCamel})
+	implServerTemp, _ = implServerTemp.ParseFiles(path + "/template/server/grpc.tmpl")
+
+	protoTemp := template.New("service.tmpl")
+	protoTemp = protoTemp.Funcs(template.FuncMap{"goname": strcase.ToCamel})
+	protoTemp, _ = protoTemp.ParseFiles(path + "/template/service.tmpl")
+
+	grpcServices := []model.Service{}
+	for _, service := range config.Services {
+		if service.Protocol == "grpc" {
+			grpcServices = append(grpcServices, service)
+		}
+	}
+
+	var implClientTempFilledBytes bytes.Buffer
+	err := implClientTemp.Execute(&implClientTempFilledBytes, grpcServices)
+	if err != nil {
+		panic(err)
+	}
+
+	var implServerTempFilledBytes bytes.Buffer
+	err = implServerTemp.Execute(&implServerTempFilledBytes, grpcServices)
+	if err != nil {
+		panic(err)
+	}
+
+	var protoTempFilledBytes bytes.Buffer
+	err = protoTemp.Execute(&protoTempFilledBytes, grpcServices)
+	if err != nil {
+		panic(err)
+	}
+
+	os.Mkdir(path+"/generated", 0777)
+	os.Mkdir(path+"/generated/client", 0777)
+	os.Mkdir(path+"/generated/server", 0777)
+	os.WriteFile(path+"/generated/client/grpc.go", implClientTempFilledBytes.Bytes(), 0644)
+	os.WriteFile(path+"/generated/server/grpc.go", implServerTempFilledBytes.Bytes(), 0644)
+	os.WriteFile(path+"/generated/service.proto", protoTempFilledBytes.Bytes(), 0644)
+}
+
+func CreateK8sYaml(config model.FileConfig, clusters []string, buildID int) {
+	path, _ := os.Getwd()
 	path = path + "/k8s"
 
 	for i := 0; i < len(clusters); i++ {
 		directory := fmt.Sprintf(path+"/%s", clusters[i])
 		os.Mkdir(directory, 0777)
 	}
-	var proto_temp_filled_byte bytes.Buffer
-	err := proto_temp.Execute(&proto_temp_filled_byte, config.Services)
-	if err != nil {
-		panic(err)
-	}
-	proto_temp_filled := proto_temp_filled_byte.String()
+
 	for i := 0; i < len(config.Services); i++ {
 		serv := config.Services[i].Name
-		protocol := config.Services[i].Endpoints[0].Protocol
+		protocol := config.Services[i].Protocol
 		readinessProbe := config.Services[i].ReadinessProbe
 
 		resources := config.Services[i].Resources
 		processes := config.Services[i].Processes
 
 		logging := config.Settings.Logging
-		development := config.Settings.Development
 
-		cm_data := s.CreateConfigMap(processes, logging, config.Services[i].Endpoints)
+		cm_data := s.CreateConfigMap(processes, logging, protocol, config.Services[i].Endpoints, buildID)
 
 		serv_json, err := json.Marshal(cm_data)
 		if err != nil {
@@ -149,24 +192,24 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 				manifests = append(manifests, string(yamlDoc))
 				return nil
 			}
-			configmap := s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json), proto_temp_filled)
+			configmap := s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json))
 			appendManifest(configmap)
 
-			imageURL := s.ImageURLProd
-			imagePolicy := s.ImagePullPolicyProd
-
-			if development {
-				imageURL = s.ImageURLDev
-				imagePolicy = s.ImagePullPolicyDev
-			}
-
 			deployment := s.CreateDeployment(serv, serv, c_id, replicas, serv, c_id, namespace,
-				s.DefaultPort, s.ImageName, imageURL, imagePolicy, s.VolumePath, s.VolumeName, "config-"+serv, readinessProbe,
+				s.DefaultPort, "emulator", s.ImageURL, s.ImagePullPolicy, s.VolumePath, s.VolumeName, "config-"+serv, readinessProbe,
 				resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory,
 				nodeAffinity, protocol, annotations)
 			appendManifest(deployment)
 
-			service := s.CreateService(serv, serv, protocol, s.Uri, c_id, namespace, s.DefaultExtPort, s.DefaultPort)
+			ports := []model.ServicePortInstance{
+				{
+					Name:       protocol,
+					Port:       s.DefaultExtPort,
+					TargetPort: s.DefaultPort,
+				},
+			}
+
+			service := s.CreateService(serv, serv, protocol, s.Uri, c_id, namespace, ports)
 			appendManifest(service)
 
 			yamlDocString := strings.Join(manifests, "---\n")
@@ -258,4 +301,23 @@ func CreateJsonInput(userConfig model.UserConfig) string {
 	}
 
 	return path
+}
+
+func CreateDockerImage(config model.FileConfig, buildID int) {
+	baseName := s.BaseImageNameProd
+	baseTag := s.BaseImageTagProd
+
+	if config.Settings.Development {
+		baseName = s.BaseImageNameDev
+		baseTag = s.BaseImageTagDev
+	}
+
+	path, _ := os.Getwd()
+	cmd := exec.Command(
+		"docker", "build", "-t", s.ImageName, "--build-arg", "BASE="+baseName, "--build-arg", "TAG="+baseTag, "--build-arg", "BUILDID="+fmt.Sprint(buildID), path)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
 }
