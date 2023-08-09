@@ -24,5 +24,6 @@ fi
 
 # Push the image to all clusters
 for i in $(seq ${NUM}); do
-  kind load docker-image "$(hostname -f)/hydragen-emulator" --name=cluster-${i}
+  name="$(hostname -f)/hydragen-emulator"
+  kind load docker-image "$(docker images $name --format '{{.Repository}}:{{.Tag}}')" --name=cluster-${i}
 done

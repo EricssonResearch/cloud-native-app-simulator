@@ -310,13 +310,14 @@ func CreateJsonInput(userConfig model.UserConfig) string {
 func CreateDockerImage(config model.FileConfig, buildHash string) {
 	baseName := s.FormatBaseImageName(config.Settings.Development)
 	hostName := s.HostnameFQDN()
+	imageName := fmt.Sprintf("%s/%s:%s", hostName, s.ImageName, buildHash)
 
 	path, _ := os.Getwd()
 	args := []string{
 		"build",
 		"--no-cache",
 		"-t",
-		fmt.Sprintf("%s/%s:%s", hostName, s.ImageName, buildHash),
+		imageName,
 		"--build-arg",
 		"BASE=" + baseName,
 		path,
@@ -326,6 +327,13 @@ func CreateDockerImage(config model.FileConfig, buildHash string) {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Docker image:", imageName)
+
+	cmd = exec.Command("docker", "save", imageName, "-o", fmt.Sprintf("%s/generated/hydragen-emulator.tar", path))
 	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
