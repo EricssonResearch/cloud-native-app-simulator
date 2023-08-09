@@ -37,7 +37,6 @@ const (
 	BaseImageTagDev  = "latest"
 
 	ImageName       = "hydragen-emulator"
-	ImageTag        = "latest"
 	ImagePullPolicy = "Never"
 
 	DefaultExtPort  = 80
@@ -249,14 +248,12 @@ func CreateFileConfig() model.FileConfig {
 	return fileConfig
 }
 
-func CreateConfigMap(processes int, logging bool, protocol string, ep []model.Endpoint, buildID int) *model.ConfigMap {
-
+func CreateConfigMap(processes int, logging bool, protocol string, ep []model.Endpoint) *model.ConfigMap {
 	cm_data := &model.ConfigMap{
 		Processes: processes,
 		Logging:   logging,
 		Protocol:  protocol,
 		Endpoints: []model.Endpoint(ep),
-		BuildID:   fmt.Sprint(buildID),
 	}
 
 	return cm_data
