@@ -314,6 +314,7 @@ func CreateDockerImage(config model.FileConfig, buildHash string) {
 	path, _ := os.Getwd()
 	args := []string{
 		"build",
+		"--no-cache",
 		"-t",
 		fmt.Sprintf("%s/%s:%s", hostName, s.ImageName, buildHash),
 		"--build-arg",
