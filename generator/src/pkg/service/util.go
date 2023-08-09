@@ -18,22 +18,27 @@ package service
 
 import (
 	model "application-model"
+	"bytes"
 	"fmt"
+	"os"
+	"os/exec"
 	"strconv"
+	"strings"
 )
 
 const (
 	VolumeName = "config-data-volume"
 	VolumePath = "/usr/src/emulator/config"
 
-	BaseImageNameProd = "hydragen-base"
-	BaseImageNameDev  = "hydragen-base-dev"
+	BaseImageURLProd = "ghcr.io/ericssonresearch/cloud-native-app-simulator"
+	BaseImageName    = "hydragen-base"
 	// TODO: Update the version here once everything is released
 	BaseImageTagProd = "v4.0.0"
 	BaseImageTagDev  = "latest"
-	ImageName        = "hydragen-emulator"
-	ImageURL         = "hydragen-emulator:latest"
-	ImagePullPolicy  = "Never"
+
+	ImageName       = "hydragen-emulator"
+	ImageTag        = "latest"
+	ImagePullPolicy = "Never"
 
 	DefaultExtPort  = 80
 	DefaultPort     = 5000
@@ -63,6 +68,28 @@ const (
 	CsTrafficForwardRatio = 1
 	CsRequestSizeDefault  = 256
 )
+
+func HostnameFQDN() string {
+	out := bytes.Buffer{}
+	cmd := exec.Command("hostname", "-f")
+	cmd.Stdout = &out
+
+	if err := cmd.Run(); err != nil {
+		hostname, _ := os.Hostname()
+		return hostname
+	}
+
+	return strings.TrimSpace(out.String())
+}
+
+func FormatBaseImageName(development bool) string {
+	if development {
+		hostName := HostnameFQDN()
+		return fmt.Sprintf("%s/%s:%s", hostName, BaseImageName, BaseImageTagDev)
+	} else {
+		return fmt.Sprintf("%s/%s:%s", BaseImageURLProd, BaseImageName, BaseImageTagProd)
+	}
+}
 
 func CreateDeployment(metadataName, selectorAppName, selectorClusterName string, numberOfReplicas int,
 	templateAppLabel, templateClusterLabel, namespace string, port int, containerName, containerImageURL, containerImagePolicy,

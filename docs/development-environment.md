@@ -46,10 +46,11 @@ cd community
 The base image, containing code and compilers, needs to be built from the local source code.
 
 ```bash
-docker build -t hydragen-base-dev .
+docker build -t "$(hostname -f)/hydragen-base" .
 ```
 
-By default, HydraGen will use a release image from GitHub Packages as the base when building your image (`hydragen-base`). To use the development base image instead set this option in the input JSON configuration:
+By default, HydraGen will use a release image from GitHub Packages as the base when building your image.
+To use the development base image instead set this option in the input JSON configuration:
 
 ```json
 {
@@ -63,7 +64,7 @@ By default, HydraGen will use a release image from GitHub Packages as the base w
 
 ## Pushing the image to a cluster
 
-The generated image needs to be pushed to all the clusters after you have run `generator.sh`.
+The generated image needs to be pushed to all clusters after you have run `generator.sh`.
 
 ```bash
 cd community

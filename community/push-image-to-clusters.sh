@@ -22,7 +22,7 @@ else
 	NUM=$1
 fi
 
-# Push the image to the all clusters
+# Push the image to all clusters
 for i in $(seq ${NUM}); do
-  kind load docker-image hydragen-emulator --name=cluster-${i}
+  kind load docker-image "$(hostname -f)/hydragen-emulator" --name=cluster-${i}
 done

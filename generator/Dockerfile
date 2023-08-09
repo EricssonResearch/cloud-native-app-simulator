@@ -17,10 +17,9 @@
 # This is a layered image that builds the current source code on top of hydragen-base and copies the binary to a new image
 # The new image should be deployed on all clusters and contains generated code for all endpoints specified in the input file
 
-ARG BASE="hydragen-base"
-ARG TAG=v4.0.0
+ARG BASE
 
-FROM ${BASE}:${TAG} as builder
+FROM ${BASE} as builder
 
 ARG BUILDID
 

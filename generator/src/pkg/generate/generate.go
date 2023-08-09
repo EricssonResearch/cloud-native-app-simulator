@@ -195,8 +195,9 @@ func CreateK8sYaml(config model.FileConfig, clusters []string, buildID int) {
 			configmap := s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json))
 			appendManifest(configmap)
 
+			image := fmt.Sprintf("%s/%s:%s", s.HostnameFQDN(), s.ImageName, s.ImageTag)
 			deployment := s.CreateDeployment(serv, serv, c_id, replicas, serv, c_id, namespace,
-				s.DefaultPort, "emulator", s.ImageURL, s.ImagePullPolicy, s.VolumePath, s.VolumeName, "config-"+serv, readinessProbe,
+				s.DefaultPort, "emulator", image, s.ImagePullPolicy, s.VolumePath, s.VolumeName, "config-"+serv, readinessProbe,
 				resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory,
 				nodeAffinity, protocol, annotations)
 			appendManifest(deployment)
@@ -304,19 +305,25 @@ func CreateJsonInput(userConfig model.UserConfig) string {
 }
 
 func CreateDockerImage(config model.FileConfig, buildID int) {
-	baseName := s.BaseImageNameProd
-	baseTag := s.BaseImageTagProd
-
-	if config.Settings.Development {
-		baseName = s.BaseImageNameDev
-		baseTag = s.BaseImageTagDev
-	}
+	baseName := s.FormatBaseImageName(config.Settings.Development)
+	hostName := s.HostnameFQDN()
 
 	path, _ := os.Getwd()
-	cmd := exec.Command(
-		"docker", "build", "-t", s.ImageName, "--build-arg", "BASE="+baseName, "--build-arg", "TAG="+baseTag, "--build-arg", "BUILDID="+fmt.Sprint(buildID), path)
+	args := []string{
+		"build",
+		"-t",
+		fmt.Sprintf("%s/%s", hostName, s.ImageName),
+		"--build-arg",
+		"BASE=" + baseName,
+		"--build-arg",
+		"BUILDID=" + fmt.Sprint(buildID),
+		path,
+	}
+
+	cmd := exec.Command("docker", args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+
 	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
