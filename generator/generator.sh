@@ -33,6 +33,13 @@ if [[ -d k8s ]]; then
 	rm -r k8s
 fi
 
+images="$(docker images $(hostname -f)/hydragen-emulator -q)"
+
+if [[ ! -z "$images" ]]; then
+	echo "deleting previous docker images"
+	docker image remove "$images"
+fi
+
 mkdir generated
 mkdir k8s
 
