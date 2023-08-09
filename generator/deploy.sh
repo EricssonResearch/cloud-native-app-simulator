@@ -38,6 +38,7 @@ else
         if [[ $? == 0 ]]; then
           ctxnodes="$($cmd | grep -v 'NoSchedule' | cut -d ' ' -f 1 | tr '\n' ' ')"
           for node in $ctxnodes; do nodes+=("$cl/$node"); done
+          break 1
         fi
       done
     done
@@ -49,6 +50,8 @@ else
 
     if [[ $runtime == "1" ]]; then
       ../community/push-image-to-clusters.sh
+    elif [[ $runtime == "2" ]]; then
+      echo "TODO"
     else
       echo "The container image has been saved in generated/hydragen-emulator.tar"
       echo "It should be cached in the namespace k8s.io on the following nodes: ${nodes[@]}"
