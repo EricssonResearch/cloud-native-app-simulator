@@ -22,7 +22,7 @@ if [[ -z "$password" ]]; then
   ctr -n=k8s.io images import -
 else 
   # First authorize (timeout is usually 15 minutes)
-  echo "$password" | sudo -S -v
+  echo "$password" | sudo -S -v -p ""
   # Now read from ssh stdin
   sudo ctr -n=k8s.io images import -
 fi

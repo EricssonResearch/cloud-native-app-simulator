@@ -18,7 +18,7 @@
 name="$(hostname -f)/hydragen-emulator"
 image="$(docker images $name --format '{{.Repository}}:{{.Tag}}')"
 
-cd ../generator/k8s
+cd "$(git rev-parse --show-toplevel)/generator/k8s"
 clusters="$(echo *)"
 contexts="$(kubectl config get-contexts --output=name | tr '\n' ' ')"
 
@@ -57,11 +57,17 @@ for node in "${nodes[@]}"; do
   # https://kubernetes.io/docs/reference/kubectl/cheatsheet/
   jsonpath="{.status.addresses[?(@.type=='InternalIP')].address}"
   ip="$(kubectl get nodes $name --cluster $cl --context $ctx -o jsonpath=$jsonpath)"
-  script="$(cat ../../community/containerd-import-image.sh)"
   file="/tmp/containerd-import-image.sh"
 
-  echo "Sending image to $name at $ip..."
-  cat ../generated/hydragen-emulator.tar | \
-    ssh -C "$ip" \
-    "echo "$script" > $file; chmod +x $file; $file "$password"; rm $file"
+  # Start ssh in background
+  ssh -M -S /tmp/containerd-import-ssh-socket -fnNT "$(whoami)@$ip" 
+  # Copy script to remote machine
+  scp -o "ControlPath=/tmp/containerd-import-ssh-socket" ../../community/containerd-import-image.sh "$(whoami)@$ip:/tmp/containerd-import-image.sh"
+  # Execute script with archive coming from stdin
+  ssh -S /tmp/containerd-import-ssh-socket "$(whoami)@$ip" "chmod +x /tmp/containerd-import-image.sh"
+  # Add space at the start to prevent password from being saved in bash history
+  cat ../generated/hydragen-emulator.tar | ssh -S /tmp/containerd-import-ssh-socket -C "$(whoami)@$ip" " /tmp/containerd-import-image.sh "$password""
+  ssh -S /tmp/containerd-import-ssh-socket "$(whoami)@$ip" "rm /tmp/containerd-import-image.sh"
+  # Close ssh session
+  ssh -S /tmp/containerd-import-ssh-socket -O exit "$(whoami)@$ip"
 done
