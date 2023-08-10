@@ -18,10 +18,18 @@ Visit this [page](development-environment.md) to learn about development environ
 1. To generate and deploy microservice-based applications, go to the _/generator/_ directory.
 2. If needed, install Go module dependencies, e.g. Cobra and yaml. This can be done by running `go mod download`.
 3. Modify any of the input files under the _input/_ directory according to your own requirements (see some json examples under the _examples/_ directory).
-4. Generate Go source files and Kubernetes manifest files by running the _generator.sh_ script. This command can be run under two different modes, preset mode or random mode, with the syntax `./generator.sh {mode} {input file}`. See [Application Generator](home.md#application-generator) for more details
+4. Generate Go source files, Kubernetes manifest files and a unique Docker image by running the _generator.sh_ script. This command can be run under two different modes, preset mode or random mode, with the syntax `./generator.sh {mode} {input file}`. See [Application Generator](home.md#application-generator) for more details
 5. Change Kubernetes context to the main cluster: `kubectl config use-context cluster1`.
-6. Deploy the configmap with `deploy.sh {input file}`.
-7. Deploy the generated Docker image (`hydragen-emulator`). For a Kind cluster, this can be done with the included script `community/push-image-to-clusters.sh`.
+6. Deploy the generated Docker image (`$hostname/hydragen-emulator:$hash`).
+7. Deploy the configmap with `deploy.sh {input file}`.
+
+The Docker image needs to be deployed in the `k8s.io` namespace for Kubernetes to be able to find the image.
+The method to import an image depends on the container runtime in use.
+
+Helper scripts are included for:
+
+* **Kind:** The script `community/kind-push-image-to-clusters.sh` loads the image in `cluster-1,cluster-2,cluster-3...`
+* **containerd**: The script `community/containerd-push-image-to-clusters.sh` attempts to discover all nodes that need an updated image using `kubectl`. It then uses `ssh` to connect to the node using its internal IP and import the image using `ctr`. This script requires SSH access to every node from the current machine and current user.
 
 ## Generating Traffic
 
