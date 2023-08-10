@@ -61,7 +61,7 @@ for node in "${nodes[@]}"; do
   file="/tmp/containerd-import-image.sh"
 
   echo "Sending image to $name at $ip..."
-  cat ../generated/hydragen-emulator.tar \
-    ssh -C "$(whoami)@$ip" \
+  cat ../generated/hydragen-emulator.tar | \
+    ssh -C "$ip" \
     "echo "$script" > $file; chmod +x $file; $file "$password"; rm $file"
 done
