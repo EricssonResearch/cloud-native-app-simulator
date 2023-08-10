@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2021 Ericsson AB
+# Copyright 2023 Ericsson AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,16 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+# This script is run over SSH and caches the image being sent over the network in containerd
 
-DEFAULT_NUM=2
-if [ -z "$1" ]; then
-	NUM=$DEFAULT_NUM
-else
-	NUM=$1
+password="$1"
+
+if [[ -z "$password" ]]; then
+  ctr -n=k8s.io images import -
+else 
+  # First authorize (timeout is usually 15 minutes)
+  echo "$password" | sudo -S -v
+  # Now read from ssh stdin
+  sudo ctr -n=k8s.io images import -
 fi
-
-# Push the image to all clusters
-for i in $(seq ${NUM}); do
-  name="$(hostname -f)/hydragen-emulator"
-  kind load docker-image "$(docker images $name --format '{{.Repository}}:{{.Tag}}')" --name=cluster-${i}
-done

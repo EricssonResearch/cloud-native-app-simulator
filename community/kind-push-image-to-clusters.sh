@@ -16,23 +16,14 @@
 #
 
 DEFAULT_NUM=2
-DEFAULT_CONFIG="kind-cluster-3-nodes.yaml"
 if [ -z "$1" ]; then
   NUM=$DEFAULT_NUM
 else
   NUM=$1
 fi
 
-if [ -z "$2" ]; then
-  CONFIG=$DEFAULT_CONFIG
-else
-  CONFIG=$2
-fi
-
-
-
-# Create the kind multi-node clusters based on the given config
+# Push the image to all clusters
 for i in $(seq ${NUM}); do
-  kind create cluster --name cluster-${i} --config $CONFIG
-  kind load docker-image hydragen-emulator --name=cluster-${i}
+  name="$(hostname -f)/hydragen-emulator"
+  kind load docker-image "$(docker images $name --format '{{.Repository}}:{{.Tag}}')" --name=cluster-${i}
 done
