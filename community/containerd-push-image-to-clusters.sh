@@ -63,5 +63,5 @@ for node in "${nodes[@]}"; do
   echo "Sending image to $name at $ip..."
   cat ../generated/hydragen-emulator.tar \
     ssh -C "$(whoami)@$ip" \
-    "echo "$script" > $file; chmod +x $file; $file; rm $file"
+    "echo "$script" > $file; chmod +x $file; $file "$password"; rm $file"
 done
