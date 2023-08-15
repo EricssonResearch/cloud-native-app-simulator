@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Copyright 2021 Ericsson AB
 #
@@ -14,36 +15,15 @@
 # limitations under the License.
 #
 
-#!/bin/bash
-
-set -e
-
-DEFAULT_NUM=4
-if [ -z "$4" ]; then
-	NUM=$DEFAULT_NUM
+DEFAULT_NUM=2
+if [ -z "$1" ]; then
+  NUM=$DEFAULT_NUM
 else
-	NUM=$4
+  NUM=$1
 fi
 
-if [[ -d generated ]]; then
-	echo "Deleting previous generated files"
-	rm -r generated
-fi
-
-if [[ -d k8s ]]; then
-	echo "Deleting previous manifest files"
-	rm -r k8s
-fi
-
-images="$(docker images $(hostname -f)/hydragen-emulator -q)"
-
-if [[ ! -z "$images" ]]; then
-	echo "Deleting previous Docker images"
-	docker image remove "$images"
-fi
-
-mkdir generated
-mkdir k8s
-
-echo "Generating image and kubernetes manifest files"
-go run main.go generate $1 $2
+# Push the image to all clusters
+for i in $(seq ${NUM}); do
+  name="$(hostname -f)/hydragen-emulator"
+  kind load docker-image "$(docker images $name --format '{{.Repository}}:{{.Tag}}')" --name=cluster-${i}
+done

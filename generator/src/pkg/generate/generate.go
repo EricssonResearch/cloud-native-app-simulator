@@ -19,14 +19,15 @@ package generate
 import (
 	s "application-generator/src/pkg/service"
 	model "application-model"
-	"os/exec"
 
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"hash/crc32"
 	"io"
 	"math/rand"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"text/template"
@@ -53,7 +54,7 @@ func Unique(strSlice []string) []string {
 }
 
 // Parse microservice config file, and return a config struct
-func Parse(configFilename string) (model.FileConfig, []string) {
+func Parse(configFilename string) (model.FileConfig, []string, string) {
 	configFile, err := os.Open(configFilename)
 	if err != nil {
 		panic(err)
@@ -96,7 +97,9 @@ func Parse(configFilename string) (model.FileConfig, []string) {
 	fmt.Println("---------------")
 	fmt.Println("All endpoints: ", Unique(endpoints))
 	fmt.Println("Number of endpoints: ", len(Unique(endpoints)))
-	return loaded_config, clusters
+
+	hash := crc32.ChecksumIEEE(configFileByteValue)
+	return loaded_config, clusters, fmt.Sprintf("%x", hash)
 }
 
 func CreateGrpcEndpoints(config model.FileConfig) {
@@ -147,7 +150,7 @@ func CreateGrpcEndpoints(config model.FileConfig) {
 	os.WriteFile(path+"/generated/service.proto", protoTempFilledBytes.Bytes(), 0644)
 }
 
-func CreateK8sYaml(config model.FileConfig, clusters []string, buildID int) {
+func CreateK8sYaml(config model.FileConfig, clusters []string, buildHash string) {
 	path, _ := os.Getwd()
 	path = path + "/k8s"
 
@@ -166,7 +169,7 @@ func CreateK8sYaml(config model.FileConfig, clusters []string, buildID int) {
 
 		logging := config.Settings.Logging
 
-		cm_data := s.CreateConfigMap(processes, logging, protocol, config.Services[i].Endpoints, buildID)
+		cm_data := s.CreateConfigMap(processes, logging, protocol, config.Services[i].Endpoints)
 
 		serv_json, err := json.Marshal(cm_data)
 		if err != nil {
@@ -195,8 +198,9 @@ func CreateK8sYaml(config model.FileConfig, clusters []string, buildID int) {
 			configmap := s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json))
 			appendManifest(configmap)
 
+			image := fmt.Sprintf("%s/%s:%s", s.HostnameFQDN(), s.ImageName, buildHash)
 			deployment := s.CreateDeployment(serv, serv, c_id, replicas, serv, c_id, namespace,
-				s.DefaultPort, "emulator", s.ImageURL, s.ImagePullPolicy, s.VolumePath, s.VolumeName, "config-"+serv, readinessProbe,
+				s.DefaultPort, "emulator", image, s.ImagePullPolicy, s.VolumePath, s.VolumeName, "config-"+serv, readinessProbe,
 				resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory,
 				nodeAffinity, protocol, annotations)
 			appendManifest(deployment)
@@ -303,20 +307,33 @@ func CreateJsonInput(userConfig model.UserConfig) string {
 	return path
 }
 
-func CreateDockerImage(config model.FileConfig, buildID int) {
-	baseName := s.BaseImageNameProd
-	baseTag := s.BaseImageTagProd
-
-	if config.Settings.Development {
-		baseName = s.BaseImageNameDev
-		baseTag = s.BaseImageTagDev
-	}
+func CreateDockerImage(config model.FileConfig, buildHash string) {
+	baseName := s.FormatBaseImageName(config.Settings.Development)
+	hostName := s.HostnameFQDN()
+	imageName := fmt.Sprintf("%s/%s:%s", hostName, s.ImageName, buildHash)
 
 	path, _ := os.Getwd()
-	cmd := exec.Command(
-		"docker", "build", "-t", s.ImageName, "--build-arg", "BASE="+baseName, "--build-arg", "TAG="+baseTag, "--build-arg", "BUILDID="+fmt.Sprint(buildID), path)
+	args := []string{
+		"build",
+		"--no-cache",
+		"-t",
+		imageName,
+		"--build-arg",
+		"BASE=" + baseName,
+		path,
+	}
+
+	cmd := exec.Command("docker", args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Docker image:", imageName)
+
+	cmd = exec.Command("docker", "save", imageName, "-o", fmt.Sprintf("%s/generated/hydragen-emulator.tar", path))
 	if err := cmd.Run(); err != nil {
 		panic(err)
 	}

@@ -18,9 +18,9 @@
 DEFAULT_NUM=2
 DEFAULT_CONFIG="kind-cluster-3-nodes.yaml"
 if [ -z "$1" ]; then
-	NUM=$DEFAULT_NUM
+  NUM=$DEFAULT_NUM
 else
-	NUM=$1
+  NUM=$1
 fi
 
 if [ -z "$2" ]; then

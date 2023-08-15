@@ -19,7 +19,6 @@ package cmd
 import (
 	"application-generator/src/pkg/generate"
 	model "application-model"
-	"math/rand"
 
 	"bufio"
 	"fmt"
@@ -161,12 +160,11 @@ var generateCmd = &cobra.Command{
 			inputFile = args[1]
 		}
 
-		buildID := rand.Int()
-		config, clusters := generate.Parse(inputFile)
+		config, clusters, buildHash := generate.Parse(inputFile)
 
 		generate.CreateGrpcEndpoints(config)
-		generate.CreateK8sYaml(config, clusters, buildID)
-		generate.CreateDockerImage(config, buildID)
+		generate.CreateK8sYaml(config, clusters, buildHash)
+		generate.CreateDockerImage(config, buildHash)
 	},
 }
 

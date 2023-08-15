@@ -22,13 +22,9 @@ import (
 	model "application-model"
 	"encoding/json"
 	"io"
-	"log"
 	"os"
 	"runtime"
 )
-
-// Randomly generated string in Dockerfile which is used to make sure the binary is up to date with the configuration
-var buildID string
 
 // Load the config map from the CONF environment variable
 func LoadConfigMap() (*model.ConfigMap, error) {
@@ -54,10 +50,6 @@ func main() {
 	configMap, err := LoadConfigMap()
 	if err != nil {
 		panic(err)
-	}
-
-	if configMap.BuildID != "" && configMap.BuildID != buildID {
-		log.Printf("Build ID mismatch: %s != %s, have you deployed the latest Docker image?", configMap.BuildID, buildID)
 	}
 
 	runtime.GOMAXPROCS(configMap.Processes)
