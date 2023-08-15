@@ -227,8 +227,8 @@ func ApplyDefaults(config *model.FileConfig) {
 					endpoint.NetworkComplexity.ForwardRequests = "synchronous"
 				}
 				for _, calledService := range endpoint.NetworkComplexity.CalledServices {
-					if calledService.TrafficForwardRatio < 0 {
-						calledService.TrafficForwardRatio = 0
+					if calledService.TrafficForwardRatio < 1 {
+						calledService.TrafficForwardRatio = 1
 					}
 				}
 			}
