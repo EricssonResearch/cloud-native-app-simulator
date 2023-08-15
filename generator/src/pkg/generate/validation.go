@@ -222,8 +222,15 @@ func ApplyDefaults(config *model.FileConfig) {
 			if endpoint.CpuComplexity != nil && endpoint.CpuComplexity.Threads < 1 {
 				endpoint.CpuComplexity.Threads = 1
 			}
-			if endpoint.NetworkComplexity != nil && endpoint.NetworkComplexity.ForwardRequests == "" {
-				endpoint.NetworkComplexity.ForwardRequests = "synchronous"
+			if endpoint.NetworkComplexity != nil {
+				if endpoint.NetworkComplexity.ForwardRequests == "" {
+					endpoint.NetworkComplexity.ForwardRequests = "synchronous"
+				}
+				for _, calledService := range endpoint.NetworkComplexity.CalledServices {
+					if calledService.TrafficForwardRatio < 1 {
+						calledService.TrafficForwardRatio = 1
+					}
+				}
 			}
 		}
 	}

@@ -34,7 +34,8 @@ func ConcatenateCPUResponses(taskResponses *MutexTaskResponses, cpuTaskResponse 
 
 	if taskResponses.CpuTask != nil {
 		for k, v := range cpuTaskResponse.Services {
-			taskResponses.CpuTask.Services[k] = v
+			uniqueKey := UniqueKey(taskResponses.CpuTask.Services, k)
+			taskResponses.CpuTask.Services[uniqueKey] = v
 		}
 	} else {
 		taskResponses.CpuTask = cpuTaskResponse
