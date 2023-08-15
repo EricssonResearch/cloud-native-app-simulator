@@ -48,6 +48,21 @@ type NetworkTask struct {
 	Request any
 }
 
+// Get a unique key for appending to map
+func UniqueKey[V any](m map[string]V, k string) string {
+	uniqueKey := k
+	i := 0
+	for true {
+		if _, found := m[uniqueKey]; !found {
+			break
+		}
+
+		i++
+		uniqueKey = fmt.Sprintf("%s.%d", k, i+1)
+	}
+	return uniqueKey
+}
+
 // Combines the task responses in taskResponses with networkTaskResponse and endpointResponses
 func ConcatenateNetworkResponses(taskResponses *MutexTaskResponses, networkTaskResponse *generated.NetworkTaskResponse, endpointResponses []generated.EndpointResponse) {
 	taskResponses.Mutex.Lock()
@@ -56,7 +71,8 @@ func ConcatenateNetworkResponses(taskResponses *MutexTaskResponses, networkTaskR
 	if taskResponses.NetworkTask != nil {
 		taskResponses.NetworkTask.Services = append(taskResponses.NetworkTask.Services, networkTaskResponse.Services...)
 		for k, v := range networkTaskResponse.Responses {
-			taskResponses.NetworkTask.Responses[k] = v
+			uniqueKey := UniqueKey(taskResponses.NetworkTask.Responses, k)
+			taskResponses.NetworkTask.Responses[uniqueKey] = v
 		}
 		// Don't replace the payload
 	} else {
@@ -65,7 +81,8 @@ func ConcatenateNetworkResponses(taskResponses *MutexTaskResponses, networkTaskR
 
 	for _, r := range endpointResponses {
 		key := fmt.Sprintf("%s/%s", r.Service.Service, r.Service.Endpoint)
-		taskResponses.NetworkTask.Responses[key] = &generated.ServiceResponse{
+		uniqueKey := UniqueKey(taskResponses.NetworkTask.Responses, key)
+		taskResponses.NetworkTask.Responses[uniqueKey] = &generated.ServiceResponse{
 			Protocol: r.Protocol,
 			Status:   r.Status,
 		}
