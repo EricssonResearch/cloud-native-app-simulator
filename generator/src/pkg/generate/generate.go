@@ -148,6 +148,23 @@ func CreateGrpcEndpoints(config model.FileConfig) {
 	os.WriteFile(path+"/generated/client/grpc.go", implClientTempFilledBytes.Bytes(), 0644)
 	os.WriteFile(path+"/generated/server/grpc.go", implServerTempFilledBytes.Bytes(), 0644)
 	os.WriteFile(path+"/generated/service.proto", protoTempFilledBytes.Bytes(), 0644)
+
+	// goimports is used to remove unused imports, such as when the service only has HTTP endpoints
+	cmd := exec.Command("goimports", "-w", path+"/generated/client/grpc.go", path+"/generated/client/grpc.go")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+
+	cmd = exec.Command("goimports", "-w", path+"/generated/server/grpc.go", path+"/generated/server/grpc.go")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
 }
 
 func CreateK8sYaml(config model.FileConfig, clusters []string, buildHash string) {
