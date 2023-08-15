@@ -93,15 +93,23 @@ func grpcRequest(service model.CalledService) generated.EndpointResponse {
 // Forward requests to all services sequentially and return REST or gRPC responses
 func ForwardSequential(request any, services []model.CalledService) []generated.EndpointResponse {
 	forwardHeaders := ExtractHeaders(request)
-	responses := make([]generated.EndpointResponse, len(services), len(services))
+	len := 0
+	for _, service := range services {
+		len += service.TrafficForwardRatio
+	}
+	responses := make([]generated.EndpointResponse, len, len)
 
-	for i, service := range services {
-		if service.Protocol == "http" {
-			response := httpRequest(service, forwardHeaders)
-			responses[i] = response
-		} else if service.Protocol == "grpc" {
-			response := grpcRequest(service)
-			responses[i] = response
+	i := 0
+	for _, service := range services {
+		for j := 0; j < service.TrafficForwardRatio; j++ {
+			if service.Protocol == "http" {
+				response := httpRequest(service, forwardHeaders)
+				responses[i] = response
+			} else if service.Protocol == "grpc" {
+				response := grpcRequest(service)
+				responses[i] = response
+			}
+			i++
 		}
 	}
 
@@ -125,16 +133,24 @@ func parallelGRPCRequest(responses []generated.EndpointResponse, i int, service 
 // Forward requests to all services in parallel using goroutines and return REST or gRPC responses
 func ForwardParallel(request any, services []model.CalledService) []generated.EndpointResponse {
 	forwardHeaders := ExtractHeaders(request)
-	responses := make([]generated.EndpointResponse, len(services), len(services))
+	len := 0
+	for _, service := range services {
+		len += service.TrafficForwardRatio
+	}
+	responses := make([]generated.EndpointResponse, len, len)
 	wg := sync.WaitGroup{}
 
-	for i, service := range services {
-		if service.Protocol == "http" {
-			wg.Add(1)
-			go parallelHTTPRequest(responses, i, service, forwardHeaders, &wg)
-		} else if service.Protocol == "grpc" {
-			wg.Add(1)
-			go parallelGRPCRequest(responses, i, service, &wg)
+	i := 0
+	for _, service := range services {
+		for j := 0; j < service.TrafficForwardRatio; j++ {
+			if service.Protocol == "http" {
+				wg.Add(1)
+				go parallelHTTPRequest(responses, i, service, forwardHeaders, &wg)
+			} else if service.Protocol == "grpc" {
+				wg.Add(1)
+				go parallelGRPCRequest(responses, i, service, &wg)
+			}
+			i++
 		}
 	}
 
