@@ -217,7 +217,7 @@ func CreateK8sYaml(config model.FileConfig, clusters []string, buildHash string)
 
 			image := fmt.Sprintf("%s/%s:%s", s.HostnameFQDN(), s.ImageName, buildHash)
 			deployment := s.CreateDeployment(serv, serv, c_id, replicas, serv, c_id, namespace,
-				s.DefaultPort, "emulator", image, s.ImagePullPolicy, s.VolumePath, s.VolumeName, "config-"+serv, readinessProbe,
+				s.DefaultPort, s.ContainerName, image, s.ImagePullPolicy, s.VolumePath, s.VolumeName, "config-"+serv, readinessProbe,
 				resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory,
 				nodeAffinity, protocol, annotations)
 			appendManifest(deployment)

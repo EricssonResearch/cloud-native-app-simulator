@@ -36,6 +36,7 @@ const (
 	BaseImageTagProd = "v4.0.0"
 	BaseImageTagDev  = "latest"
 
+	ContainerName   = "app"
 	ImageName       = "hydragen-emulator"
 	ImagePullPolicy = "Never"
 
