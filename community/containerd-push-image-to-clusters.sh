@@ -22,7 +22,12 @@ cd "$(git rev-parse --show-toplevel)/generator/k8s"
 clusters="$(echo *)"
 contexts="$(kubectl config get-contexts --output=name | tr '\n' ' ')"
 
+echo "Clusters: $clusters"
+echo "Contexts: $contexts"
+echo ""
+
 echo "Trying to discover all nodes that need an updated image..."
+echo ""
 
 names=()
 nodes=()
@@ -31,17 +36,24 @@ nodes=()
 # TODO: Does not check for the "node" property in configmap
 for cl in $clusters; do
   for ctx in $contexts; do
+    echo "Trying to access cluster $cl with context $ctx"
     cmd="kubectl get nodes -o custom-columns=:metadata.name,:spec.taints[].effect --no-headers --cluster $cl --context $ctx"
     output="$($cmd 2>&1)"
     if [[ $? == 0 ]]; then
+      echo "  Kubectl returned nodes: $(echo $output | tr '\n' ' ')"
       ctxnodes="$(echo "$output" | grep -v 'NoSchedule' | cut -d ' ' -f 1 | tr '\n' ' ')"
+      echo "  Nodes that can have pods scheduled: $ctxnodes"
       for node in $ctxnodes; do
         names+=("$cl/$node")
         nodes+=("$ctx/$cl/$node")
       done
       break 1
+    else
+      echo "  Command failed (exit status $?): $(echo $output | tr '\n' ' ')"
     fi
   done
+
+  echo "" 
 done
 
 echo "Nodes: ${names[@]}"
