@@ -49,32 +49,35 @@ name="$(hostname -f)/hydragen-emulator"
 image="$(docker images $name --format '{{.Repository}}:{{.Tag}}')"
 
 cd "$(git rev-parse --show-toplevel)/generator/k8s"
-clusters="$(echo *)"
-contexts="$(kubectl config get-contexts --output=name | tr '\n' ' ')"
+contexts="$(echo *)"
+#contexts="$(kubectl config get-contexts --output=name | tr '\n' ' ')"
 
+echo "Contexts: $contexts"
 echo "Trying to discover all nodes that need an updated image..."
+echo ""
 
-names=()
 nodes=()
 
-# Try every context with every cluster
+# Try every context
 # TODO: Does not check for the "node" property in configmap
-for cl in $clusters; do
-  for ctx in $contexts; do
-    cmd="kubectl get nodes -o custom-columns=:metadata.name,:spec.taints[].effect --no-headers --cluster $cl --context $ctx"
-    output="$($cmd 2>&1)"
-    if [[ $? == 0 ]]; then
-      ctxnodes="$(echo "$output" | grep -v 'NoSchedule' | cut -d ' ' -f 1 | tr '\n' ' ')"
-      for node in $ctxnodes; do
-        names+=("$cl/$node")
-        nodes+=("$ctx/$cl/$node")
-      done
-      break 1
-    fi
-  done
+for ctx in $contexts; do
+  echo "Trying to access context $ctx"
+  cmd="kubectl get nodes -o custom-columns=:metadata.name,:spec.taints[].effect --no-headers --context $ctx"
+  output="$($cmd 2>&1)"
+  if [[ $? == 0 ]]; then
+    echo "  Kubectl returned nodes: $(echo $output | tr '\n' ' ')"
+    ctxnodes="$(echo "$output" | grep -v 'NoSchedule' | cut -d ' ' -f 1 | tr '\n' ' ')"
+    echo "  Nodes that can have pods scheduled: $ctxnodes"
+    for node in $ctxnodes; do
+      nodes+=("$ctx/$node")
+    done
+  else
+    echo "  Command failed (exit status $?): $(echo $output | tr '\n' ' ')"
+  fi
+  echo "" 
 done
 
-echo "Nodes: ${names[@]}"
+echo "Nodes: ${nodes[@]}"
 
 if [[ $has_sudo_password == false ]]; then
   read -s -p "Sudo password (leave blank if '$(whoami)' has administrative access to containerd): " sudo_password
@@ -85,10 +88,10 @@ if [[ $has_sudo_password == false ]]; then
 fi
 
 for node in "${nodes[@]}"; do
-  IFS="/" read -r ctx cl name <<< $node
+  IFS="/" read -r ctx name <<< $node
   # https://kubernetes.io/docs/reference/kubectl/cheatsheet/
   jsonpath="{.status.addresses[?(@.type=='InternalIP')].address}"
-  ip="$(kubectl get nodes $name --cluster $cl --context $ctx -o jsonpath=$jsonpath)"
+  ip="$(kubectl get nodes $name --context $ctx -o jsonpath=$jsonpath)"
   file="/tmp/containerd-import-image.sh"
 
   # Start ssh in background
