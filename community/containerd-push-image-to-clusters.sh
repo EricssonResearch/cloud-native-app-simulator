@@ -15,6 +15,36 @@
 # limitations under the License.
 #
 
+has_sudo_password=false
+sudo_password=""
+has_ssh_password=false
+ssh_password=""
+
+while getopts ":s:p:n" option; do
+  case "${option}" in
+    s)
+      has_sudo_password=true
+      sudo_password="$OPTARG"
+      ;;
+    p)
+      has_ssh_password=true
+      ssh_password="$OPTARG"
+      ;;
+    n)
+      has_sudo_password=true
+      sudo_password=""
+      ;;
+    *)
+      echo "Usage: $0 -s <sudo password> -p <ssh password> -n"
+      echo "Parameters:"
+      echo "  -s: Set sudo password to argument"
+      echo "  -p: Set ssh password to argument (if sshpass is installed)"
+      echo "  -n: Skip sudo password prompt"
+      exit 0
+      ;;
+    esac
+done
+
 name="$(hostname -f)/hydragen-emulator"
 image="$(docker images $name --format '{{.Repository}}:{{.Tag}}')"
 
@@ -46,11 +76,13 @@ done
 
 echo "Nodes: ${names[@]}"
 
-read -s -p "Sudo password (leave blank if '$(whoami)' has administrative access to containerd): " password
-if [[ -z $password ]]; then
-  echo -n "(not using sudo)"
+if [[ $has_sudo_password == false ]]; then
+  read -s -p "Sudo password (leave blank if '$(whoami)' has administrative access to containerd): " sudo_password
+  if [[ -z "$sudo_password" ]]; then
+    echo -n "(not using sudo)"
+  fi
+  echo ""
 fi
-echo ""
 
 for node in "${nodes[@]}"; do
   IFS="/" read -r ctx cl name <<< $node
@@ -60,13 +92,18 @@ for node in "${nodes[@]}"; do
   file="/tmp/containerd-import-image.sh"
 
   # Start ssh in background
-  ssh -M -S /tmp/containerd-import-ssh-socket -fnNT "$(whoami)@$ip" 
+  if [[ $has_ssh_password == true ]]; then
+    sshpass -p "$ssh_password" ssh -M -S /tmp/containerd-import-ssh-socket -fnNT "$(whoami)@$ip"
+  else
+    ssh -M -S /tmp/containerd-import-ssh-socket -fnNT "$(whoami)@$ip"
+  fi
+
   # Copy script to remote machine
   scp -o "ControlPath=/tmp/containerd-import-ssh-socket" ../../community/containerd-import-image.sh "$(whoami)@$ip:/tmp/containerd-import-image.sh"
   # Execute script with archive coming from stdin
   ssh -S /tmp/containerd-import-ssh-socket "$(whoami)@$ip" "chmod +x /tmp/containerd-import-image.sh"
   # Add space at the start to prevent password from being saved in bash history
-  cat ../generated/hydragen-emulator.tar | ssh -S /tmp/containerd-import-ssh-socket -C "$(whoami)@$ip" " /tmp/containerd-import-image.sh "$password""
+  cat ../generated/hydragen-emulator.tar | ssh -S /tmp/containerd-import-ssh-socket -C "$(whoami)@$ip" " /tmp/containerd-import-image.sh "$sudo_password""
   ssh -S /tmp/containerd-import-ssh-socket "$(whoami)@$ip" "rm /tmp/containerd-import-image.sh"
   # Close ssh session
   ssh -S /tmp/containerd-import-ssh-socket -O exit "$(whoami)@$ip"
