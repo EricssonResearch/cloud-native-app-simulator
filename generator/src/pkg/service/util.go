@@ -24,6 +24,8 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 const (
@@ -98,12 +100,25 @@ func CreateDeployment(metadataName, selectorAppName, selectorClusterName string,
 
 	var deployment model.DeploymentInstance
 	var containerInstance model.ContainerInstance
-	var envInstance model.EnvInstance
+	var serviceEnvInstance model.EnvInstance
+	var memlimitEnvInstance model.EnvInstance
 	var containerVolume model.ContainerVolumeInstance
 	var volumeInstance model.VolumeInstance
 
-	envInstance.Name = "SERVICE_NAME"
-	envInstance.Value = metadataName
+	serviceEnvInstance.Name = "SERVICE_NAME"
+	serviceEnvInstance.Value = metadataName
+	containerInstance.Env = append(containerInstance.Env, serviceEnvInstance)
+
+	memlimitResource, _ := resource.ParseQuantity(limitMemory)
+	memlimitBytes, ok := memlimitResource.AsInt64()
+	if !ok {
+		panic(fmt.Errorf("Could not parse memory limit %s as bytes", limitMemory))
+	}
+
+	memlimitEnvInstance.Name = "GOMEMLIMIT"
+	memlimitEnvInstance.Value = fmt.Sprint(memlimitBytes)
+	containerInstance.Env = append(containerInstance.Env, memlimitEnvInstance)
+
 	volumeInstance.Name = volumeName
 	volumeInstance.ConfigMap.Name = configMapName
 
@@ -115,7 +130,6 @@ func CreateDeployment(metadataName, selectorAppName, selectorClusterName string,
 	containerInstance.Name = containerName
 	containerInstance.Image = containerImageURL
 	containerInstance.ImagePullPolicy = containerImagePolicy
-	containerInstance.Env = append(containerInstance.Env, envInstance)
 
 	if protocol == "http" {
 		containerInstance.ReadinessProbe.HttpGet.Path = "/"
