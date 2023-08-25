@@ -95,8 +95,8 @@ func HTTP(endpoints []model.Endpoint) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", rootHandler)
 
-	for _, endpoint := range endpoints {
-		mux.Handle(fmt.Sprintf("/%s", endpoint.Name), endpointHandler{endpoint: &endpoint})
+	for i := range endpoints {
+		mux.Handle(fmt.Sprintf("/%s", endpoints[i].Name), endpointHandler{endpoint: &endpoints[i]})
 	}
 
 	err := http.ListenAndServe(":5000", mux)
