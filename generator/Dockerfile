@@ -17,9 +17,9 @@
 # This is a layered image that builds the current source code on top of hydragen-base and copies the binary to a new image
 # The new image should be deployed on all clusters and contains generated code for all endpoints specified in the input file
 
-ARG BASE
+ARG SRCIMAGE
 
-FROM ${BASE} as builder
+FROM ${SRCIMAGE} as builder
 
 # Copy everything the application generator created
 COPY ./generated/ /usr/src/emulator/emulator/src/generated/
@@ -29,7 +29,7 @@ WORKDIR /usr/src/emulator
 # Run protobuf compiler
 RUN protoc -I/usr/src/emulator --go_out=emulator --go_opt=module=application-emulator --go-grpc_out=emulator --go-grpc_opt=module=application-emulator /usr/src/emulator/emulator/src/generated/service.proto
 # Compile the binary without cgo
-# This makes it possible to run without a base image
+# This makes it possible to run without any dependencies
 RUN CGO_ENABLED=0 go build -mod=readonly -work -ldflags "-s -w" -o app-emulator ./emulator
 
 # Install grpc_health_probe

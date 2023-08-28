@@ -325,8 +325,15 @@ func CreateJsonInput(userConfig model.UserConfig) string {
 }
 
 func CreateDockerImage(config model.FileConfig, buildHash string) {
-	baseName := s.FormatBaseImageName(config.Settings.Development)
 	hostName := s.HostnameFQDN()
+
+	var sourceImage string
+	if config.Settings.Development {
+		sourceImage = fmt.Sprintf("%s/%s:%s", hostName, s.SourceImageName, s.SourceImageTagDev)
+	} else {
+		sourceImage = fmt.Sprintf("%s/%s:%s", s.SourceImageURLProd, s.SourceImageName, s.SourceImageTagProd)
+	}
+
 	imageName := fmt.Sprintf("%s/%s:%s", hostName, s.ImageName, buildHash)
 
 	path, _ := os.Getwd()
@@ -336,7 +343,7 @@ func CreateDockerImage(config model.FileConfig, buildHash string) {
 		"-t",
 		imageName,
 		"--build-arg",
-		"BASE=" + baseName,
+		"SRCIMAGE=" + sourceImage,
 		path,
 	}
 

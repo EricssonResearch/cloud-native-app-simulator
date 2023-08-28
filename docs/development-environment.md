@@ -41,16 +41,16 @@ cd community
 ./kind-setup-clusters.sh [number of clusters (default 2)] [config of each cluster (default kind-cluster-3-nodes.yaml)]
 ```
 
-## Build the base image
+## Build the source image
 
-The base image, containing code and compilers, needs to be built from the local source code.
+The source image, containing code and compilers, needs to be built from the local source code.
 
 ```bash
 docker build -t "$(hostname -f)/hydragen-base" .
 ```
 
 By default, HydraGen will use a release image from GitHub Packages as the base when building your image.
-To use the development base image instead set this option in the input JSON configuration:
+To use the development source image instead set this option in the input JSON configuration:
 
 ```json
 {

@@ -32,11 +32,11 @@ const (
 	VolumeName = "config-data-volume"
 	VolumePath = "/usr/src/emulator/config"
 
-	BaseImageURLProd = "ghcr.io/ericssonresearch/cloud-native-app-simulator"
-	BaseImageName    = "hydragen-base"
+	SourceImageURLProd = "ghcr.io/ericssonresearch/cloud-native-app-simulator"
+	SourceImageName    = "hydragen-base"
 	// TODO: Update the version here once everything is released
-	BaseImageTagProd = "v4.0.0"
-	BaseImageTagDev  = "latest"
+	SourceImageTagProd = "v4.0.0"
+	SourceImageTagDev  = "latest"
 
 	ContainerName   = "app"
 	ImageName       = "hydragen-emulator"
@@ -82,15 +82,6 @@ func HostnameFQDN() string {
 	}
 
 	return strings.TrimSpace(out.String())
-}
-
-func FormatBaseImageName(development bool) string {
-	if development {
-		hostName := HostnameFQDN()
-		return fmt.Sprintf("%s/%s:%s", hostName, BaseImageName, BaseImageTagDev)
-	} else {
-		return fmt.Sprintf("%s/%s:%s", BaseImageURLProd, BaseImageName, BaseImageTagProd)
-	}
 }
 
 func CreateDeployment(metadataName, selectorAppName, selectorClusterName string, numberOfReplicas int,
