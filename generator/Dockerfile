@@ -18,6 +18,7 @@
 # The new image should be deployed on all clusters and contains generated code for all endpoints specified in the input file
 
 ARG SRCIMAGE
+ARG BASEIMAGE
 
 FROM ${SRCIMAGE} as builder
 
@@ -37,7 +38,7 @@ RUN GRPC_HEALTH_PROBE_VERSION=v0.4.19 && \
     wget -qO/usr/bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 && \
     chmod +x /usr/bin/grpc_health_probe
 
-FROM busybox
+FROM ${BASEIMAGE}
 
 # Copy final binary to /usr/bin/app-emulator
 COPY --from=builder /usr/src/emulator/app-emulator /usr/bin/app-emulator

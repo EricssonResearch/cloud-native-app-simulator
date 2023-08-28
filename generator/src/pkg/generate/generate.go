@@ -344,6 +344,8 @@ func CreateDockerImage(config model.FileConfig, buildHash string) {
 		imageName,
 		"--build-arg",
 		"SRCIMAGE=" + sourceImage,
+		"--build-arg",
+		"BASEIMAGE=" + config.Settings.BaseImage,
 		path,
 	}
 
