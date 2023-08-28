@@ -15,6 +15,9 @@ At least one cluster and endpoint is required. Other sections are optional and w
 
 #### Optional attributes
 
+* **logging**: Enables logging using Elasticsearch. See [logging.md](logging.md) for more information.
+* **development**: Builds the application emulator from a local source image (`hydragen-base`) instead of the latest release image.
+* **base_image**: Specifies the base Docker image for the application emulator. For example, to use Ubuntu 20.04, set this to `ubuntu:20.04`. The default is `busybox` which provides a minimal shell and set of utilities.
 * **resources**: Resource allocation requests and limits.
 * **processes**: The maximum number of processes the service is allowed to use (`GOMAXPROCS`). If this is set to 0, the Go runtime will choose the number of processes to use. Default: 0
 * **readiness_probe**: The initial delay before readiness probe is initiated. Default: 1 second
@@ -23,6 +26,11 @@ At least one cluster and endpoint is required. Other sections are optional and w
 
 ```json
 {
+  "settings": {
+    "logging": <boolean>,
+    "development": <boolean>,
+    "base_image": "<string>"
+  },
   "services": [
     {
       "name": "<string>",
