@@ -38,9 +38,11 @@ const (
 	SourceImageTagProd = "v4.0.0"
 	SourceImageTagDev  = "latest"
 
-	ContainerName   = "app"
-	ImageName       = "hydragen-emulator"
-	ImagePullPolicy = "Never"
+	BaseImageDefault = "busybox"
+	ImageName        = "hydragen-emulator"
+	ImagePullPolicy  = "Never"
+
+	ContainerName = "app"
 
 	DefaultExtPort  = 80
 	DefaultPort     = 5000
