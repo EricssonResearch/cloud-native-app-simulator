@@ -244,13 +244,14 @@ func CreateK8sYaml(config model.FileConfig, clusters []string, buildHash string)
 	}
 }
 
-func CreateJsonInput(userConfig model.UserConfig) string {
+func CreateJsonInput(userConfig model.UserConfig, development bool) string {
 	path, _ := os.Getwd()
 	path = path + "/input/" + userConfig.OutputFileName
 
 	rand.Seed(time.Now().UnixNano())
 
 	inputConfig := s.CreateFileConfig()
+	inputConfig.Settings.Development = development
 
 	// TODO: Generate cluster latencies
 
