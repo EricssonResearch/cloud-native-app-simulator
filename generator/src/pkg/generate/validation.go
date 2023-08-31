@@ -230,6 +230,22 @@ func ApplyDefaults(config *model.FileConfig) {
 					if calledService.TrafficForwardRatio < 1 {
 						calledService.TrafficForwardRatio = 1
 					}
+					if calledService.Port == 0 {
+						calledService.Port = s.DefaultExtPort
+					}
+					if calledService.Protocol == "" {
+						for _, potentialCalledService := range config.Services {
+							if potentialCalledService.Name == calledService.Service {
+								// No need to check endpoints since services can't have duplicate names
+								calledService.Protocol = potentialCalledService.Protocol
+							}
+						}
+
+						// Assume HTTP if service was not found
+						if calledService.Protocol == "" {
+							calledService.Protocol = "http"
+						}
+					}
 				}
 			}
 		}

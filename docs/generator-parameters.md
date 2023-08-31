@@ -171,13 +171,13 @@ The CPU stressor will lock threads for exclusive access while it is executing. T
 
 * **service**: The name of the service object that serves the specified endpoint.
 * **endpoint**: The name of the endpoint that will be contacted.
-* **port**: The port the server is responding to requests on.
-* **protocol**: Determines if the call will be made using HTTP or gRPC.
 * **traffic_forward_ratio**: Determines the ratio of inbound to outbound requests (1:X). This determines how many times an endpoint call will be made for every request.
 
 #### Optional attributes
 
 * **request_payload_size**: Determines the number of characters that will be sent in the request to the endpoint. Default: 0
+* **port**: The port the server is responding to requests on. This is usually determined automatically.
+* **protocol**: Determines if the call will be made using HTTP or gRPC. This is usually determined automatically.
 
 #### Format
 
