@@ -155,7 +155,8 @@ var generateCmd = &cobra.Command{
 				OutputFileName:      outputFileName,
 			}
 
-			inputFile = generate.CreateJsonInput(userConfig)
+			development := yesNoPrompt("Use the local development image to build the emulator?", false)
+			inputFile = generate.CreateJsonInput(userConfig, development)
 		} else if mode == "preset" {
 			inputFile = args[1]
 		}
