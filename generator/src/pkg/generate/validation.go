@@ -186,6 +186,10 @@ func ValidateFileConfig(config *model.FileConfig) error {
 
 // Applies default values to input JSON
 func ApplyDefaults(config *model.FileConfig) {
+	if config.Settings.BaseImage == "" {
+		config.Settings.BaseImage = s.BaseImageDefault
+	}
+
 	for i := range config.Services {
 		service := &config.Services[i]
 

@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-# This is the base image for the application emulator
+# This is the source image for the application emulator
 # It contains the source code, Go compiler and protobuf compiler
 # The generator will compile a unique layered image for the current configuration
 

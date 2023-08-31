@@ -88,8 +88,9 @@ type ClusterLatency struct {
 }
 
 type Setting struct {
-	Logging     bool `json:"logging"`
-	Development bool `json:"development"`
+	Logging     bool   `json:"logging"`
+	Development bool   `json:"development"`
+	BaseImage   string `json:"base_image"`
 }
 
 type FileConfig struct {
