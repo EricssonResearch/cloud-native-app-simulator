@@ -13,22 +13,27 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package generate
 
 import (
-	"application-generator/src/pkg/model"
 	s "application-generator/src/pkg/service"
+	model "application-model"
+
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"hash/crc32"
+	"io"
 	"math/rand"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"text/template"
 	"time"
 
+	"github.com/iancoleman/strcase"
 	"gopkg.in/yaml.v3"
 )
 
@@ -49,24 +54,26 @@ func Unique(strSlice []string) []string {
 }
 
 // Parse microservice config file, and return a config struct
-func Parse(configFilename string) (model.FileConfig, []string) {
+func Parse(configFilename string) (model.FileConfig, []string, string) {
 	configFile, err := os.Open(configFilename)
-	configFileByteValue, _ := ioutil.ReadAll(configFile)
-
 	if err != nil {
 		panic(err)
 	}
 
+	configFileByteValue, _ := io.ReadAll(configFile)
 	loaded_config := s.CreateFileConfig()
-	err = json.Unmarshal(configFileByteValue, &loaded_config)
 
+	decoder := json.NewDecoder(bytes.NewReader(configFileByteValue))
+	// Panic if input contains unknown fields
+	decoder.DisallowUnknownFields()
+
+	err = decoder.Decode(&loaded_config)
 	if err != nil {
 		panic(err)
 	}
-	
+
 	ApplyDefaults(&loaded_config)
 	err = ValidateFileConfig(&loaded_config)
-
 	if err != nil {
 		panic(err)
 	}
@@ -90,35 +97,96 @@ func Parse(configFilename string) (model.FileConfig, []string) {
 	fmt.Println("---------------")
 	fmt.Println("All endpoints: ", Unique(endpoints))
 	fmt.Println("Number of endpoints: ", len(Unique(endpoints)))
-	return loaded_config, clusters
+
+	hash := crc32.ChecksumIEEE(configFileByteValue)
+	return loaded_config, clusters, fmt.Sprintf("%x", hash)
 }
 
-func CreateK8sYaml(config model.FileConfig, clusters []string) {
+func CreateGrpcEndpoints(config model.FileConfig) {
 	path, _ := os.Getwd()
-	proto_temp, _ := template.ParseFiles(path + "/template/service.tmpl")
+
+	implClientTemp := template.New("grpc.tmpl")
+	implClientTemp = implClientTemp.Funcs(template.FuncMap{"goname": strcase.ToCamel})
+	implClientTemp, _ = implClientTemp.ParseFiles(path + "/template/client/grpc.tmpl")
+
+	implServerTemp := template.New("grpc.tmpl")
+	implServerTemp = implServerTemp.Funcs(template.FuncMap{"goname": strcase.ToCamel})
+	implServerTemp, _ = implServerTemp.ParseFiles(path + "/template/server/grpc.tmpl")
+
+	protoTemp := template.New("service.tmpl")
+	protoTemp = protoTemp.Funcs(template.FuncMap{"goname": strcase.ToCamel})
+	protoTemp, _ = protoTemp.ParseFiles(path + "/template/service.tmpl")
+
+	grpcServices := []model.Service{}
+	for _, service := range config.Services {
+		if service.Protocol == "grpc" {
+			grpcServices = append(grpcServices, service)
+		}
+	}
+
+	var implClientTempFilledBytes bytes.Buffer
+	err := implClientTemp.Execute(&implClientTempFilledBytes, grpcServices)
+	if err != nil {
+		panic(err)
+	}
+
+	var implServerTempFilledBytes bytes.Buffer
+	err = implServerTemp.Execute(&implServerTempFilledBytes, grpcServices)
+	if err != nil {
+		panic(err)
+	}
+
+	var protoTempFilledBytes bytes.Buffer
+	err = protoTemp.Execute(&protoTempFilledBytes, grpcServices)
+	if err != nil {
+		panic(err)
+	}
+
+	os.Mkdir(path+"/generated", 0777)
+	os.Mkdir(path+"/generated/client", 0777)
+	os.Mkdir(path+"/generated/server", 0777)
+	os.WriteFile(path+"/generated/client/grpc.go", implClientTempFilledBytes.Bytes(), 0644)
+	os.WriteFile(path+"/generated/server/grpc.go", implServerTempFilledBytes.Bytes(), 0644)
+	os.WriteFile(path+"/generated/service.proto", protoTempFilledBytes.Bytes(), 0644)
+
+	// goimports is used to remove unused imports, such as when the service only has HTTP endpoints
+	cmd := exec.Command("goimports", "-w", path+"/generated/client/grpc.go", path+"/generated/client/grpc.go")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+
+	cmd = exec.Command("goimports", "-w", path+"/generated/server/grpc.go", path+"/generated/server/grpc.go")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+}
+
+func CreateK8sYaml(config model.FileConfig, clusters []string, buildHash string) {
+	path, _ := os.Getwd()
 	path = path + "/k8s"
 
 	for i := 0; i < len(clusters); i++ {
 		directory := fmt.Sprintf(path+"/%s", clusters[i])
 		os.Mkdir(directory, 0777)
 	}
-	var proto_temp_filled_byte bytes.Buffer
-	err := proto_temp.Execute(&proto_temp_filled_byte, config.Services)
-	if err != nil {
-		panic(err)
-	}
-	proto_temp_filled := proto_temp_filled_byte.String()
+
 	for i := 0; i < len(config.Services); i++ {
 		serv := config.Services[i].Name
-		protocol := config.Services[i].Endpoints[0].Protocol
+		protocol := config.Services[i].Protocol
 		readinessProbe := config.Services[i].ReadinessProbe
 
 		resources := config.Services[i].Resources
 		processes := config.Services[i].Processes
-		threads := config.Services[i].Threads
 
 		logging := config.Settings.Logging
-		cm_data := s.CreateConfigMap(processes, threads, logging, config.Services[i].Endpoints)
+
+		cm_data := s.CreateConfigMap(processes, logging, protocol, config.Services[i].Endpoints)
 
 		serv_json, err := json.Marshal(cm_data)
 		if err != nil {
@@ -144,20 +212,29 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 				manifests = append(manifests, string(yamlDoc))
 				return nil
 			}
-			configmap := s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json), proto_temp_filled)
+			configmap := s.CreateConfig("config-"+serv, "config-"+serv, c_id, namespace, string(serv_json))
 			appendManifest(configmap)
 
+			image := fmt.Sprintf("%s/%s:%s", s.HostnameFQDN(), s.ImageName, buildHash)
 			deployment := s.CreateDeployment(serv, serv, c_id, replicas, serv, c_id, namespace,
-				s.DefaultPort, s.ImageName, s.ImageURL, s.VolumePath, s.VolumeName, "config-"+serv, readinessProbe,
+				s.DefaultPort, s.ContainerName, image, s.ImagePullPolicy, s.VolumePath, s.VolumeName, "config-"+serv, readinessProbe,
 				resources.Requests.Cpu, resources.Requests.Memory, resources.Limits.Cpu, resources.Limits.Memory,
 				nodeAffinity, protocol, annotations)
 			appendManifest(deployment)
 
-			service := s.CreateService(serv, serv, protocol, s.Uri, c_id, namespace, s.DefaultExtPort, s.DefaultPort)
+			ports := []model.ServicePortInstance{
+				{
+					Name:       protocol,
+					Port:       s.DefaultExtPort,
+					TargetPort: s.DefaultPort,
+				},
+			}
+
+			service := s.CreateService(serv, serv, protocol, s.Uri, c_id, namespace, ports)
 			appendManifest(service)
 
 			yamlDocString := strings.Join(manifests, "---\n")
-			err := ioutil.WriteFile(manifestFilePath, []byte(yamlDocString), 0644)
+			err := os.WriteFile(manifestFilePath, []byte(yamlDocString), 0644)
 			if err != nil {
 				fmt.Print(err)
 				return
@@ -167,13 +244,14 @@ func CreateK8sYaml(config model.FileConfig, clusters []string) {
 	}
 }
 
-func CreateJsonInput(userConfig model.UserConfig) string {
+func CreateJsonInput(userConfig model.UserConfig, development bool) string {
 	path, _ := os.Getwd()
 	path = path + "/input/" + userConfig.OutputFileName
 
 	rand.Seed(time.Now().UnixNano())
 
 	inputConfig := s.CreateFileConfig()
+	inputConfig.Settings.Development = development
 
 	// TODO: Generate cluster latencies
 
@@ -203,7 +281,6 @@ func CreateJsonInput(userConfig model.UserConfig) string {
 		service.Resources = resources
 
 		service.Processes = s.SvcProcessesDefault
-		service.Threads = s.SvcThreadsDefault
 		service.ReadinessProbe = s.SvcReadinessProbeDefault
 
 		// Randomly generating service endpoints
@@ -240,10 +317,51 @@ func CreateJsonInput(userConfig model.UserConfig) string {
 		panic(err)
 	}
 
-	err = ioutil.WriteFile(path, input_json, 0644)
+	err = os.WriteFile(path, input_json, 0644)
 	if err != nil {
 		fmt.Print(err)
 	}
 
 	return path
+}
+
+func CreateDockerImage(config model.FileConfig, buildHash string) {
+	hostName := s.HostnameFQDN()
+
+	var sourceImage string
+	if config.Settings.Development {
+		sourceImage = fmt.Sprintf("%s/%s:%s", hostName, s.SourceImageName, s.SourceImageTagDev)
+	} else {
+		sourceImage = fmt.Sprintf("%s/%s:%s", s.SourceImageURLProd, s.SourceImageName, s.SourceImageTagProd)
+	}
+
+	imageName := fmt.Sprintf("%s/%s:%s", hostName, s.ImageName, buildHash)
+
+	path, _ := os.Getwd()
+	args := []string{
+		"build",
+		"--no-cache",
+		"-t",
+		imageName,
+		"--build-arg",
+		"SRCIMAGE=" + sourceImage,
+		"--build-arg",
+		"BASEIMAGE=" + config.Settings.BaseImage,
+		path,
+	}
+
+	cmd := exec.Command("docker", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Docker image:", imageName)
+
+	cmd = exec.Command("docker", "save", imageName, "-o", fmt.Sprintf("%s/generated/hydragen-emulator.tar", path))
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
 }

@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: config-service11
+    labels:
+        name: config-service11
+        version: cluster4
+    namespace: namespace1
+data:
+    conf.json: '{"processes":1,"logging":false,"protocol":"http","endpoints":[{"name":"end1","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[]}},{"name":"end2","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[]}},{"name":"end3","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[]}},{"name":"end4","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[]}}]}'
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: service11
+    namespace: namespace1
+    labels:
+        version: cluster4
+spec:
+    selector:
+        matchLabels:
+            app: service11
+            version: cluster4
+    replicas: 1
+    template:
+        metadata:
+            labels:
+                app: service11
+                version: cluster4
+            annotations: {}
+        spec:
+            containers:
+                - name: app
+                  image: hydragen-emulator:807af6cb
+                  imagePullPolicy: Never
+                  env:
+                    - name: SERVICE_NAME
+                      value: service11
+                    - name: GOMEMLIMIT
+                      value: "1024000000"
+                  ports:
+                    - containerPort: 5000
+                  volumeMounts:
+                    - mountPath: /usr/src/emulator/config
+                      name: config-data-volume
+                  readinessProbe:
+                    httpGet:
+                        path: /
+                        port: 5000
+                    initialDelaySeconds: 2
+                    periodSeconds: 1
+                  resources:
+                    limits:
+                        cpu: 1000m
+                        memory: 1024M
+                    requests:
+                        cpu: 500m
+                        memory: 256M
+            volumes:
+                - name: config-data-volume
+                  configMap:
+                    name: config-service11
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: service11
+    namespace: namespace1
+    labels:
+        version: cluster4
+    annotations:
+        http: /
+spec:
+    selector:
+        app: service11
+    ports:
+        - name: http
+          port: 80
+          targetPort: 5000

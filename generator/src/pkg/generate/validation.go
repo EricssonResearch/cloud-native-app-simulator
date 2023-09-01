@@ -17,8 +17,8 @@ limitations under the License.
 package generate
 
 import (
-	"application-generator/src/pkg/model"
 	s "application-generator/src/pkg/service"
+	model "application-model"
 
 	"errors"
 	"fmt"
@@ -39,63 +39,56 @@ func Occurrences(strSlice []string) map[string]int {
 // Validates service and endpoint names in JSON config
 func ValidateNames(config *model.FileConfig) error {
 	serviceNames := []string{}
+	serviceNameOccurrences := Occurrences(serviceNames)
 
 	// Validate service names (RFC 1035 DNS Label)
 	for _, service := range config.Services {
 		errs := validation.IsDNS1035Label(service.Name)
-
 		// There can be several conformance errors but only one is returned by this function
 		// If the user fixes one error, the next error will be shown when running the generator again
 		if len(errs) > 0 {
-			return fmt.Errorf("Service '%s' has invalid name: %s", service.Name, errs[0])
+			return fmt.Errorf("service '%s' has invalid name: %s", service.Name, errs[0])
 		}
 
 		serviceNames = append(serviceNames, service.Name)
 	}
 
-	serviceNameOccurrences := Occurrences(serviceNames)
-
 	for _, service := range config.Services {
 		// Duplicate name found
 		if serviceNameOccurrences[service.Name] > 1 {
-			return fmt.Errorf("Duplicate service name '%s'", service.Name)
+			return fmt.Errorf("duplicate service name '%s'", service.Name)
 		}
 
 		endpointNames := []string{}
+		endpointNameOccurrences := Occurrences(serviceNames)
 
 		// Validate endpoint names (RFC 1123 DNS Subdomain)
 		for _, endpoint := range service.Endpoints {
 			errs := validation.IsDNS1123Subdomain(endpoint.Name)
-
 			if len(errs) > 0 {
-				return fmt.Errorf("Endpoint '%s' has invalid name: %s", endpoint.Name, errs[0])
+				return fmt.Errorf("endpoint '%s' has invalid name: %s", endpoint.Name, errs[0])
 			}
 
 			if endpoint.NetworkComplexity != nil {
 				for _, calledService := range endpoint.NetworkComplexity.CalledServices {
 					errs = validation.IsDNS1035Label(calledService.Service)
-
 					if len(errs) > 0 {
-						return fmt.Errorf("Call from endpoint '%s' to invalid service '%s': %s", endpoint.Name, calledService.Service, errs[0])
+						return fmt.Errorf("call from endpoint '%s' to invalid service '%s': %s", endpoint.Name, calledService.Service, errs[0])
 					}
-
 					errs = validation.IsDNS1123Subdomain(calledService.Endpoint)
-
 					if len(errs) > 0 {
-						return fmt.Errorf("Call from endpoint '%s' to invalid endpoint '%s': %s", endpoint.Name, calledService.Endpoint, errs[0])
+						return fmt.Errorf("call from endpoint '%s' to invalid endpoint '%s': %s", endpoint.Name, calledService.Endpoint, errs[0])
 					}
 				}
-			}		
+			}
 
 			endpointNames = append(endpointNames, endpoint.Name)
 		}
 
-		endpointNameOccurrences := Occurrences(serviceNames)
-
 		for _, endpoint := range service.Endpoints {
 			// Duplicate name found
 			if endpointNameOccurrences[endpoint.Name] > 1 {
-				return fmt.Errorf("Duplicate endpoint '%s' in service '%s'", endpoint.Name, service.Name)
+				return fmt.Errorf("duplicate endpoint '%s' in service '%s'", endpoint.Name, service.Name)
 			}
 		}
 	}
@@ -115,14 +108,11 @@ func ValidateResources(config *model.FileConfig) error {
 
 		for _, limit := range limits {
 			quantity, err := resource.ParseQuantity(limit)
-
 			if err != nil {
-				return fmt.Errorf("Invalid resource allocation '%s': %s", limit, err)
+				return fmt.Errorf("invalid resource allocation '%s': %s", limit, err)
 			}
-
-			// TODO: Max limits
 			if quantity.Sign() != 1 {
-				return fmt.Errorf("Resource allocation '%s' too low", limit)
+				return fmt.Errorf("resource allocation '%s' too low", limit)
 			}
 		}
 	}
@@ -130,47 +120,48 @@ func ValidateResources(config *model.FileConfig) error {
 	return nil
 }
 
-// Validate that protocols are set in both endpoint definition and call
-func ValidateProtocols(service *model.Service, endpoint *model.Endpoint) error {
+// Validate that protocols are set in both service definition and endpoint call
+func ValidateProtocols(service *model.Service) error {
 	validProtocols := map[string]bool{"http": true, "grpc": true}
-
-	if !validProtocols[endpoint.Protocol] {
-		return fmt.Errorf("Endpoint '%s' in service '%s' has invalid protocol '%s'", 
-			endpoint.Name, service.Name, endpoint.Protocol)
+	if !validProtocols[service.Protocol] {
+		return fmt.Errorf("service '%s' has invalid protocol '%s'",
+			service.Name, service.Protocol)
 	}
 
-	if endpoint.NetworkComplexity != nil {
-		for _, calledService := range endpoint.NetworkComplexity.CalledServices {
-			if !validProtocols[calledService.Protocol] {
-				return fmt.Errorf("Call to endpoint '%s' from endpoint '%s' has invalid protocol '%s'", 
-					calledService.Endpoint, endpoint.Name, calledService.Protocol)
+	for _, endpoint := range service.Endpoints {
+		if endpoint.NetworkComplexity != nil {
+			for _, calledService := range endpoint.NetworkComplexity.CalledServices {
+				if !validProtocols[calledService.Protocol] {
+					return fmt.Errorf("call to endpoint '%s' from endpoint '%s' has invalid protocol '%s'",
+						calledService.Endpoint, endpoint.Name, calledService.Protocol)
+				}
 			}
 		}
 	}
-	
+
 	return nil
 }
 
 // Validate that input JSON contains required parameters
 func ValidateRequiredParameters(config *model.FileConfig) error {
 	if len(config.Services) == 0 {
-		return errors.New("At least one service is required")
+		return errors.New("at least one service is required")
 	}
 
 	for _, service := range config.Services {
 		if len(service.Clusters) == 0 {
-			return fmt.Errorf("Service '%s' needs to be deployed on at least one cluster", service.Name)
+			return fmt.Errorf("service '%s' needs to be deployed on at least one cluster", service.Name)
+		}
+		if service.Processes < 0 {
+			return fmt.Errorf("service '%s' has invalid number of processes (0 = auto, >0 = manual)", service.Name)
 		}
 
 		if len(service.Endpoints) == 0 {
-			return fmt.Errorf("At least one endpoint is required in service '%s'", service.Name)
+			return fmt.Errorf("at least one endpoint is required in service '%s'", service.Name)
 		} else {
-			for _, endpoint := range service.Endpoints {
-				err := ValidateProtocols(&service, &endpoint)
-
-				if err != nil {
-					return err
-				}
+			err := ValidateProtocols(&service)
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -183,11 +174,9 @@ func ValidateFileConfig(config *model.FileConfig) error {
 	if err := ValidateRequiredParameters(config); err != nil {
 		return err
 	}
-	
 	if err := ValidateNames(config); err != nil {
 		return err
 	}
-
 	if err := ValidateResources(config); err != nil {
 		return err
 	}
@@ -197,7 +186,11 @@ func ValidateFileConfig(config *model.FileConfig) error {
 
 // Applies default values to input JSON
 func ApplyDefaults(config *model.FileConfig) {
-	for i, _ := range config.Services {
+	if config.Settings.BaseImage == "" {
+		config.Settings.BaseImage = s.BaseImageDefault
+	}
+
+	for i := range config.Services {
 		service := &config.Services[i]
 
 		if service.Resources.Limits.Cpu == "" {
@@ -213,31 +206,53 @@ func ApplyDefaults(config *model.FileConfig) {
 			service.Resources.Requests.Memory = s.RequestsMemoryDefault
 		}
 
-		if service.Processes <= 0 {
-			service.Processes = s.SvcProcessesDefault
-		}
-		if service.Threads <= 0 {
-			service.Threads = s.SvcThreadsDefault
-		}
-
 		if service.ReadinessProbe <= 0 {
 			service.ReadinessProbe = s.SvcReadinessProbeDefault
 		}
 
-		for j, _ := range service.Clusters {
+		for j := range service.Clusters {
 			cluster := &service.Clusters[j]
-
 			if cluster.Namespace == "" {
 				cluster.Namespace = s.ClusterNamespaceDefault
 			}
 		}
 
-		for k, _ := range service.Endpoints {
+		for k := range service.Endpoints {
 			endpoint := &service.Endpoints[k]
 
-			if endpoint.NetworkComplexity != nil && endpoint.NetworkComplexity.CalledServices == nil {
-				// json.Marshal returns null for a nil slice
-				endpoint.NetworkComplexity.CalledServices = []model.CalledService{}
+			if endpoint.ExecutionMode == "" {
+				endpoint.ExecutionMode = "sequential"
+			}
+			if endpoint.CpuComplexity != nil && endpoint.CpuComplexity.Threads < 1 {
+				endpoint.CpuComplexity.Threads = 1
+			}
+			if endpoint.NetworkComplexity != nil {
+				if endpoint.NetworkComplexity.ForwardRequests == "" {
+					endpoint.NetworkComplexity.ForwardRequests = "synchronous"
+				}
+				for l := range endpoint.NetworkComplexity.CalledServices {
+					calledService := &endpoint.NetworkComplexity.CalledServices[l]
+
+					if calledService.TrafficForwardRatio < 1 {
+						calledService.TrafficForwardRatio = 1
+					}
+					if calledService.Port == 0 {
+						calledService.Port = s.DefaultExtPort
+					}
+					if calledService.Protocol == "" {
+						for _, potentialCalledService := range config.Services {
+							if potentialCalledService.Name == calledService.Service {
+								// No need to check endpoints since services can't have duplicate names
+								calledService.Protocol = potentialCalledService.Protocol
+							}
+						}
+
+						// Assume HTTP if service was not found
+						if calledService.Protocol == "" {
+							calledService.Protocol = "http"
+						}
+					}
+				}
 			}
 		}
 	}

@@ -12,6 +12,7 @@
   "services": [
     {
       "name": "service1",
+      "protocol": "http",
       "clusters": [
         {
           "cluster": "cluster-1",
@@ -41,12 +42,10 @@
         }
       },
       "processes": 2,
-      "threads": 2,
       "readiness_probe": 5,
       "endpoints": [
         {
           "name": "end1",
-          "protocol": "http",
           "execution_mode": "sequential",
           "cpu_complexity": {
             "execution_time": 0.001
@@ -57,7 +56,7 @@
             "called_services": [
               {
                 "service": "service2",
-                "port": "80",
+                "port": 80,
                 "endpoint": "end2",
                 "protocol": "http",
                 "traffic_forward_ratio": 1,

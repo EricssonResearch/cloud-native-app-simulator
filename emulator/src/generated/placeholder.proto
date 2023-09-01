@@ -1,0 +1,12 @@
+// protoc --go_out=emulator --go_opt=module=application-emulator --go-grpc_out=emulator --go-grpc_opt=module=application-emulator emulator/src/generated/placeholder.proto
+
+syntax = "proto3";
+
+package generated;
+option go_package = "application-emulator/src/generated";
+
+import "model/api.proto";
+
+service Service1 {
+	rpc TestEndpoint (Request) returns (Response) {}
+}

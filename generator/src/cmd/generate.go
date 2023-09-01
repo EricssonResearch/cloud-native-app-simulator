@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,11 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package cmd
 
 import (
 	"application-generator/src/pkg/generate"
-	"application-generator/src/pkg/model"
+	model "application-model"
+
 	"bufio"
 	"fmt"
 	"os"
@@ -153,13 +155,17 @@ var generateCmd = &cobra.Command{
 				OutputFileName:      outputFileName,
 			}
 
-			inputFile = generate.CreateJsonInput(userConfig)
+			development := yesNoPrompt("Use the local development image to build the emulator?", false)
+			inputFile = generate.CreateJsonInput(userConfig, development)
 		} else if mode == "preset" {
 			inputFile = args[1]
 		}
 
-		config, clusters := generate.Parse(inputFile)
-		generate.CreateK8sYaml(config, clusters)
+		config, clusters, buildHash := generate.Parse(inputFile)
+
+		generate.CreateGrpcEndpoints(config)
+		generate.CreateK8sYaml(config, clusters, buildHash)
+		generate.CreateDockerImage(config, buildHash)
 	},
 }
 

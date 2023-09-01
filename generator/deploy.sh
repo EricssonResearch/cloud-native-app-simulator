@@ -46,7 +46,7 @@ else
   fi
   # Deploy the microservices to clusters
   for d in ./k8s/*; do
-    echo "applying deployment manifests to ${d##./k8s/}"
+    echo "Applying deployment manifests to ${d##./k8s/}"
     [[ -d "$d" ]] && kubectl apply --prune -f k8s/${d##./k8s/} -l version=${d##./k8s/} --context ${d##./k8s/}
   done
 fi

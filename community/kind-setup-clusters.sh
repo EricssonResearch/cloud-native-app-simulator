@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Copyright 2021 Ericsson AB
 #
@@ -13,14 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#!/bin/bash
 
 DEFAULT_NUM=2
 DEFAULT_CONFIG="kind-cluster-3-nodes.yaml"
 if [ -z "$1" ]; then
-	NUM=$DEFAULT_NUM
+  NUM=$DEFAULT_NUM
 else
-	NUM=$1
+  NUM=$1
 fi
 
 if [ -z "$2" ]; then
@@ -34,5 +34,5 @@ fi
 # Create the kind multi-node clusters based on the given config
 for i in $(seq ${NUM}); do
   kind create cluster --name cluster-${i} --config $CONFIG
-  kind load docker-image app-demo --name=cluster-${i}
+  kind load docker-image hydragen-emulator --name=cluster-${i}
 done

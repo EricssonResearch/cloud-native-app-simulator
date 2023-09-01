@@ -16,6 +16,8 @@
 
 #!/bin/bash
 
+set -e
+
 DEFAULT_NUM=4
 if [ -z "$4" ]; then
 	NUM=$DEFAULT_NUM
@@ -23,12 +25,25 @@ else
 	NUM=$4
 fi
 
+if [[ -d generated ]]; then
+	echo "Deleting previous generated files"
+	rm -r generated
+fi
+
 if [[ -d k8s ]]; then
-	echo "deleting previous manifest files"
+	echo "Deleting previous manifest files"
 	rm -r k8s
 fi
 
+images="$(docker images $(hostname -f)/hydragen-emulator -q)"
+
+if [[ ! -z "$images" ]]; then
+	echo "Deleting previous Docker images"
+	docker image remove "$images"
+fi
+
+mkdir generated
 mkdir k8s
-#generate kubernetes kubernetes manifest files
-echo "generating kubernetes manifest files"
+
+echo "Generating image and kubernetes manifest files"
 go run main.go generate $1 $2

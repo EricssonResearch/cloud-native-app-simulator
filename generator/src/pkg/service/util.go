@@ -13,24 +13,40 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package service
 
 import (
-	"application-generator/src/pkg/model"
+	model "application-model"
+	"bytes"
 	"fmt"
+	"os"
+	"os/exec"
 	"strconv"
+	"strings"
+
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 const (
 	VolumeName = "config-data-volume"
-	VolumePath = "/usr/src/app/config"
+	VolumePath = "/usr/src/emulator/config"
 
-	ImageName = "app"
-	ImageURL  = "ghcr.io/ericssonresearch/cloud-native-app-simulator/app-demo:v3.0.1"
+	SourceImageURLProd = "ghcr.io/ericssonresearch/cloud-native-app-simulator"
+	SourceImageName    = "hydragen-base"
+	// TODO: Update the version here once everything is released
+	SourceImageTagProd = "v4.0.0"
+	SourceImageTagDev  = "latest"
+
+	BaseImageDefault = "busybox"
+	ImageName        = "hydragen-emulator"
+	ImagePullPolicy  = "Never"
+
+	ContainerName = "app"
 
 	DefaultExtPort  = 80
 	DefaultPort     = 5000
-	defaultProtocol = "http"
+	DefaultProtocol = "http"
 
 	Uri = "/"
 
@@ -43,7 +59,6 @@ const (
 
 	SvcNamePrefix            = "service"
 	SvcProcessesDefault      = 1
-	SvcThreadsDefault        = 1
 	SvcReadinessProbeDefault = 2
 
 	EpNamePrefix            = "end"
@@ -58,21 +73,45 @@ const (
 	CsRequestSizeDefault  = 256
 )
 
+func HostnameFQDN() string {
+	out := bytes.Buffer{}
+	cmd := exec.Command("hostname", "-f")
+	cmd.Stdout = &out
+
+	if err := cmd.Run(); err != nil {
+		hostname, _ := os.Hostname()
+		return hostname
+	}
+
+	return strings.TrimSpace(out.String())
+}
+
 func CreateDeployment(metadataName, selectorAppName, selectorClusterName string, numberOfReplicas int,
-	templateAppLabel, templateClusterLabel, namespace string, containerPort int, containerName, containerImage,
+	templateAppLabel, templateClusterLabel, namespace string, port int, containerName, containerImageURL, containerImagePolicy,
 	mountPath string, volumeName, configMapName string, readinessProbe int, requestCPU, requestMemory, limitCPU,
 	limitMemory, nodeAffinity, protocol string, annotations []model.Annotation) (deploymentInstance model.DeploymentInstance) {
 
 	var deployment model.DeploymentInstance
 	var containerInstance model.ContainerInstance
-	var envInstance model.EnvInstance
-	var containerPortInstance model.ContainerPortInstance
+	var serviceEnvInstance model.EnvInstance
+	var memlimitEnvInstance model.EnvInstance
 	var containerVolume model.ContainerVolumeInstance
 	var volumeInstance model.VolumeInstance
 
-	envInstance.Name = "SERVICE_NAME"
-	envInstance.Value = metadataName
-	containerPortInstance.ContainerPort = containerPort
+	serviceEnvInstance.Name = "SERVICE_NAME"
+	serviceEnvInstance.Value = metadataName
+	containerInstance.Env = append(containerInstance.Env, serviceEnvInstance)
+
+	memlimitResource, _ := resource.ParseQuantity(limitMemory)
+	memlimitBytes, ok := memlimitResource.AsInt64()
+	if !ok {
+		panic(fmt.Errorf("Could not parse memory limit %s as bytes", limitMemory))
+	}
+
+	memlimitEnvInstance.Name = "GOMEMLIMIT"
+	memlimitEnvInstance.Value = fmt.Sprint(memlimitBytes)
+	containerInstance.Env = append(containerInstance.Env, memlimitEnvInstance)
+
 	volumeInstance.Name = volumeName
 	volumeInstance.ConfigMap.Name = configMapName
 
@@ -80,18 +119,16 @@ func CreateDeployment(metadataName, selectorAppName, selectorClusterName string,
 	containerVolume.MountPath = mountPath
 
 	containerInstance.Volumes = append(containerInstance.Volumes, containerVolume)
-	containerInstance.Ports = append(containerInstance.Ports, containerPortInstance)
+	containerInstance.Ports = append(containerInstance.Ports, model.ContainerPortInstance{ContainerPort: port})
 	containerInstance.Name = containerName
-	containerInstance.Image = containerImage
-	containerInstance.ImagePullPolicy = "IfNotPresent"
-	containerInstance.Env = append(containerInstance.Env, envInstance)
+	containerInstance.Image = containerImageURL
+	containerInstance.ImagePullPolicy = containerImagePolicy
+
 	if protocol == "http" {
 		containerInstance.ReadinessProbe.HttpGet.Path = "/"
-		containerInstance.ReadinessProbe.HttpGet.Port = containerPort
-	}
-	if protocol == "grpc" {
-		containerInstance.ReadinessProbe.Exec.Command = append(containerInstance.ReadinessProbe.Exec.Command, ("/bin/grpc_health_probe"), "-addr=:"+strconv.Itoa(containerPort))
-
+		containerInstance.ReadinessProbe.HttpGet.Port = port
+	} else if protocol == "grpc" {
+		containerInstance.ReadinessProbe.Exec.Command = append(containerInstance.ReadinessProbe.Exec.Command, ("/usr/bin/grpc_health_probe"), "-addr=:"+strconv.Itoa(port))
 	}
 
 	containerInstance.ReadinessProbe.InitialDelaySeconds = readinessProbe
@@ -127,7 +164,7 @@ func CreateDeployment(metadataName, selectorAppName, selectorClusterName string,
 }
 
 func CreateWorkerDeployment(metadataName, selectorName string, numberOfReplicas int, templateLabel string,
-	containerName, containerImage, mountPath string, volumeName, configMapName string) (deploymentInstance model.DeploymentInstance) {
+	containerName, containerImageURL, containerImagePolicy, mountPath string, volumeName, configMapName string) (deploymentInstance model.DeploymentInstance) {
 
 	var deployment model.DeploymentInstance
 	var containerInstance model.ContainerInstance
@@ -142,8 +179,8 @@ func CreateWorkerDeployment(metadataName, selectorName string, numberOfReplicas 
 
 	containerInstance.Volumes = append(containerInstance.Volumes, containerVolume)
 	containerInstance.Name = containerName
-	containerInstance.Image = containerImage
-	containerInstance.ImagePullPolicy = "IfNotPresent"
+	containerInstance.Image = containerImageURL
+	containerInstance.ImagePullPolicy = containerImagePolicy
 
 	deployment.APIVersion = "apps/v1"
 	deployment.Kind = "Deployment"
@@ -157,22 +194,15 @@ func CreateWorkerDeployment(metadataName, selectorName string, numberOfReplicas 
 	return deployment
 }
 
-func CreateService(metadataName, selectorAppName, protocol, uri, metadataLabelCluster, namespace string, defaultExtPort, defaultPort int) (serviceInstance model.ServiceInstance) {
+func CreateService(metadataName, selectorAppName, protocol, uri, metadataLabelCluster, namespace string, ports []model.ServicePortInstance) (serviceInstance model.ServiceInstance) {
 	const apiVersion = "v1"
-
 	const apiKind = "Service"
-
-	var port model.ServicePortInstance
 
 	var service model.ServiceInstance
 
 	annotations := map[string]string{
 		protocol: uri,
 	}
-
-	port.Port = defaultExtPort
-	port.TargetPort = defaultPort
-	port.Name = protocol
 
 	service.APIVersion = apiVersion
 	service.Kind = apiKind
@@ -181,7 +211,7 @@ func CreateService(metadataName, selectorAppName, protocol, uri, metadataLabelCl
 	service.Metadata.Labels.Cluster = metadataLabelCluster
 	service.Metadata.Annotations = annotations
 	service.Spec.Selector.App = selectorAppName
-	service.Spec.Ports = append(service.Spec.Ports, port)
+	service.Spec.Ports = append(service.Spec.Ports, ports...)
 
 	return service
 }
@@ -200,7 +230,7 @@ func CreateServiceAccount(metadataName, accountName string) (serviceAccountInsta
 	return serviceAccount
 }
 
-func CreateConfig(metadataName, metadataLabelName, metadataLabelCluster, namespace, config, proto string) (configMapInstance model.ConfigMapInstance) {
+func CreateConfig(metadataName, metadataLabelName, metadataLabelCluster, namespace, config string) (configMapInstance model.ConfigMapInstance) {
 
 	const apiVersion = "v1"
 
@@ -215,52 +245,8 @@ func CreateConfig(metadataName, metadataLabelName, metadataLabelCluster, namespa
 	configMap.Metadata.Labels.Name = metadataLabelName
 	configMap.Metadata.Namespace = namespace
 	configMap.Data.Config = config
-	configMap.Data.Service = proto
 
 	return configMap
-}
-
-func CreateGateway(hosts []string) model.GatewayInstance {
-
-	var server model.GatewayServers
-	for i, s := range hosts {
-		e := fmt.Sprintf("s%s.dev", s)
-		hosts[i] = e
-	}
-	server.Hosts = hosts
-	server.Port.Name = "http"
-	server.Port.Number = 80
-	server.Port.Protocol = "HTTP"
-
-	gateway := &model.GatewayInstance{APIVersion: "networking.istio.io/v1alpha3",
-		Kind: "Gateway", Metadata: model.Metadata{Name: "generator-gateway"},
-		Spec: model.GatewaySpec{Selector: model.GatewaySelector{Istio: "ingressgateway"}}}
-
-	gateway.Spec.Servers = append(gateway.Spec.Servers, server)
-
-	return *gateway
-}
-
-func CreateVirtualService(metadataName, hostname, gatewayHost string, port int) model.VirtualServiceInstance {
-
-	var match model.VirtualServiceMatch
-	match.URI.Exact = "/"
-
-	var route model.VirtualServiceRoute
-	route.Destination.Host = hostname
-	route.Destination.Port.Number = port
-	var http model.VirtualServiceHTTP
-	http.Match = append(http.Match, match)
-	http.Route = append(http.Route, route)
-
-	virtualService := &model.VirtualServiceInstance{
-		APIVersion: "networking.istio.io/v1alpha3", Kind: "VirtualService", Metadata: model.Metadata{Name: metadataName}}
-	virtualService.Spec.HTTP = append(virtualService.Spec.HTTP, http)
-	virtualService.Spec.Gateways = append(virtualService.Spec.Gateways, "generator-gateway")
-	virtualService.Spec.Hosts = append(virtualService.Spec.Hosts, gatewayHost)
-
-	return *virtualService
-
 }
 
 func CreateFileConfig() model.FileConfig {
@@ -270,12 +256,11 @@ func CreateFileConfig() model.FileConfig {
 	return fileConfig
 }
 
-func CreateConfigMap(processes int, threads int, logging bool, ep []model.Endpoint) *model.ConfigMap {
-
+func CreateConfigMap(processes int, logging bool, protocol string, ep []model.Endpoint) *model.ConfigMap {
 	cm_data := &model.ConfigMap{
 		Processes: processes,
-		Threads:   threads,
 		Logging:   logging,
+		Protocol:  protocol,
 		Endpoints: []model.Endpoint(ep),
 	}
 
@@ -305,8 +290,8 @@ func CreateInputService() model.Service {
 	var service model.Service
 
 	service.Processes = SvcProcessesDefault
-	service.Threads = SvcThreadsDefault
 	service.ReadinessProbe = SvcReadinessProbeDefault
+	service.Protocol = DefaultProtocol
 
 	return service
 }
@@ -319,10 +304,7 @@ func CreateInputCluster() model.Cluster {
 }
 
 func CreateInputEndpoint() model.Endpoint {
-
 	var ep model.Endpoint
-	ep.Protocol = defaultProtocol
-
 	var cpuComplexity model.CpuComplexity
 	var networkComplexity model.NetworkComplexity
 
@@ -343,8 +325,8 @@ func CreateInputCalledSvc() model.CalledService {
 
 	var calledSvc model.CalledService
 
-	calledSvc.Port = strconv.Itoa(DefaultExtPort)
-	calledSvc.Protocol = defaultProtocol
+	calledSvc.Port = DefaultExtPort
+	calledSvc.Protocol = DefaultProtocol
 	calledSvc.TrafficForwardRatio = CsTrafficForwardRatio
 	calledSvc.RequestPayloadSize = CsRequestSizeDefault
 
