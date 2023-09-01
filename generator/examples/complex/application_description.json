@@ -1,11 +1,10 @@
 {
- "cluster_latencies": null,
  "services": [
   {
    "name": "service1",
    "clusters": [
     {
-     "cluster": "cluster4",
+     "cluster": "cluster2",
      "replicas": 1,
      "namespace": "namespace2"
     }
@@ -22,10 +21,23 @@
    },
    "processes": 1,
    "readiness_probe": 2,
+   "protocol": "http",
    "endpoints": [
     {
      "name": "end1",
-     "protocol": "http",
+     "execution_mode": "sequential",
+     "cpu_complexity": {
+      "execution_time": 0.001,
+      "threads": 0
+     },
+     "network_complexity": {
+      "forward_requests": "asynchronous",
+      "response_payload_size": 512,
+      "called_services": []
+     }
+    },
+    {
+     "name": "end2",
      "execution_mode": "sequential",
      "cpu_complexity": {
       "execution_time": 0.001,
@@ -90,58 +102,12 @@
         "protocol": "http",
         "traffic_forward_ratio": 1,
         "request_payload_size": 256
-       },
-       {
-        "service": "service9",
-        "port": 80,
-        "endpoint": "end1",
-        "protocol": "http",
-        "traffic_forward_ratio": 1,
-        "request_payload_size": 256
-       },
-       {
-        "service": "service10",
-        "port": 80,
-        "endpoint": "end1",
-        "protocol": "http",
-        "traffic_forward_ratio": 1,
-        "request_payload_size": 256
        }
       ]
      }
-    }
-   ]
-  },
-  {
-   "name": "service2",
-   "clusters": [
-    {
-     "cluster": "cluster4",
-     "replicas": 1,
-     "namespace": "namespace1"
     },
     {
-     "cluster": "cluster1",
-     "replicas": 2,
-     "namespace": "namespace1"
-    }
-   ],
-   "resources": {
-    "limits": {
-     "cpu": "1000m",
-     "memory": "1024M"
-    },
-    "requests": {
-     "cpu": "500m",
-     "memory": "256M"
-    }
-   },
-   "processes": 1,
-   "readiness_probe": 2,
-   "endpoints": [
-    {
-     "name": "end1",
-     "protocol": "http",
+     "name": "end3",
      "execution_mode": "sequential",
      "cpu_complexity": {
       "execution_time": 0.001,
@@ -151,6 +117,14 @@
       "forward_requests": "asynchronous",
       "response_payload_size": 512,
       "called_services": [
+       {
+        "service": "service2",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
        {
         "service": "service3",
         "port": 80,
@@ -174,56 +148,46 @@
         "protocol": "http",
         "traffic_forward_ratio": 1,
         "request_payload_size": 256
-       },
-       {
-        "service": "service6",
-        "port": 80,
-        "endpoint": "end1",
-        "protocol": "http",
-        "traffic_forward_ratio": 1,
-        "request_payload_size": 256
-       },
-       {
-        "service": "service7",
-        "port": 80,
-        "endpoint": "end1",
-        "protocol": "http",
-        "traffic_forward_ratio": 1,
-        "request_payload_size": 256
-       },
-       {
-        "service": "service8",
-        "port": 80,
-        "endpoint": "end1",
-        "protocol": "http",
-        "traffic_forward_ratio": 1,
-        "request_payload_size": 256
-       },
-       {
-        "service": "service9",
-        "port": 80,
-        "endpoint": "end1",
-        "protocol": "http",
-        "traffic_forward_ratio": 1,
-        "request_payload_size": 256
-       },
-       {
-        "service": "service10",
-        "port": 80,
-        "endpoint": "end1",
-        "protocol": "http",
-        "traffic_forward_ratio": 1,
-        "request_payload_size": 256
-       },
-       {
-        "service": "service11",
-        "port": 80,
-        "endpoint": "end1",
-        "protocol": "http",
-        "traffic_forward_ratio": 1,
-        "request_payload_size": 256
        }
       ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "service2",
+   "clusters": [
+    {
+     "cluster": "cluster4",
+     "replicas": 1,
+     "namespace": "namespace2"
+    }
+   ],
+   "resources": {
+    "limits": {
+     "cpu": "1000m",
+     "memory": "1024M"
+    },
+    "requests": {
+     "cpu": "500m",
+     "memory": "256M"
+    }
+   },
+   "processes": 1,
+   "readiness_probe": 2,
+   "protocol": "http",
+   "endpoints": [
+    {
+     "name": "end1",
+     "execution_mode": "sequential",
+     "cpu_complexity": {
+      "execution_time": 0.001,
+      "threads": 0
+     },
+     "network_complexity": {
+      "forward_requests": "asynchronous",
+      "response_payload_size": 512,
+      "called_services": []
      }
     }
    ]
@@ -232,37 +196,12 @@
    "name": "service3",
    "clusters": [
     {
-     "cluster": "cluster1",
+     "cluster": "cluster3",
      "replicas": 1,
      "namespace": "namespace1"
-    },
-    {
-     "cluster": "cluster4",
-     "replicas": 2,
-     "namespace": "namespace2"
-    },
-    {
-     "cluster": "cluster1",
-     "replicas": 1,
-     "namespace": "namespace2"
     },
     {
      "cluster": "cluster2",
-     "replicas": 1,
-     "namespace": "namespace2"
-    },
-    {
-     "cluster": "cluster4",
-     "replicas": 1,
-     "namespace": "namespace1"
-    },
-    {
-     "cluster": "cluster1",
-     "replicas": 4,
-     "namespace": "namespace1"
-    },
-    {
-     "cluster": "cluster4",
      "replicas": 1,
      "namespace": "namespace1"
     }
@@ -279,10 +218,23 @@
    },
    "processes": 1,
    "readiness_probe": 2,
+   "protocol": "http",
    "endpoints": [
     {
      "name": "end1",
-     "protocol": "http",
+     "execution_mode": "sequential",
+     "cpu_complexity": {
+      "execution_time": 0.001,
+      "threads": 0
+     },
+     "network_complexity": {
+      "forward_requests": "asynchronous",
+      "response_payload_size": 512,
+      "called_services": []
+     }
+    },
+    {
+     "name": "end2",
      "execution_mode": "sequential",
      "cpu_complexity": {
       "execution_time": 0.001,
@@ -326,108 +278,6 @@
        },
        {
         "service": "service8",
-        "port": 80,
-        "endpoint": "end1",
-        "protocol": "http",
-        "traffic_forward_ratio": 1,
-        "request_payload_size": 256
-       },
-       {
-        "service": "service9",
-        "port": 80,
-        "endpoint": "end1",
-        "protocol": "http",
-        "traffic_forward_ratio": 1,
-        "request_payload_size": 256
-       },
-       {
-        "service": "service10",
-        "port": 80,
-        "endpoint": "end1",
-        "protocol": "http",
-        "traffic_forward_ratio": 1,
-        "request_payload_size": 256
-       }
-      ]
-     }
-    },
-    {
-     "name": "end2",
-     "protocol": "http",
-     "execution_mode": "sequential",
-     "cpu_complexity": {
-      "execution_time": 0.001,
-      "threads": 0
-     },
-     "network_complexity": {
-      "forward_requests": "asynchronous",
-      "response_payload_size": 512,
-      "called_services": [
-       {
-        "service": "service4",
-        "port": 80,
-        "endpoint": "end1",
-        "protocol": "http",
-        "traffic_forward_ratio": 1,
-        "request_payload_size": 256
-       },
-       {
-        "service": "service5",
-        "port": 80,
-        "endpoint": "end1",
-        "protocol": "http",
-        "traffic_forward_ratio": 1,
-        "request_payload_size": 256
-       },
-       {
-        "service": "service6",
-        "port": 80,
-        "endpoint": "end1",
-        "protocol": "http",
-        "traffic_forward_ratio": 1,
-        "request_payload_size": 256
-       },
-       {
-        "service": "service7",
-        "port": 80,
-        "endpoint": "end1",
-        "protocol": "http",
-        "traffic_forward_ratio": 1,
-        "request_payload_size": 256
-       }
-      ]
-     }
-    },
-    {
-     "name": "end3",
-     "protocol": "http",
-     "execution_mode": "sequential",
-     "cpu_complexity": {
-      "execution_time": 0.001,
-      "threads": 0
-     },
-     "network_complexity": {
-      "forward_requests": "asynchronous",
-      "response_payload_size": 512,
-      "called_services": [
-       {
-        "service": "service4",
-        "port": 80,
-        "endpoint": "end1",
-        "protocol": "http",
-        "traffic_forward_ratio": 1,
-        "request_payload_size": 256
-       },
-       {
-        "service": "service5",
-        "port": 80,
-        "endpoint": "end1",
-        "protocol": "http",
-        "traffic_forward_ratio": 1,
-        "request_payload_size": 256
-       },
-       {
-        "service": "service6",
         "port": 80,
         "endpoint": "end1",
         "protocol": "http",
@@ -443,12 +293,12 @@
    "name": "service4",
    "clusters": [
     {
-     "cluster": "cluster2",
+     "cluster": "cluster4",
      "replicas": 1,
-     "namespace": "namespace2"
+     "namespace": "namespace1"
     },
     {
-     "cluster": "cluster2",
+     "cluster": "cluster1",
      "replicas": 2,
      "namespace": "namespace1"
     }
@@ -465,10 +315,10 @@
    },
    "processes": 1,
    "readiness_probe": 2,
+   "protocol": "http",
    "endpoints": [
     {
      "name": "end1",
-     "protocol": "http",
      "execution_mode": "sequential",
      "cpu_complexity": {
       "execution_time": 0.001,
@@ -485,21 +335,12 @@
         "protocol": "http",
         "traffic_forward_ratio": 1,
         "request_payload_size": 256
-       },
-       {
-        "service": "service6",
-        "port": 80,
-        "endpoint": "end1",
-        "protocol": "http",
-        "traffic_forward_ratio": 1,
-        "request_payload_size": 256
        }
       ]
      }
     },
     {
      "name": "end2",
-     "protocol": "http",
      "execution_mode": "sequential",
      "cpu_complexity": {
       "execution_time": 0.001,
@@ -562,7 +403,6 @@
     },
     {
      "name": "end3",
-     "protocol": "http",
      "execution_mode": "sequential",
      "cpu_complexity": {
       "execution_time": 0.001,
@@ -574,6 +414,116 @@
       "called_services": [
        {
         "service": "service5",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service6",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service7",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service8",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service9",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service10",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       }
+      ]
+     }
+    },
+    {
+     "name": "end4",
+     "execution_mode": "sequential",
+     "cpu_complexity": {
+      "execution_time": 0.001,
+      "threads": 0
+     },
+     "network_complexity": {
+      "forward_requests": "asynchronous",
+      "response_payload_size": 512,
+      "called_services": [
+       {
+        "service": "service5",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service6",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service7",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service8",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service9",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service10",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service11",
         "port": 80,
         "endpoint": "end1",
         "protocol": "http",
@@ -589,39 +539,14 @@
    "name": "service5",
    "clusters": [
     {
-     "cluster": "cluster3",
+     "cluster": "cluster1",
      "replicas": 1,
-     "namespace": "namespace2"
-    },
-    {
-     "cluster": "cluster3",
-     "replicas": 2,
-     "namespace": "namespace1"
-    },
-    {
-     "cluster": "cluster2",
-     "replicas": 3,
-     "namespace": "namespace2"
-    },
-    {
-     "cluster": "cluster2",
-     "replicas": 3,
-     "namespace": "namespace2"
-    },
-    {
-     "cluster": "cluster4",
-     "replicas": 4,
      "namespace": "namespace1"
     },
     {
      "cluster": "cluster1",
-     "replicas": 3,
+     "replicas": 1,
      "namespace": "namespace1"
-    },
-    {
-     "cluster": "cluster3",
-     "replicas": 5,
-     "namespace": "namespace2"
     }
    ],
    "resources": {
@@ -636,10 +561,10 @@
    },
    "processes": 1,
    "readiness_probe": 2,
+   "protocol": "http",
    "endpoints": [
     {
      "name": "end1",
-     "protocol": "http",
      "execution_mode": "sequential",
      "cpu_complexity": {
       "execution_time": 0.001,
@@ -656,6 +581,130 @@
         "protocol": "http",
         "traffic_forward_ratio": 1,
         "request_payload_size": 256
+       },
+       {
+        "service": "service7",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service8",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       }
+      ]
+     }
+    },
+    {
+     "name": "end2",
+     "execution_mode": "sequential",
+     "cpu_complexity": {
+      "execution_time": 0.001,
+      "threads": 0
+     },
+     "network_complexity": {
+      "forward_requests": "asynchronous",
+      "response_payload_size": 512,
+      "called_services": [
+       {
+        "service": "service6",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service7",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service8",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service9",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service10",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service11",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       }
+      ]
+     }
+    },
+    {
+     "name": "end3",
+     "execution_mode": "sequential",
+     "cpu_complexity": {
+      "execution_time": 0.001,
+      "threads": 0
+     },
+     "network_complexity": {
+      "forward_requests": "asynchronous",
+      "response_payload_size": 512,
+      "called_services": [
+       {
+        "service": "service6",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service7",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service8",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service9",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
        }
       ]
      }
@@ -666,38 +715,8 @@
    "name": "service6",
    "clusters": [
     {
-     "cluster": "cluster1",
-     "replicas": 1,
-     "namespace": "namespace2"
-    },
-    {
-     "cluster": "cluster2",
-     "replicas": 1,
-     "namespace": "namespace2"
-    },
-    {
-     "cluster": "cluster4",
-     "replicas": 2,
-     "namespace": "namespace1"
-    },
-    {
      "cluster": "cluster3",
-     "replicas": 2,
-     "namespace": "namespace2"
-    },
-    {
-     "cluster": "cluster4",
-     "replicas": 5,
-     "namespace": "namespace1"
-    },
-    {
-     "cluster": "cluster1",
      "replicas": 1,
-     "namespace": "namespace2"
-    },
-    {
-     "cluster": "cluster2",
-     "replicas": 6,
      "namespace": "namespace2"
     }
    ],
@@ -713,10 +732,10 @@
    },
    "processes": 1,
    "readiness_probe": 2,
+   "protocol": "http",
    "endpoints": [
     {
      "name": "end1",
-     "protocol": "http",
      "execution_mode": "sequential",
      "cpu_complexity": {
       "execution_time": 0.001,
@@ -741,6 +760,22 @@
         "protocol": "http",
         "traffic_forward_ratio": 1,
         "request_payload_size": 256
+       },
+       {
+        "service": "service9",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service10",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
        }
       ]
      }
@@ -751,33 +786,8 @@
    "name": "service7",
    "clusters": [
     {
-     "cluster": "cluster2",
+     "cluster": "cluster3",
      "replicas": 1,
-     "namespace": "namespace2"
-    },
-    {
-     "cluster": "cluster4",
-     "replicas": 2,
-     "namespace": "namespace2"
-    },
-    {
-     "cluster": "cluster4",
-     "replicas": 2,
-     "namespace": "namespace2"
-    },
-    {
-     "cluster": "cluster4",
-     "replicas": 1,
-     "namespace": "namespace1"
-    },
-    {
-     "cluster": "cluster2",
-     "replicas": 4,
-     "namespace": "namespace2"
-    },
-    {
-     "cluster": "cluster4",
-     "replicas": 4,
      "namespace": "namespace2"
     }
    ],
@@ -793,10 +803,23 @@
    },
    "processes": 1,
    "readiness_probe": 2,
+   "protocol": "http",
    "endpoints": [
     {
      "name": "end1",
-     "protocol": "http",
+     "execution_mode": "sequential",
+     "cpu_complexity": {
+      "execution_time": 0.001,
+      "threads": 0
+     },
+     "network_complexity": {
+      "forward_requests": "asynchronous",
+      "response_payload_size": 512,
+      "called_services": []
+     }
+    },
+    {
+     "name": "end2",
      "execution_mode": "sequential",
      "cpu_complexity": {
       "execution_time": 0.001,
@@ -840,11 +863,355 @@
        }
       ]
      }
+    },
+    {
+     "name": "end3",
+     "execution_mode": "sequential",
+     "cpu_complexity": {
+      "execution_time": 0.001,
+      "threads": 0
+     },
+     "network_complexity": {
+      "forward_requests": "asynchronous",
+      "response_payload_size": 512,
+      "called_services": [
+       {
+        "service": "service8",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service9",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service10",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service11",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       }
+      ]
+     }
+    },
+    {
+     "name": "end4",
+     "execution_mode": "sequential",
+     "cpu_complexity": {
+      "execution_time": 0.001,
+      "threads": 0
+     },
+     "network_complexity": {
+      "forward_requests": "asynchronous",
+      "response_payload_size": 512,
+      "called_services": [
+       {
+        "service": "service8",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       }
+      ]
+     }
+    },
+    {
+     "name": "end5",
+     "execution_mode": "sequential",
+     "cpu_complexity": {
+      "execution_time": 0.001,
+      "threads": 0
+     },
+     "network_complexity": {
+      "forward_requests": "asynchronous",
+      "response_payload_size": 512,
+      "called_services": [
+       {
+        "service": "service8",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service9",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service10",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       }
+      ]
+     }
     }
    ]
   },
   {
    "name": "service8",
+   "clusters": [
+    {
+     "cluster": "cluster2",
+     "replicas": 1,
+     "namespace": "namespace2"
+    },
+    {
+     "cluster": "cluster4",
+     "replicas": 1,
+     "namespace": "namespace1"
+    }
+   ],
+   "resources": {
+    "limits": {
+     "cpu": "1000m",
+     "memory": "1024M"
+    },
+    "requests": {
+     "cpu": "500m",
+     "memory": "256M"
+    }
+   },
+   "processes": 1,
+   "readiness_probe": 2,
+   "protocol": "http",
+   "endpoints": [
+    {
+     "name": "end1",
+     "execution_mode": "sequential",
+     "cpu_complexity": {
+      "execution_time": 0.001,
+      "threads": 0
+     },
+     "network_complexity": {
+      "forward_requests": "asynchronous",
+      "response_payload_size": 512,
+      "called_services": [
+       {
+        "service": "service9",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service10",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       }
+      ]
+     }
+    },
+    {
+     "name": "end2",
+     "execution_mode": "sequential",
+     "cpu_complexity": {
+      "execution_time": 0.001,
+      "threads": 0
+     },
+     "network_complexity": {
+      "forward_requests": "asynchronous",
+      "response_payload_size": 512,
+      "called_services": [
+       {
+        "service": "service9",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "service9",
+   "clusters": [
+    {
+     "cluster": "cluster4",
+     "replicas": 1,
+     "namespace": "namespace1"
+    },
+    {
+     "cluster": "cluster1",
+     "replicas": 2,
+     "namespace": "namespace2"
+    }
+   ],
+   "resources": {
+    "limits": {
+     "cpu": "1000m",
+     "memory": "1024M"
+    },
+    "requests": {
+     "cpu": "500m",
+     "memory": "256M"
+    }
+   },
+   "processes": 1,
+   "readiness_probe": 2,
+   "protocol": "http",
+   "endpoints": [
+    {
+     "name": "end1",
+     "execution_mode": "sequential",
+     "cpu_complexity": {
+      "execution_time": 0.001,
+      "threads": 0
+     },
+     "network_complexity": {
+      "forward_requests": "asynchronous",
+      "response_payload_size": 512,
+      "called_services": [
+       {
+        "service": "service10",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       }
+      ]
+     }
+    },
+    {
+     "name": "end2",
+     "execution_mode": "sequential",
+     "cpu_complexity": {
+      "execution_time": 0.001,
+      "threads": 0
+     },
+     "network_complexity": {
+      "forward_requests": "asynchronous",
+      "response_payload_size": 512,
+      "called_services": [
+       {
+        "service": "service10",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       }
+      ]
+     }
+    },
+    {
+     "name": "end3",
+     "execution_mode": "sequential",
+     "cpu_complexity": {
+      "execution_time": 0.001,
+      "threads": 0
+     },
+     "network_complexity": {
+      "forward_requests": "asynchronous",
+      "response_payload_size": 512,
+      "called_services": [
+       {
+        "service": "service10",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service11",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       }
+      ]
+     }
+    },
+    {
+     "name": "end4",
+     "execution_mode": "sequential",
+     "cpu_complexity": {
+      "execution_time": 0.001,
+      "threads": 0
+     },
+     "network_complexity": {
+      "forward_requests": "asynchronous",
+      "response_payload_size": 512,
+      "called_services": [
+       {
+        "service": "service10",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       },
+       {
+        "service": "service11",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       }
+      ]
+     }
+    },
+    {
+     "name": "end5",
+     "execution_mode": "sequential",
+     "cpu_complexity": {
+      "execution_time": 0.001,
+      "threads": 0
+     },
+     "network_complexity": {
+      "forward_requests": "asynchronous",
+      "response_payload_size": 512,
+      "called_services": [
+       {
+        "service": "service10",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "service10",
    "clusters": [
     {
      "cluster": "cluster4",
@@ -864,91 +1231,10 @@
    },
    "processes": 1,
    "readiness_probe": 2,
+   "protocol": "http",
    "endpoints": [
     {
      "name": "end1",
-     "protocol": "http",
-     "execution_mode": "sequential",
-     "cpu_complexity": {
-      "execution_time": 0.001,
-      "threads": 0
-     },
-     "network_complexity": {
-      "forward_requests": "asynchronous",
-      "response_payload_size": 512,
-      "called_services": []
-     }
-    }
-   ]
-  },
-  {
-   "name": "service9",
-   "clusters": [
-    {
-     "cluster": "cluster1",
-     "replicas": 1,
-     "namespace": "namespace2"
-    },
-    {
-     "cluster": "cluster2",
-     "replicas": 1,
-     "namespace": "namespace1"
-    }
-   ],
-   "resources": {
-    "limits": {
-     "cpu": "1000m",
-     "memory": "1024M"
-    },
-    "requests": {
-     "cpu": "500m",
-     "memory": "256M"
-    }
-   },
-   "processes": 1,
-   "readiness_probe": 2,
-   "endpoints": [
-    {
-     "name": "end1",
-     "protocol": "http",
-     "execution_mode": "sequential",
-     "cpu_complexity": {
-      "execution_time": 0.001,
-      "threads": 0
-     },
-     "network_complexity": {
-      "forward_requests": "asynchronous",
-      "response_payload_size": 512,
-      "called_services": []
-     }
-    }
-   ]
-  },
-  {
-   "name": "service10",
-   "clusters": [
-    {
-     "cluster": "cluster1",
-     "replicas": 1,
-     "namespace": "namespace2"
-    }
-   ],
-   "resources": {
-    "limits": {
-     "cpu": "1000m",
-     "memory": "1024M"
-    },
-    "requests": {
-     "cpu": "500m",
-     "memory": "256M"
-    }
-   },
-   "processes": 1,
-   "readiness_probe": 2,
-   "endpoints": [
-    {
-     "name": "end1",
-     "protocol": "http",
      "execution_mode": "sequential",
      "cpu_complexity": {
       "execution_time": 0.001,
@@ -971,7 +1257,28 @@
     },
     {
      "name": "end2",
-     "protocol": "http",
+     "execution_mode": "sequential",
+     "cpu_complexity": {
+      "execution_time": 0.001,
+      "threads": 0
+     },
+     "network_complexity": {
+      "forward_requests": "asynchronous",
+      "response_payload_size": 512,
+      "called_services": [
+       {
+        "service": "service11",
+        "port": 80,
+        "endpoint": "end1",
+        "protocol": "http",
+        "traffic_forward_ratio": 1,
+        "request_payload_size": 256
+       }
+      ]
+     }
+    },
+    {
+     "name": "end3",
      "execution_mode": "sequential",
      "cpu_complexity": {
       "execution_time": 0.001,
@@ -984,8 +1291,20 @@
      }
     },
     {
-     "name": "end3",
-     "protocol": "http",
+     "name": "end4",
+     "execution_mode": "sequential",
+     "cpu_complexity": {
+      "execution_time": 0.001,
+      "threads": 0
+     },
+     "network_complexity": {
+      "forward_requests": "asynchronous",
+      "response_payload_size": 512,
+      "called_services": []
+     }
+    },
+    {
+     "name": "end5",
      "execution_mode": "sequential",
      "cpu_complexity": {
       "execution_time": 0.001,
@@ -1008,26 +1327,6 @@
      "namespace": "namespace1"
     },
     {
-     "cluster": "cluster4",
-     "replicas": 1,
-     "namespace": "namespace1"
-    },
-    {
-     "cluster": "cluster4",
-     "replicas": 2,
-     "namespace": "namespace2"
-    },
-    {
-     "cluster": "cluster3",
-     "replicas": 1,
-     "namespace": "namespace2"
-    },
-    {
-     "cluster": "cluster3",
-     "replicas": 4,
-     "namespace": "namespace1"
-    },
-    {
      "cluster": "cluster3",
      "replicas": 2,
      "namespace": "namespace1"
@@ -1045,10 +1344,10 @@
    },
    "processes": 1,
    "readiness_probe": 2,
+   "protocol": "http",
    "endpoints": [
     {
      "name": "end1",
-     "protocol": "http",
      "execution_mode": "sequential",
      "cpu_complexity": {
       "execution_time": 0.001,
@@ -1062,7 +1361,6 @@
     },
     {
      "name": "end2",
-     "protocol": "http",
      "execution_mode": "sequential",
      "cpu_complexity": {
       "execution_time": 0.001,
@@ -1076,7 +1374,19 @@
     },
     {
      "name": "end3",
-     "protocol": "http",
+     "execution_mode": "sequential",
+     "cpu_complexity": {
+      "execution_time": 0.001,
+      "threads": 0
+     },
+     "network_complexity": {
+      "forward_requests": "asynchronous",
+      "response_payload_size": 512,
+      "called_services": []
+     }
+    },
+    {
+     "name": "end4",
      "execution_mode": "sequential",
      "cpu_complexity": {
       "execution_time": 0.001,
@@ -1093,6 +1403,7 @@
  ],
  "settings": {
   "logging": false,
-  "development": false
+  "development": false,
+  "base_image": ""
  }
 }

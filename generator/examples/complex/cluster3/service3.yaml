@@ -1,31 +1,31 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-    name: config-service11
+    name: config-service3
     labels:
-        name: config-service11
+        name: config-service3
         version: cluster3
     namespace: namespace1
 data:
-    conf.json: '{"processes":1,"logging":false,"protocol":"http","endpoints":[{"name":"end1","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[]}},{"name":"end2","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[]}},{"name":"end3","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[]}},{"name":"end4","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[]}}]}'
+    conf.json: '{"processes":1,"logging":false,"protocol":"http","endpoints":[{"name":"end1","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[]}},{"name":"end2","execution_mode":"sequential","cpu_complexity":{"execution_time":0.001,"threads":1},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[{"service":"service4","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service5","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service6","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service7","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256},{"service":"service8","port":80,"endpoint":"end1","protocol":"http","traffic_forward_ratio":1,"request_payload_size":256}]}}]}'
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-    name: service11
+    name: service3
     namespace: namespace1
     labels:
         version: cluster3
 spec:
     selector:
         matchLabels:
-            app: service11
+            app: service3
             version: cluster3
-    replicas: 2
+    replicas: 1
     template:
         metadata:
             labels:
-                app: service11
+                app: service3
                 version: cluster3
             annotations: {}
         spec:
@@ -35,7 +35,7 @@ spec:
                   imagePullPolicy: Never
                   env:
                     - name: SERVICE_NAME
-                      value: service11
+                      value: service3
                     - name: GOMEMLIMIT
                       value: "1024000000"
                   ports:
@@ -59,12 +59,12 @@ spec:
             volumes:
                 - name: config-data-volume
                   configMap:
-                    name: config-service11
+                    name: config-service3
 ---
 apiVersion: v1
 kind: Service
 metadata:
-    name: service11
+    name: service3
     namespace: namespace1
     labels:
         version: cluster3
@@ -72,7 +72,7 @@ metadata:
         http: /
 spec:
     selector:
-        app: service11
+        app: service3
     ports:
         - name: http
           port: 80

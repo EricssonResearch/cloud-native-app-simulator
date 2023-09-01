@@ -7,8 +7,7 @@ metadata:
         version: cluster1
     namespace: default
 data:
-    conf.json: '{"processes":2,"logging":false,"endpoints":[{"name":"endpoint1","protocol":"http","execution_mode":"parallel","cpu_complexity":{"execution_time":1,"threads":2,"lock_threads":false},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[]}},{"name":"endpoint2","protocol":"http","execution_mode":"parallel","network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":[]}}]}'
-    service.proto: "syntax = \"proto3\";\n\n\nservice service1 {\n    \n    rpc endpoint1 (Request) returns (Response) {}\n    \n    rpc endpoint2 (Request) returns (Response) {}\n    \n}\n\nservice service2 {\n    \n    rpc endpoint1 (Request) returns (Response) {}\n    \n    rpc endpoint2 (Request) returns (Response) {}\n    \n}\n\n\nmessage Request {\n    string data = 1;\n}\n\nmessage Response {\n    string data = 1;\n}"
+    conf.json: '{"processes":2,"logging":false,"protocol":"http","endpoints":[{"name":"endpoint1","execution_mode":"parallel","cpu_complexity":{"execution_time":1,"threads":2},"network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":null}},{"name":"endpoint2","execution_mode":"parallel","network_complexity":{"forward_requests":"asynchronous","response_payload_size":512,"called_services":null}}]}'
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -32,15 +31,17 @@ spec:
             nodeName: cluster1-control-plane
             containers:
                 - name: app
-                  image: app-demo:latest
+                  image: hydragen-emulator:5033c2d8
                   imagePullPolicy: Never
                   env:
                     - name: SERVICE_NAME
                       value: service2
+                    - name: GOMEMLIMIT
+                      value: "1024000000"
                   ports:
                     - containerPort: 5000
                   volumeMounts:
-                    - mountPath: /usr/src/app/config
+                    - mountPath: /usr/src/emulator/config
                       name: config-data-volume
                   readinessProbe:
                     httpGet:
