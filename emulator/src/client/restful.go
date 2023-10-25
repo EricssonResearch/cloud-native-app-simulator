@@ -50,8 +50,6 @@ func POST(service, endpoint string, port int, payload string, headers http.Heade
 
 	request, _ := http.NewRequest(http.MethodPost, url, bytes.NewReader(postData))
 
-	// Override the content type
-	headers.Set("Content-Type", "application/json")
 	// Forward any other headers set by the user
 	for key, values := range headers {
 		for _, value := range values {

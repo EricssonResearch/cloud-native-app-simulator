@@ -47,6 +47,9 @@ func ExtractHeaders(request any) http.Header {
 		}
 	}
 
+	// Override the content type
+	forwardHeaders.Set("Content-Type", "application/json")
+
 	return forwardHeaders
 }
 
