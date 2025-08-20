@@ -1,0 +1,19 @@
+# Este ingress tiene varios pasos para que funcione y se pueda probar el servicio que uno quiere
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hydragen-ingress
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx # Importante, tener instalado y operativo el ingress-controller de nginx 
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: service1
+            port:
+              number: 80 # Este puerto tiene que coincidir con el especificado en el port: de la definición del servicio.

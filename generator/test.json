@@ -1,0 +1,106 @@
+{
+  "settings" : {
+    "development": true,
+    "logging": true
+  },
+  "services": [
+    {
+      "name": "service1",
+      "protocol": "http",
+      "clusters": [
+        {
+          "cluster": "kind-cluster-1",
+          "namespace": "default"
+        }
+      ],
+      "resources": {
+        "limits": {
+          "memory": "1024M",
+          "cpu": "2000m"
+        },
+        "requests": {
+          "memory": "1024M",
+          "cpu": "2000m"
+        }
+      },
+      "processes": 1,
+      "readiness_probe": 1,
+      "endpoints": [
+        {
+          "name": "endpoint1",
+          "execution_mode": "sequential",
+          "network_complexity": {
+            "forward_requests": "asynchronous",
+            "response_payload_size": 512,
+            "called_services": [
+              {
+                "service": "service2",
+                "endpoint": "endpoint1",
+                "traffic_forward_ratio": 1,
+                "request_payload_size": 256
+              },
+              {
+                "service": "service2",
+                "endpoint": "endpoint2",
+                "traffic_forward_ratio": 1,
+                "request_payload_size": 256
+              }
+            ]
+          }
+        },
+        {
+          "name": "endpoint2",
+          "execution_mode": "parallel",
+          "network_complexity": {
+            "forward_requests": "asynchronous",
+            "response_payload_size": 512
+          }
+        }
+      ]
+    },
+    {
+      "name": "service2",
+      "protocol": "http",
+      "clusters": [
+        {
+          "cluster": "kind-cluster-1",
+          "namespace": "default"
+        }
+      ],
+      "resources": {
+        "limits": {
+          "memory": "1024M",
+          "cpu": "2000m"
+        },
+        "requests": {
+          "memory": "1024M",
+          "cpu": "2000m"
+        }
+      },
+      "processes": 2,
+      "readiness_probe": 1,
+      "endpoints": [
+        {
+          "name": "endpoint1",
+          "execution_mode": "parallel",
+          "cpu_complexity": {
+            "execution_time": 1,
+            "threads": 2
+          },
+          "network_complexity": {
+            "forward_requests": "asynchronous",
+            "response_payload_size": 512
+          }
+        },
+        {
+          "name": "endpoint2",
+          "execution_mode": "parallel",
+          "network_complexity": {
+            "forward_requests": "asynchronous",
+            "response_payload_size": 512
+          }
+        }
+      ]
+    }
+  ]
+}
