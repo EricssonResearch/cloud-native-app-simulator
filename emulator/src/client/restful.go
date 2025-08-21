@@ -58,6 +58,7 @@ func POST(service, endpoint string, port int, payload string, headers http.Heade
 	}
 
 	// Send the request
+	// Here it comes the circuit breaker
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return 0, nil, err

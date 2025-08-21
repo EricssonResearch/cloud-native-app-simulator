@@ -94,7 +94,7 @@ func grpcRequest(service model.CalledService) generated.EndpointResponse {
 }
 
 // Forward requests to all services sequentially and return REST or gRPC responses
-func ForwardSequential(request any, services []model.CalledService) []generated.EndpointResponse {
+func ForwardSequential(request any, services []model.CalledService, endpoint string) []generated.EndpointResponse {
 	forwardHeaders := ExtractHeaders(request)
 	len := 0
 	for _, service := range services {
@@ -134,7 +134,7 @@ func parallelGRPCRequest(responses []generated.EndpointResponse, i int, service 
 }
 
 // Forward requests to all services in parallel using goroutines and return REST or gRPC responses
-func ForwardParallel(request any, services []model.CalledService) []generated.EndpointResponse {
+func ForwardParallel(request any, services []model.CalledService, endpoint string) []generated.EndpointResponse {
 	forwardHeaders := ExtractHeaders(request)
 	len := 0
 	for _, service := range services {

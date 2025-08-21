@@ -36,11 +36,21 @@ type NetworkComplexity struct {
 	CalledServices      []CalledService `json:"called_services"`
 }
 
+type CircuitBreakerConfig struct {
+	Timeout int `json:"timeout"`
+}
+
+// TODO: Implement more Resilience patterns
+type ResiliencePatterns struct {
+	CircuitBreaker *CircuitBreakerConfig `json:"circuit_breaker,omitempty"`
+}
+
 type Endpoint struct {
-	Name              string             `json:"name"`
-	ExecutionMode     string             `json:"execution_mode"`
-	CpuComplexity     *CpuComplexity     `json:"cpu_complexity,omitempty"`
-	NetworkComplexity *NetworkComplexity `json:"network_complexity,omitempty"`
+	Name               string              `json:"name"`
+	ExecutionMode      string              `json:"execution_mode"`
+	CpuComplexity      *CpuComplexity      `json:"cpu_complexity,omitempty"`
+	NetworkComplexity  *NetworkComplexity  `json:"network_complexity,omitempty"`
+	ResiliencePatterns *ResiliencePatterns `json:"resilience_patterns,omitempty"`
 }
 
 type ResourceLimits struct {

@@ -46,6 +46,7 @@ func GRPC(service, endpoint string, port int, payload string) (*generated.Respon
 	}
 	defer conn.Close()
 
+	// This context package already sets the timeout
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 

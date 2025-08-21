@@ -17,6 +17,7 @@ limitations under the License.
 package server
 
 import (
+	"application-emulator/src/resilience"
 	"application-emulator/src/stressors"
 	"application-emulator/src/util"
 	model "application-model"
@@ -95,7 +96,11 @@ func HTTP(endpoints []model.Endpoint) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", rootHandler)
 
+	circuitBreakerInstance := resilience.GetCircuitBreakerRegister()
 	for i := range endpoints {
+		if resilience.CheckCircuitBreakerConfig(&endpoints[i]) {
+			circuitBreakerInstance.RegisterEndpoint(endpoints[i].Name, endpoints[i].ResiliencePatterns.CircuitBreaker)
+		}
 		mux.Handle(fmt.Sprintf("/%s", endpoints[i].Name), endpointHandler{endpoint: &endpoints[i]})
 	}
 

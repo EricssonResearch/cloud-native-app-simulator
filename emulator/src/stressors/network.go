@@ -112,9 +112,9 @@ func (n *NetworkTask) ExecTask(endpoint *model.Endpoint, responses *MutexTaskRes
 
 	var calls []generated.EndpointResponse
 	if stressParams.ForwardRequests == "asynchronous" {
-		calls = ForwardParallel(n.Request, stressParams.CalledServices)
+		calls = ForwardParallel(n.Request, stressParams.CalledServices, endpoint.Name)
 	} else if stressParams.ForwardRequests == "synchronous" {
-		calls = ForwardSequential(n.Request, stressParams.CalledServices)
+		calls = ForwardSequential(n.Request, stressParams.CalledServices, endpoint.Name)
 	}
 
 	svc := fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)
