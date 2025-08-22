@@ -29,6 +29,12 @@
         {
           "name": "endpoint1",
           "execution_mode": "sequential",
+          "resilience_patterns":  {
+            "circuit_breaker" : {
+              "timeout": 2,
+              "retry_timer": 20
+            }
+          },
           "network_complexity": {
             "forward_requests": "asynchronous",
             "response_payload_size": 512,
@@ -36,6 +42,7 @@
               {
                 "service": "service2",
                 "endpoint": "endpoint1",
+                "active_circuit_breaker": true,
                 "traffic_forward_ratio": 1,
                 "request_payload_size": 256
               },
@@ -84,12 +91,8 @@
           "name": "endpoint1",
           "execution_mode": "parallel",
           "cpu_complexity": {
-            "execution_time": 1,
+            "execution_time": 3,
             "threads": 2
-          },
-          "network_complexity": {
-            "forward_requests": "asynchronous",
-            "response_payload_size": 512
           }
         },
         {

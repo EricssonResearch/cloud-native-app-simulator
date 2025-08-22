@@ -17,11 +17,13 @@ limitations under the License.
 package client
 
 import (
+	"application-emulator/src/resilience/circuit_breaker"
 	"application-model/generated"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 
 	"google.golang.org/protobuf/encoding/protojson"
@@ -30,7 +32,7 @@ import (
 const useProtoJSON = true
 
 // Sends a HTTP POST request to the specified endpoint
-func POST(service, endpoint string, port int, payload string, headers http.Header) (int, *generated.Response, error) {
+func POST(service, endpoint string, port int, payload string, headers http.Header, sourceEndpoint string) (int, *generated.Response, error) {
 	var url string
 	// Omit the port if zero
 	if port == 0 {
@@ -59,7 +61,23 @@ func POST(service, endpoint string, port int, payload string, headers http.Heade
 
 	// Send the request
 	// Here it comes the circuit breaker
-	response, err := http.DefaultClient.Do(request)
+
+	circuitBreakerRegistry := circuit_breaker.GetCircuitBreakerRegistry()
+	cbName := circuitBreakerRegistry.BuildName(sourceEndpoint, service, endpoint)
+	circuitBreaker := circuitBreakerRegistry.GetCircuitBreaker(cbName)
+
+	log.Printf("[CLIENT HTTP] Circuit breaker obtanied %v", circuitBreaker)
+
+	var response *http.Response
+	var err error
+
+	if circuitBreaker == nil {
+		response, err = http.DefaultClient.Do(request)
+	} else {
+		response, err = circuitBreaker.ProxyHTTP(request)
+	}
+
+	log.Printf("[CLIENT HTTP] Request returned from %s/%s", service, endpoint)
 	if err != nil {
 		return 0, nil, err
 	}

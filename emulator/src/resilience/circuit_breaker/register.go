@@ -1,41 +1,39 @@
-package resilience
+package circuit_breaker
 
 import (
 	model "application-model"
-	"net/http"
+	"fmt"
 	"sync"
 )
 
-type CircuitBreakerState int
+var instanceLock = &sync.Mutex{}
+var registerLock = &sync.Mutex{}
+var GetLock = &sync.Mutex{}
 
-const (
-	OPEN CircuitBreakerState = iota
-	CLOSED
-	HALF_OPEN
-)
-
-type CircuitBreaker interface {
-	ProxyHTTP(request *http.Request) (*http.Response, error)
-	ProxyGRPC()
-}
-
-type CircuitBreakerImpl struct {
-	State   CircuitBreakerState
-	Timeout int // timeout in seconds
-
-}
 type CircuitBreakerRegister struct {
 	ProtectedEndpoints map[string]*CircuitBreakerImpl
 }
 
+var circuitBreakerInstance *CircuitBreakerRegister
+
+func (cbr *CircuitBreakerRegister) BuildName(sourceEndpoint, destService, destEndpoint string) string {
+	return fmt.Sprintf("%s:%s/%s", sourceEndpoint, destService, destEndpoint)
+}
 func (cbr *CircuitBreakerRegister) RegisterEndpoint(endpoint string, config *model.CircuitBreakerConfig) {
+	registerLock.Lock()
+	defer registerLock.Unlock()
 	cbr.ProtectedEndpoints[endpoint] = &CircuitBreakerImpl{
-		State:   CLOSED,
-		Timeout: config.Timeout,
+		State:             CLOSED,
+		Timeout:           config.Timeout,
+		RetryTimer:        config.RetryTimer,
+		EndpointProtected: endpoint,
 	}
 }
 
 func (cbr *CircuitBreakerRegister) GetCircuitBreaker(endpoint string) *CircuitBreakerImpl {
+	GetLock.Lock()
+	defer GetLock.Unlock()
+
 	circuitBreaker, ok := cbr.ProtectedEndpoints[endpoint]
 	if !ok {
 		return nil
@@ -43,17 +41,14 @@ func (cbr *CircuitBreakerRegister) GetCircuitBreaker(endpoint string) *CircuitBr
 	return circuitBreaker
 }
 
-var lock = &sync.Mutex{}
-var circuitBreakerInstance *CircuitBreakerRegister
-
 func CheckCircuitBreakerConfig(endpoint *model.Endpoint) bool {
 	return endpoint.ResiliencePatterns.CircuitBreaker != nil
 }
 
-func GetCircuitBreakerRegister() *CircuitBreakerRegister {
+func GetCircuitBreakerRegistry() *CircuitBreakerRegister {
 	if circuitBreakerInstance == nil {
-		lock.Lock()
-		defer lock.Unlock()
+		instanceLock.Lock()
+		defer instanceLock.Unlock()
 		if circuitBreakerInstance == nil {
 			circuitBreakerInstance = &CircuitBreakerRegister{
 				ProtectedEndpoints: make(map[string]*CircuitBreakerImpl),

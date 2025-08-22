@@ -18,6 +18,7 @@ package client
 
 import (
 	"application-emulator/src/generated/client"
+	"application-emulator/src/resilience/circuit_breaker"
 	"application-model/generated"
 	"context"
 	"fmt"
@@ -28,7 +29,7 @@ import (
 )
 
 // Sends a gRPC request to the specified endpoint
-func GRPC(service, endpoint string, port int, payload string) (*generated.Response, error) {
+func GRPC(service, endpoint string, port int, payload, sourceEndpoint string) (*generated.Response, error) {
 	var url string
 	// Omit the port if zero
 	if port == 0 {
@@ -46,12 +47,25 @@ func GRPC(service, endpoint string, port int, payload string) (*generated.Respon
 	}
 	defer conn.Close()
 
-	// This context package already sets the timeout
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
+	circuitBreakerRegistry := circuit_breaker.GetCircuitBreakerRegistry()
+	cbName := circuitBreakerRegistry.BuildName(sourceEndpoint, service, endpoint)
+	circuitBreaker := circuitBreakerRegistry.GetCircuitBreaker(cbName)
 
+	var response *generated.Response
+	request := &generated.Request{
+		Payload: payload,
+	}
 	callOptions := []grpc.CallOption{}
-	response, err := client.CallGeneratedEndpoint(ctx, conn, service, endpoint, &generated.Request{Payload: payload}, callOptions...)
+
+	if circuitBreaker == nil {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
+		response, err = client.CallGeneratedEndpoint(ctx, conn, service, endpoint, request, callOptions...)
+	} else {
+		response, err = circuitBreaker.ProxyGRPC(conn, service, endpoint, request, callOptions...)
+	}
+
 	if err != nil {
 		return nil, err
 	}

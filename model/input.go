@@ -17,12 +17,13 @@ limitations under the License.
 package model
 
 type CalledService struct {
-	Service             string `json:"service"`
-	Port                int    `json:"port"`
-	Endpoint            string `json:"endpoint"`
-	Protocol            string `json:"protocol"`
-	TrafficForwardRatio int    `json:"traffic_forward_ratio"`
-	RequestPayloadSize  int    `json:"request_payload_size"`
+	Service              string `json:"service"`
+	Port                 int    `json:"port"`
+	Endpoint             string `json:"endpoint"`
+	Protocol             string `json:"protocol"`
+	TrafficForwardRatio  int    `json:"traffic_forward_ratio"`
+	RequestPayloadSize   int    `json:"request_payload_size"`
+	ActiveCircuitBreaker bool   `json:"active_circuit_breaker"`
 }
 
 type CpuComplexity struct {
@@ -37,7 +38,8 @@ type NetworkComplexity struct {
 }
 
 type CircuitBreakerConfig struct {
-	Timeout int `json:"timeout"`
+	Timeout    int `json:"timeout"`
+	RetryTimer int `json:"retry_timer"`
 }
 
 // TODO: Implement more Resilience patterns
