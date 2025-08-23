@@ -32,11 +32,11 @@
           "resilience_patterns":  {
             "circuit_breaker" : {
               "timeout": 2,
-              "retry_timer": 20
+              "retry_timer": 10
             }
           },
           "network_complexity": {
-            "forward_requests": "asynchronous",
+            "forward_requests": "synchronous",
             "response_payload_size": 512,
             "called_services": [
               {
@@ -45,22 +45,24 @@
                 "active_circuit_breaker": true,
                 "traffic_forward_ratio": 1,
                 "request_payload_size": 256
-              },
-              {
-                "service": "service2",
-                "endpoint": "endpoint2",
-                "traffic_forward_ratio": 1,
-                "request_payload_size": 256
               }
             ]
           }
         },
         {
           "name": "endpoint2",
-          "execution_mode": "parallel",
+          "execution_mode": "sequential",
           "network_complexity": {
-            "forward_requests": "asynchronous",
-            "response_payload_size": 512
+            "forward_requests": "synchronous",
+            "response_payload_size": 512,
+	    "called_services": [
+              {
+                "service": "service2",
+                "endpoint": "endpoint1",
+                "traffic_forward_ratio": 1,
+                "request_payload_size": 256
+              }
+            ]
           }
         }
       ]
@@ -84,23 +86,14 @@
           "cpu": "2000m"
         }
       },
-      "processes": 2,
+      "processes": 1,
       "readiness_probe": 1,
       "endpoints": [
         {
           "name": "endpoint1",
-          "execution_mode": "parallel",
+          "execution_mode": "sequential",
           "cpu_complexity": {
-            "execution_time": 3,
-            "threads": 2
-          }
-        },
-        {
-          "name": "endpoint2",
-          "execution_mode": "parallel",
-          "network_complexity": {
-            "forward_requests": "asynchronous",
-            "response_payload_size": 512
+            "execution_time": 3
           }
         }
       ]
