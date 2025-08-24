@@ -91,7 +91,7 @@
       "endpoints": [
         {
           "name": "endpoint1",
-          "execution_mode": "sequential",
+          "execution_mode": "parallel",
           "cpu_complexity": {
             "execution_time": 3
           }
