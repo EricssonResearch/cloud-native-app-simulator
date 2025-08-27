@@ -44,14 +44,15 @@ type CircuitBreakerImpl struct {
 
 func (c *CircuitBreakerImpl) ProcessRequest(cb RequestCallback, requestError error) (any, error) {
 	log.Printf("[CIRCUIT BREAKER] Circuit breaker of %s in state %s\n", c.EndpointProtected, c.State)
+	c.lock.Lock()
 	if c.State == OPEN {
+		c.lock.Unlock()
 		return nil, requestError
 	}
 	if c.State == HALF_OPEN {
-		c.lock.Lock()
 		c.State = OPEN
-		c.lock.Unlock()
 	}
+	c.lock.Unlock()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.Timeout)*time.Second)
 	defer cancel()
@@ -74,11 +75,11 @@ func (c *CircuitBreakerImpl) ProcessRequest(cb RequestCallback, requestError err
 		return nil, requestError
 	}
 
+	c.lock.Lock()
 	if c.State == OPEN || c.State == HALF_OPEN {
-		c.lock.Lock()
 		c.State = CLOSED
-		c.lock.Unlock()
 	}
+	c.lock.Unlock()
 	return response, err
 }
 

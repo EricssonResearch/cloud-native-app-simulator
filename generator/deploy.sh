@@ -32,7 +32,7 @@ else
     echo "\t deploy.sh: line 29: statefulset.apps/es-cluster: No such file or directory\n"
     echo "It might take a while ... (up to 5 minutes, enjoy your coffee! :D) "
     $(kubectl apply -f ./elk/)
-    while [ "$( kubectl get sts es-cluster -n logging -o=jsonpath='{.status.readyReplicas}')" != 1 ]; do
+    while [ "$( kubectl get sts es-cluster -n logging -o=jsonpath='{.status.readyReplicas}')" != 3 ]; do
        sleep 30
        echo "Waiting for Elasticsearch stack to be ready..."
     done
