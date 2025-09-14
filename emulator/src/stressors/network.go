@@ -17,10 +17,12 @@ limitations under the License.
 package stressors
 
 import (
+	"application-emulator/src/resilience/circuit_breaker"
 	"application-emulator/src/util"
 	model "application-model"
 	"application-model/generated"
 	"fmt"
+	"log"
 	"math/rand"
 	"strings"
 )
@@ -110,11 +112,26 @@ func (n *NetworkTask) ExecAllowed(endpoint *model.Endpoint) bool {
 func (n *NetworkTask) ExecTask(endpoint *model.Endpoint, responses *MutexTaskResponses) {
 	stressParams := endpoint.NetworkComplexity
 
+	log.Printf("[NETWORK STRESSOR] Recieved request to endpoint %s", endpoint.Name)
+
+	circuitBreakerRegistry := circuit_breaker.GetCircuitBreakerRegistry()
+
+	for _, svc := range stressParams.CalledServices {
+		if svc.ActiveCircuitBreaker {
+			cbName := circuitBreakerRegistry.BuildName(endpoint.Name, svc.Service, svc.Endpoint)
+			cb := circuitBreakerRegistry.GetCircuitBreaker(cbName)
+			if cb == nil {
+				circuitBreakerRegistry.RegisterEndpoint(cbName, endpoint.ResiliencePatterns.CircuitBreaker)
+			}
+		}
+	}
+
+	log.Printf("[NETWORK STRESSOR] Circuit Breaker verified!!")
 	var calls []generated.EndpointResponse
 	if stressParams.ForwardRequests == "asynchronous" {
-		calls = ForwardParallel(n.Request, stressParams.CalledServices)
+		calls = ForwardParallel(n.Request, stressParams.CalledServices, endpoint.Name)
 	} else if stressParams.ForwardRequests == "synchronous" {
-		calls = ForwardSequential(n.Request, stressParams.CalledServices)
+		calls = ForwardSequential(n.Request, stressParams.CalledServices, endpoint.Name)
 	}
 
 	svc := fmt.Sprintf("%s/%s", util.ServiceName, endpoint.Name)

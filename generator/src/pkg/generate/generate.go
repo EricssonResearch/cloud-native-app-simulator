@@ -346,7 +346,7 @@ func CreateDockerImage(config model.FileConfig, buildHash string) {
 		"--build-arg",
 		"SRCIMAGE=" + sourceImage,
 		"--build-arg",
-		"BASEIMAGE=" + config.Settings.BaseImage,
+		"BASEIMAGE=" + config.Settings.BaseImage, // busybox by default
 		path,
 	}
 

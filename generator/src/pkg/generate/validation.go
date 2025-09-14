@@ -129,6 +129,20 @@ func ValidateProtocols(service *model.Service) error {
 	}
 
 	for _, endpoint := range service.Endpoints {
+
+		// Circuit breaker validations
+		if endpoint.ResiliencePatterns != nil {
+			if endpoint.NetworkComplexity == nil {
+				return fmt.Errorf("Resilience must have network calls to protect")
+			}
+
+			if endpoint.ResiliencePatterns.CircuitBreaker != nil {
+				if endpoint.ResiliencePatterns.CircuitBreaker.RetryTimer == 0 || endpoint.ResiliencePatterns.CircuitBreaker.Timeout == 0 {
+					return fmt.Errorf("Circuit breaker must have timeout and retry timer values > 0")
+				}
+			}
+		}
+
 		if endpoint.NetworkComplexity != nil {
 			for _, calledService := range endpoint.NetworkComplexity.CalledServices {
 				if !validProtocols[calledService.Protocol] {

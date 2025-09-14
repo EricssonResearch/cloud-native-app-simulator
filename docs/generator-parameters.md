@@ -113,6 +113,7 @@ For each microservice, HydraGen supports a set of configuration parameters that 
 * **execution_mode**: Determines if the server responding at this endpoint should handle requests sequentially or in parallel, on multiple threads. Default: "sequential"
 * **cpu_complexity**: CPU stress parameters.
 * **network_complexity**: Network stress parameters.
+* **resilience_patterns**: Resilience patterns parameters.
 
 #### Format
 
@@ -121,12 +122,38 @@ For each microservice, HydraGen supports a set of configuration parameters that 
   {
     "name": "<string>",
     "execution_mode": "<string:sequential|parallel>",
-
+    "resilience_patterns": {...},
     "cpu_complexity": {...},
     "network_complexity": {...}
   },
   ...
 ]
+```
+
+## Describing Resilience Patterns
+
+Hydragen supports the injection of resilience patterns into the client generated code. Initially, Circuit Breaker pattern is supported.
+
+### Circuit Breaker
+
+The circuit breaker implementation use a simple strategy to change the circuit breaker state (_CLOSED, OPEN and HALF OPEN_). If some request exceeds the timeout, the circuit breaker implementation will change the state to _OPEN_ (This meansthat the failed request threshold it's one request). After a configured timeout, the pattern will send a request to the destination service and check the response status.
+
+The circuit breaker is configured for the hole endpoint, but it must be enabled for each called service in Network stressor.
+
+#### Required attributes
+
+* **timeout**: Determines the timeout in seconds to consider the response as failed.
+* **retry_timer**: Determines the number of seconds that the circuit breaker must wait to retry a request to the destination service connection.
+
+#### Format
+
+```json
+"resilience_patterns" : {
+  "circuit_breaker": {
+    "timeout": <integer>,
+    "retry_timer: <integer>
+  }
+}
 ```
 
 ## Describing Resource Stressors
@@ -168,7 +195,6 @@ The CPU stressor will lock threads for exclusive access while it is executing. T
 "network_complexity": {
   "forward_requests": "<string:synchronous|asynchronous>",
   "response_payload_size": <integer:chars>,
-
   "called_services": [...]
 }
 ```
@@ -186,6 +212,7 @@ The CPU stressor will lock threads for exclusive access while it is executing. T
 * **request_payload_size**: Determines the number of characters that will be sent in the request to the endpoint. Default: 0
 * **port**: The port the server is responding to requests on. This is usually determined automatically.
 * **protocol**: Determines if the call will be made using HTTP or gRPC. This is usually determined automatically.
+* **active_circuit_breaker**: Determines if the endpoint circuit breaker will protect this service call.
 
 #### Format
 
@@ -197,7 +224,8 @@ The CPU stressor will lock threads for exclusive access while it is executing. T
     "port": "<string>",
     "protocol": "<string:http|grpc>",
     "traffic_forward_ratio": <integer>,
-    "request_payload_size": <integer:chars>
+    "request_payload_size": <integer:chars>,
+    "active_circuit_breaker": <boolean>
   }
 ]
 ```

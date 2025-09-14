@@ -21,6 +21,7 @@ import (
 	model "application-model"
 	"application-model/generated"
 	"fmt"
+	"log"
 	"net/http"
 	"sync"
 
@@ -53,10 +54,12 @@ func ExtractHeaders(request any) http.Header {
 	return forwardHeaders
 }
 
-func httpRequest(service model.CalledService, forwardHeaders http.Header) generated.EndpointResponse {
+func httpRequest(service model.CalledService, forwardHeaders http.Header, sourceEndpoint string) generated.EndpointResponse {
+	log.Printf("[FORWARD] Http request ready to send POST to %s/%s", service.Service, service.Endpoint)
 	status, response, err :=
-		client.POST(service.Service, service.Endpoint, service.Port, RandomPayload(service.RequestPayloadSize), forwardHeaders)
+		client.POST(service.Service, service.Endpoint, service.Port, RandomPayload(service.RequestPayloadSize), forwardHeaders, sourceEndpoint)
 
+	log.Printf("[FORWARD] Http request returned from %s/%s", service.Service, service.Endpoint)
 	if err != nil {
 		return generated.EndpointResponse{
 			Service:  &service,
@@ -73,9 +76,9 @@ func httpRequest(service model.CalledService, forwardHeaders http.Header) genera
 	}
 }
 
-func grpcRequest(service model.CalledService) generated.EndpointResponse {
+func grpcRequest(service model.CalledService, sourceEndpoint string) generated.EndpointResponse {
 	response, err :=
-		client.GRPC(service.Service, service.Endpoint, service.Port, RandomPayload(service.RequestPayloadSize))
+		client.GRPC(service.Service, service.Endpoint, service.Port, RandomPayload(service.RequestPayloadSize), sourceEndpoint)
 
 	if err != nil {
 		return generated.EndpointResponse{
@@ -94,7 +97,7 @@ func grpcRequest(service model.CalledService) generated.EndpointResponse {
 }
 
 // Forward requests to all services sequentially and return REST or gRPC responses
-func ForwardSequential(request any, services []model.CalledService) []generated.EndpointResponse {
+func ForwardSequential(request any, services []model.CalledService, endpoint string) []generated.EndpointResponse {
 	forwardHeaders := ExtractHeaders(request)
 	len := 0
 	for _, service := range services {
@@ -106,10 +109,10 @@ func ForwardSequential(request any, services []model.CalledService) []generated.
 	for _, service := range services {
 		for j := 0; j < service.TrafficForwardRatio; j++ {
 			if service.Protocol == "http" {
-				response := httpRequest(service, forwardHeaders)
+				response := httpRequest(service, forwardHeaders, endpoint)
 				responses[i] = response
 			} else if service.Protocol == "grpc" {
-				response := grpcRequest(service)
+				response := grpcRequest(service, endpoint)
 				responses[i] = response
 			}
 			i++
@@ -119,22 +122,22 @@ func ForwardSequential(request any, services []model.CalledService) []generated.
 	return responses
 }
 
-func parallelHTTPRequest(responses []generated.EndpointResponse, i int, service model.CalledService, forwardHeaders http.Header, wg *sync.WaitGroup) {
+func parallelHTTPRequest(responses []generated.EndpointResponse, i int, service model.CalledService, forwardHeaders http.Header, wg *sync.WaitGroup, endpoint string) {
 	defer wg.Done()
-	response := httpRequest(service, forwardHeaders)
+	response := httpRequest(service, forwardHeaders, endpoint)
 	// No mutex needed since every response has its own index
 	responses[i] = response
 }
 
-func parallelGRPCRequest(responses []generated.EndpointResponse, i int, service model.CalledService, wg *sync.WaitGroup) {
+func parallelGRPCRequest(responses []generated.EndpointResponse, i int, service model.CalledService, wg *sync.WaitGroup, endpoint string) {
 	defer wg.Done()
-	response := grpcRequest(service)
+	response := grpcRequest(service, endpoint)
 	// No mutex needed since every response has its own index
 	responses[i] = response
 }
 
 // Forward requests to all services in parallel using goroutines and return REST or gRPC responses
-func ForwardParallel(request any, services []model.CalledService) []generated.EndpointResponse {
+func ForwardParallel(request any, services []model.CalledService, endpoint string) []generated.EndpointResponse {
 	forwardHeaders := ExtractHeaders(request)
 	len := 0
 	for _, service := range services {
@@ -148,10 +151,10 @@ func ForwardParallel(request any, services []model.CalledService) []generated.En
 		for j := 0; j < service.TrafficForwardRatio; j++ {
 			if service.Protocol == "http" {
 				wg.Add(1)
-				go parallelHTTPRequest(responses, i, service, forwardHeaders, &wg)
+				go parallelHTTPRequest(responses, i, service, forwardHeaders, &wg, endpoint)
 			} else if service.Protocol == "grpc" {
 				wg.Add(1)
-				go parallelGRPCRequest(responses, i, service, &wg)
+				go parallelGRPCRequest(responses, i, service, &wg, endpoint)
 			}
 			i++
 		}
